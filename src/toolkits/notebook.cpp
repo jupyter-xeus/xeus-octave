@@ -118,9 +118,9 @@ void notebook_graphics_toolkit::finalize(const graphics_object&) {
 void notebook_graphics_toolkit::show_figure(const graphics_object& go) const {
 	int id = getPlotStream(go);
 
-	json data, meta, tran;
+	json tran;
 	tran["display_id"] = id;
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).display_data(data, meta, tran);
+	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).display_data(json::object(), json::object(), tran);
 }
 
 void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {

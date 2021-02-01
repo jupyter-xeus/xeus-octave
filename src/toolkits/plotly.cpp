@@ -447,21 +447,21 @@ void plotly_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 			}
 		// Show the newly created plot
 
-		json data, meta, tran;
+		json data, tran;
 
 		data["application/vnd.plotly.v1+json"] = plot;
 		tran["display_id"] = id;
 
-		dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
+		dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, json::object(), tran);
 	}
 }
 
 void plotly_graphics_toolkit::show_figure(const graphics_object& go) const {
 	int id = getPlotStream(go);
 
-	json data, meta, tran;
+	json tran;
 	tran["display_id"] = id;
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).display_data(data, meta, tran);
+	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).display_data(json::object(), json::object(), tran);
 }
 
 std::vector<graphics_object> plotly_graphics_toolkit::children(const graphics_object& go, bool all) const {
