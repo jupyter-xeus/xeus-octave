@@ -1,0 +1,9 @@
+build/*
+share/jupyter/kernels/xeus-octave/kernel.json
+compile_commands.json
+.clangd
+.vscode
+*.code-workspace
+plotly
+.cache
+.ipynb_checkpoints

@@ -1,0 +1,12 @@
+{
+    "display_name": "Octave",
+    "argv": [
+        "@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_BINDIR@/@EXECUTABLE_NAME@",
+        "-f",
+        "{connection_file}"
+    ],
+    "language": "octave",
+    "name": "xeus-octave",
+    "codemirror_mode": "octave",
+    "pygments_lexer": "octave"
+}
