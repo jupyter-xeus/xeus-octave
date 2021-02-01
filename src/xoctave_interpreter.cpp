@@ -52,6 +52,7 @@
 #include "toolkits/plotly.hpp"
 #include "xeus/xinterpreter.hpp"
 #include "xoctave/display.hpp"
+#include "input.hpp"
 
 namespace nl = nlohmann;
 
@@ -59,7 +60,7 @@ using namespace octave;
 
 namespace xoctave {
 
-void xoctave_interpreter::do_print_output() {
+void xoctave_interpreter::do_print_output(bool drawnow) {
 	// Print output if necessary
 	if (!buf_stderr.str().empty()) {
 		publish_stream("stderr", buf_stderr.str());
@@ -76,6 +77,9 @@ void xoctave_interpreter::do_print_output() {
 		buf_stdout.str("");
 		buf_stdout.clear();
 	}
+
+	if (drawnow)
+		octave::feval("drawnow");
 }
 
 nl::json xoctave_interpreter::execute_request_impl(int /*execution_counter*/,
@@ -106,7 +110,6 @@ nl::json xoctave_interpreter::execute_request_impl(int /*execution_counter*/,
 				if (stmt_list) {
 					interpreter.get_evaluator().eval(stmt_list, false);
 					do_print_output();
-					octave::feval("drawnow");
 				} else if (str_parser.at_end_of_input()) {
 					exit_status = EOF;
 					break;
@@ -121,7 +124,7 @@ nl::json xoctave_interpreter::execute_request_impl(int /*execution_counter*/,
 			error = e.message();
 			error += "\n" + e.stack_trace();
 			interpreter.recover_from_exception();
-			do_print_output();
+			do_print_output(false);
 			publish_execution_error("Index exception", error, std::vector<std::string>());
 			result["status"] = "error";
 		} catch (const execution_exception& ee) {
@@ -129,12 +132,12 @@ nl::json xoctave_interpreter::execute_request_impl(int /*execution_counter*/,
 			error += "\n" + ee.stack_trace();
 			interpreter.get_error_system().save_exception(ee);
 			interpreter.recover_from_exception();
-			do_print_output();
+			do_print_output(false);
 			publish_execution_error("Execution exception", error, std::vector<std::string>());
 			result["status"] = "error";
 		} catch (const std::bad_alloc&) {
 			interpreter.recover_from_exception();
-			do_print_output();
+			do_print_output(false);
 			publish_execution_error("Out of memory", "Trying to return to prompt", std::vector<std::string>());
 			result["status"] = "error";
 		}
@@ -170,6 +173,9 @@ void xoctave_interpreter::configure_impl() {
 #else
 	octave::feval("graphics_toolkit", ovl("plotly"));
 #endif
+
+	// Override the default input system
+	input::set_command_editor(input_handler);
 
 	// Create the xoctave package
 	auto xoctave_package = interpreter.get_cdef_manager().make_package("xoctave");
@@ -287,6 +293,8 @@ nl::json xoctave_interpreter::kernel_info_request_impl() {
 }
 
 void xoctave_interpreter::shutdown_request_impl() {
+	// Recover the old input system before shutting down the interpreter
+	input::reset_command_editor();
 	interpreter.shutdown();
 
 #ifndef NDEBUG

@@ -27,6 +27,8 @@
 #include <sstream>
 #include <xeus/xinterpreter.hpp>
 
+#include "input.hpp"
+
 using nlohmann::json;
 using xeus::xinterpreter;
 
@@ -59,12 +61,14 @@ private:
 
 	void shutdown_request_impl() override;
 
+public:
+	void do_print_output(bool drawnow = true);
+
 private:
 	std::string get_symbol(const std::string code, int cursor_pos) const;
 
-	void do_print_output();
-
 	std::stringstream buf_stdout, buf_stderr;
+	input input_handler;
 };
 
 }  // namespace xoctave
