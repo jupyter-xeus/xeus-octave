@@ -115,19 +115,9 @@ find_package(xeus REQUIRED)
 find_package(xwidgets REQUIRED)
 find_package(xproperty REQUIRED)
 
-# X11 and OpenGL are required for fast native rendering
-find_package(X11)
-find_package(OpenGL)
-
-configure_file(
-  "${CMAKE_SOURCE_DIR}/config.h.in"
-  "${CMAKE_BINARY_DIR}/config.h"
-)
-
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET octinterp)
 
-# Osmesa is required for slow CPU native rendering
-pkg_check_modules(osmesa IMPORTED_TARGET osmesa)
+set(NOTEBOOK_TOOLKIT_RENDER_TYPE "GPU" CACHE STRING "Rendering type for OpenGL native graphics toolkit. (Can be GPU, CPU, NONE)")
 
 set(EXECUTABLE_NAME xeus-octave)
 
@@ -166,17 +156,27 @@ target_link_libraries(${EXECUTABLE_NAME} xeus-static xwidgets-static xproperty p
 target_link_libraries(${EXECUTABLE_NAME} PkgConfig::octinterp)
 target_link_libraries(${EXECUTABLE_NAME} lodepng)
 
-if(X11_FOUND AND OPENGL_FOUND)
-  # Use hardware rendering
+if (NOTEBOOK_TOOLKIT_RENDER_TYPE STREQUAL "GPU")
+  find_package(OpenGL REQUIRED)
+  pkg_check_modules(glfw3 REQUIRED IMPORTED_TARGET glfw3)
+  set(NOTEBOOK_TOOLKIT_ENABLED ON)
+  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::glfw3 OpenGL::GL)
   message(STATUS "Notebook graphics toolkit will use hardware rendering")
-  target_link_libraries(${EXECUTABLE_NAME} X11::X11 OpenGL::GL)
-elseif()
-  # Use software rendering
+elseif (NOTEBOOK_TOOLKIT_RENDER_TYPE STREQUAL "CPU")
+  pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
+  pkg_check_modules(glfw3 REQUIRED IMPORTED_TARGET glfw3)
+  set(NOTEBOOK_TOOLKIT_ENABLED ON)
+  set(NOTEBOOK_TOOLKIT_CPU ON)
+  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::glfw3 PkgConfig::osmesa)
   message(STATUS "Notebook graphics toolkit will use software rendering")
-  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::osmesa)
-else()
-  message(STATUS "No X11/OpenGL or osmesa found, the notebook graphics toolkit will be disabled")
+else ()
+  message(STATUS "The notebook graphics toolkit will be disabled")
 endif()
+
+configure_file(
+  "${CMAKE_SOURCE_DIR}/config.h.in"
+  "${CMAKE_BINARY_DIR}/config.h"
+)
 
 if (APPLE)
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES

@@ -17,6 +17,5 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#cmakedefine X11_FOUND
-#cmakedefine OPENGL_FOUND
-#cmakedefine osmesa_FOUND
+#cmakedefine NOTEBOOK_TOOLKIT_ENABLED
+#cmakedefine NOTEBOOK_TOOLKIT_CPU

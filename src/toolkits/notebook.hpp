@@ -22,12 +22,11 @@
 
 #include "config.h"
 
-#if ((defined(X11_FOUND) && defined(OPENGL_FOUND)) || defined(osmesa_FOUND))
+#ifdef NOTEBOOK_TOOLKIT_ENABLED
 
-#include <octave/gl-render.h>
+#include <GLFW/glfw3.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
-#include <octave/uint8NDArray.h>
 
 #include <memory>
 #include <mutex>
@@ -42,6 +41,7 @@ namespace xoctave {
 class notebook_graphics_toolkit : public octave::base_graphics_toolkit {
 public:
 	notebook_graphics_toolkit(octave::interpreter &);
+	~notebook_graphics_toolkit();
 
 	bool is_valid() const override { return true; }
 
@@ -53,8 +53,7 @@ public:
 	void finalize(const graphics_object &) override;
 
 private:
-	unsigned char screen[2000 * 2000 * 4];
-
+	GLFWwindow *window = nullptr;
 	octave::interpreter &m_interpreter;
 };
 
