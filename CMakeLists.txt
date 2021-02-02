@@ -114,15 +114,11 @@ find_package(PkgConfig REQUIRED)
 find_package(xeus REQUIRED)
 find_package(xwidgets REQUIRED)
 find_package(xproperty REQUIRED)
+find_package(OpenGL REQUIRED)
 
 # X11 and OpenGL are required for fast native rendering
 find_package(X11)
-find_package(OpenGL)
-
-configure_file(
-  "${CMAKE_SOURCE_DIR}/config.h.in"
-  "${CMAKE_BINARY_DIR}/config.h"
-)
+find_package(Qt5 COMPONENTS Gui)
 
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET octinterp)
 
@@ -147,6 +143,10 @@ set(XEUS_OCTAVE_SRC
     src/toolkits/plotly.hpp
     src/toolkits/notebook.cpp
     src/toolkits/notebook.hpp
+    src/toolkits/renderer.cpp
+    src/toolkits/renderer.hpp
+    src/toolkits/qopengl.hpp
+    src/toolkits/opengl.hpp
     src/toolkits/tex2html.hpp
     src/xoctave/display.cpp
     src/xoctave/display.hpp
@@ -166,17 +166,31 @@ target_link_libraries(${EXECUTABLE_NAME} xeus-static xwidgets-static xproperty p
 target_link_libraries(${EXECUTABLE_NAME} PkgConfig::octinterp)
 target_link_libraries(${EXECUTABLE_NAME} lodepng)
 
-if(X11_FOUND AND OPENGL_FOUND)
+set(NATIVE_RENDERER ON)
+
+if(Qt5Gui_FOUND)
+  message(STATUS "Notebook graphics toolkit will use Qt based rendering")
+  target_link_libraries(${EXECUTABLE_NAME} Qt5::Gui OpenGL::GL)
+  set(NATIVE_RENDERER_QT ON)
+elseif(X11_FOUND)
   # Use hardware rendering
   message(STATUS "Notebook graphics toolkit will use hardware rendering")
   target_link_libraries(${EXECUTABLE_NAME} X11::X11 OpenGL::GL)
+  set(NATIVE_RENDERER_X11 ON)
 elseif()
   # Use software rendering
   message(STATUS "Notebook graphics toolkit will use software rendering")
   target_link_libraries(${EXECUTABLE_NAME} PkgConfig::osmesa)
+  set(NATIVE_RENDERER_OSMESA ON)
 else()
-  message(STATUS "No X11/OpenGL or osmesa found, the notebook graphics toolkit will be disabled")
+  message(STATUS "No X11/OpenGL, osmesa or Qt found, the notebook graphics toolkit will be disabled")
+  set(NATIVE_RENDERER OFF)
 endif()
+
+configure_file(
+  "${CMAKE_SOURCE_DIR}/config.h.in"
+  "${CMAKE_BINARY_DIR}/config.h"
+)
 
 if (APPLE)
     set_target_properties(${EXECUTABLE_NAME} PROPERTIES

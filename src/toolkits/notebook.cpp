@@ -17,15 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
-
-#if ((defined(X11_FOUND) && defined(OPENGL_FOUND)) || defined(osmesa_FOUND))
-
 #include "notebook.hpp"
 
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <GL/osmesa.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/graphics.h>
 #include <octave/interpreter.h>
@@ -36,14 +29,18 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
 #include <iostream>
 #include <mutex>
 #include <nlohmann/json_fwd.hpp>
 #include <ostream>
+#include <thread>
+#include <utility>
 
-#include "xoctave_interpreter.hpp"
+#include "config.h"
 #include "lodepng.h"
 #include "plotstream.hpp"
+#include "xoctave_interpreter.hpp"
 
 using namespace std::chrono;
 using namespace nlohmann;
@@ -52,8 +49,13 @@ using base64 = cppcodec::base64_rfc4648;
 
 namespace xoctave {
 
-notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
-#if defined (X11_FOUND) && defined(OPENGL_FOUND)
+notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"),
+#if defined(Qt5Gui_FOUND)
+																						 t_renderer(std::bind(&notebook_graphics_toolkit::renderer, this)),
+#endif
+																						 m_interpreter(interpreter) {
+#if defined(Qt5Gui_FOUND)
+#elif defined(X11_FOUND)
 	Display* dpy;
 	Window root;
 	GLint attr[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
@@ -87,15 +89,13 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interp
 	osc = OSMesaCreateContext(OSMESA_RGBA, NULL);
 	OSMesaMakeCurrent(osc, screen, GL_UNSIGNED_BYTE, 2000, 2000);
 #endif
-
-	printf("vendor: %s\n", (const char*) glGetString(GL_VENDOR));
 }
 
 bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 	if (go.isa("figure")) {
 		// Set the pixel ratio
 		figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
-		double dpr = 2;
+		double dpr = backend.get_dpr();
 
 #ifndef NDEBUG
 		std::clog << "Device pixel ratio: " << dpr << std::endl;
@@ -138,16 +138,11 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	int width = figurePosition(2) * dpr;
 	int height = figurePosition(3) * dpr;
 
-	octave::opengl_functions m_glfcns;
-	octave::opengl_renderer m_renderer(m_glfcns);
-
-	m_renderer.set_viewport(width, height);
-	m_renderer.set_device_pixel_ratio(dpr);
 #ifndef NDEBUG
 	auto render_start = high_resolution_clock::now();
 #endif
 
-	m_renderer.draw(go);
+	backend.draw(width, height, dpr, go);
 
 #ifndef NDEBUG
 	auto render_stop = high_resolution_clock::now();
@@ -164,7 +159,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	unsigned char* screen = new unsigned char[width * height * 3];
 	unsigned char* flip = new unsigned char[width * height * 3];
 
-	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, screen);
+	backend.get_pixels(width, height, screen);
 
 	for (int i = 0; i < height; i++) {
 		std::memcpy(&flip[(height - i - 1) * width * 3], &screen[i * width * 3], width * 3);
@@ -193,8 +188,8 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 
 	data["image/png"] = base64::encode(out);
 	meta["image/png"] = {
-		{"width", width/dpr},
-		{"height", height/dpr}};
+		{"width", width / dpr},
+		{"height", height / dpr}};
 	tran["display_id"] = id;
 
 	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
@@ -219,5 +214,3 @@ void notebook_graphics_toolkit::update(const graphics_object&, int) {
 }
 
 }  // namespace xoctave
-
-#endif

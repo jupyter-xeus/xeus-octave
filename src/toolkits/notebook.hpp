@@ -20,20 +20,17 @@
 #ifndef NOTEBOOK_TOOLKIT_H
 #define NOTEBOOK_TOOLKIT_H
 
-#include "config.h"
-
-#if ((defined(X11_FOUND) && defined(OPENGL_FOUND)) || defined(osmesa_FOUND))
-
-#include <octave/gl-render.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
-#include <octave/uint8NDArray.h>
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <nlohmann/json.hpp>
+#include <thread>
 
-#include "opengl.hpp"
+#include "renderer.hpp"
+#include "xoctave_interpreter.hpp"
 #include "xwidgets/xtransport.hpp"
 #include "xwidgets/xwidget.hpp"
 
@@ -53,13 +50,11 @@ public:
 	void finalize(const graphics_object &) override;
 
 private:
-	unsigned char screen[2000 * 2000 * 4];
+	renderer &backend = renderer::get();
 
 	octave::interpreter &m_interpreter;
 };
 
 }  // namespace xoctave
-
-#endif
 
 #endif

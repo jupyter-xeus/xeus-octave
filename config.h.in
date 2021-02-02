@@ -17,6 +17,7 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#cmakedefine X11_FOUND
-#cmakedefine OPENGL_FOUND
-#cmakedefine osmesa_FOUND
+#cmakedefine NATIVE_RENDERER
+#cmakedefine NATIVE_RENDERER_X11
+#cmakedefine NATIVE_RENDERER_OSMESA
+#cmakedefine NATIVE_RENDERER_QT

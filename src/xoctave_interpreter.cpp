@@ -160,7 +160,7 @@ void xoctave_interpreter::configure_impl() {
 	interpreter.get_output_system().page_screen_output(true);
 
 	// Register the graphics toolkits
-#if ((defined(X11_FOUND) && defined(OPENGL_FOUND)) || defined(osmesa_FOUND))
+#ifdef NATIVE_RENDERER
 	interpreter.get_gtk_manager().register_toolkit("notebook");
 	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::notebook_graphics_toolkit(interpreter)));
 #endif
@@ -168,7 +168,7 @@ void xoctave_interpreter::configure_impl() {
 	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::plotly_graphics_toolkit(interpreter)));
 
 	octave::feval("graphics_toolkit", ovl("fltk"));
-#if ((defined(X11_FOUND) && defined(OPENGL_FOUND)) || defined(osmesa_FOUND))
+#ifdef NATIVE_RENDERER
 	octave::feval("graphics_toolkit", ovl("notebook"));
 #else
 	octave::feval("graphics_toolkit", ovl("plotly"));
