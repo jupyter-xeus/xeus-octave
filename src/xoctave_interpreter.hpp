@@ -65,7 +65,8 @@ public:
 	void do_print_output(bool drawnow = true);
 
 private:
-	std::string get_symbol(const std::string code, int cursor_pos) const;
+	std::string get_symbol(const std::string &code, int cursor_pos) const;
+	json get_help_for_symbol(const std::string &symbol);
 
 	std::stringstream buf_stdout, buf_stderr;
 	input input_handler;

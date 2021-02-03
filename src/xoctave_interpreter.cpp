@@ -48,11 +48,11 @@
 #include <vector>
 
 #include "config.h"
+#include "input.hpp"
 #include "toolkits/notebook.hpp"
 #include "toolkits/plotly.hpp"
 #include "xeus/xinterpreter.hpp"
 #include "xoctave/display.hpp"
-#include "input.hpp"
 
 namespace nl = nlohmann;
 
@@ -82,7 +82,7 @@ void xoctave_interpreter::do_print_output(bool drawnow) {
 		octave::feval("drawnow");
 }
 
-nl::json xoctave_interpreter::execute_request_impl(int /*execution_counter*/,
+nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 												   const std::string& code,
 												   bool /*silent*/,
 												   bool /*store_history*/,
@@ -93,55 +93,72 @@ nl::json xoctave_interpreter::execute_request_impl(int /*execution_counter*/,
 	std::string error;
 	nl::json result;
 
-	parser str_parser(new lexer(code, interpreter));
+	// Extract magic ?
+	std::string trim = code;
+	trim.erase(trim.find_last_not_of(" \n\r\t") + 1);
+	if (trim.length() && trim[trim.length() - 1] == '?') {
+		// User asked for function help
+		trim.pop_back();
+		auto data = get_help_for_symbol(trim);
 
-	// Clear current figure
-	root_figure::properties& root_figure = dynamic_cast<root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
-	root_figure.set_currentfigure(octave_value(NAN));
+		if (data.is_null()) {
+			result["status"] = "error";
 
-	do {
-		try {
-			str_parser.reset();
-			exit_status = str_parser.run();
-
-			if (exit_status == 0) {
-				auto stmt_list = str_parser.statement_list();
-
-				if (stmt_list) {
-					interpreter.get_evaluator().eval(stmt_list, false);
-					do_print_output();
-				} else if (str_parser.at_end_of_input()) {
-					exit_status = EOF;
-					break;
-				}
-			}
-		} catch (const interrupt_exception&) {
-			interpreter.recover_from_exception();
-			do_print_output();
-			publish_execution_error("Interrupt exception", "Kernel was interrupted", std::vector<std::string>());
-			result["status"] = "error";
-		} catch (const index_exception& e) {
-			error = e.message();
-			error += "\n" + e.stack_trace();
-			interpreter.recover_from_exception();
-			do_print_output(false);
-			publish_execution_error("Index exception", error, std::vector<std::string>());
-			result["status"] = "error";
-		} catch (const execution_exception& ee) {
-			error = ee.message();
-			error += "\n" + ee.stack_trace();
-			interpreter.get_error_system().save_exception(ee);
-			interpreter.recover_from_exception();
-			do_print_output(false);
-			publish_execution_error("Execution exception", error, std::vector<std::string>());
-			result["status"] = "error";
-		} catch (const std::bad_alloc&) {
-			interpreter.recover_from_exception();
-			do_print_output(false);
-			publish_execution_error("Out of memory", "Trying to return to prompt", std::vector<std::string>());
-			result["status"] = "error";
+			publish_execution_error("Execution exception", "help: '" + trim + "' not found\n", std::vector<std::string>());
+		} else {
+			publish_execution_result(execution_counter, data, json::object());
 		}
-	} while (exit_status == 0);
+	} else {
+		parser str_parser(new lexer(code, interpreter));
+
+		// Clear current figure
+		root_figure::properties& root_figure = dynamic_cast<root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
+		root_figure.set_currentfigure(octave_value(NAN));
+
+		do {
+			try {
+				str_parser.reset();
+				exit_status = str_parser.run();
+
+				if (exit_status == 0) {
+					auto stmt_list = str_parser.statement_list();
+
+					if (stmt_list) {
+						interpreter.get_evaluator().eval(stmt_list, false);
+						do_print_output();
+					} else if (str_parser.at_end_of_input()) {
+						exit_status = EOF;
+						break;
+					}
+				}
+			} catch (const interrupt_exception&) {
+				interpreter.recover_from_exception();
+				do_print_output();
+				publish_execution_error("Interrupt exception", "Kernel was interrupted", std::vector<std::string>());
+				result["status"] = "error";
+			} catch (const index_exception& e) {
+				error = e.message();
+				error += "\n" + e.stack_trace();
+				interpreter.recover_from_exception();
+				do_print_output(false);
+				publish_execution_error("Index exception", error, std::vector<std::string>());
+				result["status"] = "error";
+			} catch (const execution_exception& ee) {
+				error = ee.message();
+				error += "\n" + ee.stack_trace();
+				interpreter.get_error_system().save_exception(ee);
+				interpreter.recover_from_exception();
+				do_print_output(false);
+				publish_execution_error("Execution exception", error, std::vector<std::string>());
+				result["status"] = "error";
+			} catch (const std::bad_alloc&) {
+				interpreter.recover_from_exception();
+				do_print_output(false);
+				publish_execution_error("Out of memory", "Trying to return to prompt", std::vector<std::string>());
+				result["status"] = "error";
+			}
+		} while (exit_status == 0);
+	}
 
 	return result;
 }
@@ -241,28 +258,13 @@ nl::json xoctave_interpreter::inspect_request_impl(const std::string& code,
 	std::clog << "Inspect: " << function << std::endl;
 #endif
 
-	try {
-		std::string htext;
-		std::string format;
+	auto data = get_help_for_symbol(function);
 
-		interpreter.get_help_system().get_help_text(function, htext, format);
-
-		result["found"] = true;
-
-		if (format == "texinfo") {
-			octave_value_list help = octave::feval("__makeinfo__", ovl(htext, "html"), 1);
-
-			result["data"]["text/html"] = std::regex_replace(help(0).string_value(), std::regex("<title>.*</title>"), "");
-			result["data"]["application/x-texinfo"] = htext;
-		} else if (format == "plain text") {
-			result["data"]["text/plain"] = htext;
-		} else if (format == "html") {
-			result["data"]["text/html"] = htext;
-		} else {
-			result["found"] = false;
-		}
-	} catch (...) {
+	if (data.is_null())
 		result["found"] = false;
+	else {
+		result["found"] = true;
+		result["data"] = data;
 	}
 
 	result["status"] = "ok";
@@ -302,7 +304,7 @@ void xoctave_interpreter::shutdown_request_impl() {
 #endif
 }
 
-std::string xoctave_interpreter::get_symbol(const std::string code, int cursor_pos) const {
+std::string xoctave_interpreter::get_symbol(const std::string& code, int cursor_pos) const {
 	if (cursor_pos == (int) code.size())
 		cursor_pos = (int) code.size() - 1;
 
@@ -323,6 +325,41 @@ std::string xoctave_interpreter::get_symbol(const std::string code, int cursor_p
 	}
 
 	return code.substr(cursor_pos, end_pos - cursor_pos);
+}
+
+json xoctave_interpreter::get_help_for_symbol(const std::string& symbol) {
+	json result;
+
+	try {
+		std::string htext;
+		std::string format;
+
+		interpreter.get_help_system().get_help_text(symbol, htext, format);
+
+		if (format == "texinfo") {
+			octave_value_list help = octave::feval("__makeinfo__", ovl(htext, "html"), 1);
+			std::string value = help(0).string_value();
+			std::smatch match;
+			std::regex_search(value, match, std::regex("<body.*>([^]*)</body>"));
+			std::string text = match[1];
+			// Jupyter style fixes
+			text = std::regex_replace(text, std::regex("<dd(.*?)>"), "<dd $1 style='float:unset;width:unset;font-weight:unset;margin-left:40px'>");
+			text = std::regex_replace(text, std::regex("<dt(.*?)>"), "<dt $1 style='float:unset;width:unset;margin-left:0px;'>");
+			result["text/html"] = text;
+			result["application/x-texinfo"] = htext;
+		} else if (format == "plain text") {
+			result["text/plain"] = htext;
+		} else if (format == "html") {
+			result["text/html"] = htext;
+		} else {
+			result = nullptr;
+		}
+	} catch (...) {
+		std::clog << "Cannot get help for symbol " << symbol << std::endl;
+		result = nullptr;
+	}
+
+	return result;
 }
 
 }  // namespace xoctave
