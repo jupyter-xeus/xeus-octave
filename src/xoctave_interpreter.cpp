@@ -63,7 +63,8 @@ namespace xoctave {
 void xoctave_interpreter::do_print_output(bool drawnow) {
 	// Print output if necessary
 	if (!buf_stderr.str().empty()) {
-		publish_stream("stderr", buf_stderr.str());
+		if (!m_silent)
+			publish_stream("stderr", buf_stderr.str());
 
 		// Clear stream
 		buf_stderr.str("");
@@ -71,27 +72,43 @@ void xoctave_interpreter::do_print_output(bool drawnow) {
 	}
 
 	if (!buf_stdout.str().empty()) {
-		publish_stream("stdout", buf_stdout.str());
+		if (!m_silent)
+			publish_stream("stdout", buf_stdout.str());
 
 		// Clear stream
 		buf_stdout.str("");
 		buf_stdout.clear();
 	}
 
-	if (drawnow)
+	if (drawnow && !m_silent)
 		octave::feval("drawnow");
+}
+
+void xoctave_interpreter::do_display_data(json data, json metadata, json transient) {
+	if (!m_silent)
+		display_data(data, metadata, transient);
+}
+
+void xoctave_interpreter::do_update_display_data(json data, json metadata, json transient) {
+	if (!m_silent)
+		update_display_data(data, metadata, transient);
 }
 
 nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 												   const std::string& code,
-												   bool /*silent*/,
+												   bool silent,
 												   bool /*store_history*/,
 												   nl::json /*user_expressions*/,
-												   bool /*allow_stdin*/) {
+												   bool allow_stdin) {
 	int exit_status = 0;
 	std::string line;
 	std::string error;
 	nl::json result;
+
+	m_silent = silent;
+	m_allow_stdin = allow_stdin;
+
+	result["status"] = "ok";
 
 	// Extract magic ?
 	std::string trim = code;

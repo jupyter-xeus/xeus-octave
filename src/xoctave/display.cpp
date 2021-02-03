@@ -51,7 +51,7 @@ octave_value_list display_data(const octave_value_list& args, int /*nargout*/) {
 	if (args.length() > 3)
 		metadata[type] = nlohmann::json::parse(args(3).xstring_value("METADATA must be a json string"));
 
-	dynamic_cast<xoctave::xoctave_interpreter&>(xeus::get_interpreter()).display_data(d, metadata, json::object());
+	dynamic_cast<xoctave::xoctave_interpreter&>(xeus::get_interpreter()).do_display_data(d, metadata);
 
 	return ovl();
 }

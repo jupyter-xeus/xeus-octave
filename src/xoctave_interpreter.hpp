@@ -63,6 +63,8 @@ private:
 
 public:
 	void do_print_output(bool drawnow = true);
+	void do_display_data(json data, json metadata = json::object(), json transient = json::object());
+	void do_update_display_data(json data, json metadata = json::object(), json transient = json::object());
 
 private:
 	std::string get_symbol(const std::string &code, int cursor_pos) const;
@@ -70,6 +72,8 @@ private:
 
 	std::stringstream buf_stdout, buf_stderr;
 	input input_handler;
+
+	bool m_silent, m_allow_stdin;
 };
 
 }  // namespace xoctave

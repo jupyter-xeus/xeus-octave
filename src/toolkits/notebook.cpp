@@ -205,7 +205,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 		{"height", height / dpr}};
 	tran["display_id"] = id;
 
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
+	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).do_update_display_data(data, meta, tran);
 
 #ifndef NDEBUG
 	auto send_stop = high_resolution_clock::now();
