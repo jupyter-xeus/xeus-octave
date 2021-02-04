@@ -35,6 +35,8 @@ using xeus::xinterpreter;
 namespace xoctave {
 
 class xoctave_interpreter : public xinterpreter {
+	friend input;
+
 private:
 	octave::interpreter interpreter;
 
@@ -63,12 +65,18 @@ private:
 
 public:
 	void do_print_output(bool drawnow = true);
-	void do_display_data(json data, json metadata = json::object(), json transient = json::object());
-	void do_update_display_data(json data, json metadata = json::object(), json transient = json::object());
+
+	void publish_stream(const std::string& name, const std::string& text);
+	void display_data(json data, json metadata = json::object(), json transient = json::object());
+	void update_display_data(json data, json metadata = json::object(), json transient = json::object());
+	void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
+	void publish_execution_error(const std::string& ename,
+								 const std::string& evalue,
+								 const std::vector<std::string>& trace_back);
 
 private:
-	std::string get_symbol(const std::string &code, int cursor_pos) const;
-	json get_help_for_symbol(const std::string &symbol);
+	std::string get_symbol(const std::string& code, int cursor_pos) const;
+	json get_help_for_symbol(const std::string& symbol);
 
 	std::stringstream buf_stdout, buf_stderr;
 	input input_handler;

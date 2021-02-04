@@ -63,8 +63,7 @@ namespace xoctave {
 void xoctave_interpreter::do_print_output(bool drawnow) {
 	// Print output if necessary
 	if (!buf_stderr.str().empty()) {
-		if (!m_silent)
-			publish_stream("stderr", buf_stderr.str());
+		publish_stream("stderr", buf_stderr.str());
 
 		// Clear stream
 		buf_stderr.str("");
@@ -72,26 +71,42 @@ void xoctave_interpreter::do_print_output(bool drawnow) {
 	}
 
 	if (!buf_stdout.str().empty()) {
-		if (!m_silent)
-			publish_stream("stdout", buf_stdout.str());
+		publish_stream("stdout", buf_stdout.str());
 
 		// Clear stream
 		buf_stdout.str("");
 		buf_stdout.clear();
 	}
 
-	if (drawnow && !m_silent)
+	if (drawnow)
 		octave::feval("drawnow");
 }
 
-void xoctave_interpreter::do_display_data(json data, json metadata, json transient) {
+void xoctave_interpreter::publish_stream(const std::string& name, const std::string& text) {
 	if (!m_silent)
-		display_data(data, metadata, transient);
+		xinterpreter::publish_stream(name, text);
 }
 
-void xoctave_interpreter::do_update_display_data(json data, json metadata, json transient) {
+void xoctave_interpreter::display_data(json data, json metadata, json transient) {
 	if (!m_silent)
-		update_display_data(data, metadata, transient);
+		xinterpreter::display_data(data, metadata, transient);
+}
+
+void xoctave_interpreter::update_display_data(json data, json metadata, json transient) {
+	if (!m_silent)
+		xinterpreter::update_display_data(data, metadata, transient);
+}
+
+void xoctave_interpreter::publish_execution_result(int execution_count, nl::json data, nl::json metadata) {
+	if (!m_silent)
+		xinterpreter::publish_execution_result(execution_count, data, metadata);
+}
+
+void xoctave_interpreter::publish_execution_error(const std::string& ename,
+												  const std::string& evalue,
+												  const std::vector<std::string>& trace_back) {
+	if (!m_silent)
+		xinterpreter::publish_execution_error(ename, evalue, trace_back);
 }
 
 nl::json xoctave_interpreter::execute_request_impl(int execution_counter,

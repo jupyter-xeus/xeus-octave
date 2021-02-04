@@ -63,17 +63,23 @@ void input::reset_command_editor() {
 }
 
 std::string input::do_readline(const std::string& prompt, bool&) {
-	// Print any output if needed
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).do_print_output();
+	auto& interpreter = dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter());
 
-	// Perform the read request
-	auto input = xeus::blocking_input_request(prompt, false);
+	if (interpreter.m_allow_stdin) {
+		// Print any output if needed
+		interpreter.do_print_output();
 
-	// Print newline
-	std::cout << std::endl;
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).do_print_output();
+		// Perform the read request
+		auto input = xeus::blocking_input_request(prompt, false);
 
-	return input;
+		// Print newline
+		std::cout << std::endl;
+		interpreter.do_print_output();
+
+		return input;
+	}
+
+	throw std::runtime_error("This frontend does not support input requests");
 }
 
 }  // namespace xoctave
