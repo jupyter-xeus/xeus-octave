@@ -39,7 +39,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cppcodec/base64_rfc4648.hpp>
 #include <csetjmp>
 #include <cstdint>
 #include <cstdlib>
@@ -48,14 +47,14 @@
 #include <mutex>
 #include <nlohmann/json_fwd.hpp>
 #include <ostream>
+#include <string>
 
 #include "plotstream.hpp"
 #include "xoctave_interpreter.hpp"
+#include "xtl/xbase64.hpp"
 
 using namespace std::chrono;
 using namespace nlohmann;
-
-using base64 = cppcodec::base64_rfc4648;
 
 namespace xoctave {
 
@@ -172,7 +171,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	auto encode_start = high_resolution_clock::now();
 #endif
 
-	std::vector<unsigned char> out;
+	std::string out;
 	png_structp p = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 	png_infop i = png_create_info_struct(p);
 
@@ -187,7 +186,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 
 	png_set_write_fn(
 		p, &out, [](png_structp p, png_bytep d, png_size_t l) {
-			std::vector<unsigned char>* out = static_cast<std::vector<unsigned char>*>(png_get_io_ptr(p));
+			std::string* out = static_cast<std::string*>(png_get_io_ptr(p));
 			out->insert(out->end(), d, d + l);
 		},
 		nullptr);
@@ -207,7 +206,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 
 	json data, meta, tran;
 
-	data["image/png"] = base64::encode(out);
+	data["image/png"] = xtl::base64encode(out);
 	meta["image/png"] = {
 		{"width", width / dpr},
 		{"height", height / dpr}};
