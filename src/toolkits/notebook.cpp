@@ -35,10 +35,12 @@
 #include <octave/graphics.h>
 #include <octave/interpreter.h>
 #include <octave/ov.h>
+#include <png.h>
 
 #include <algorithm>
 #include <chrono>
 #include <cppcodec/base64_rfc4648.hpp>
+#include <csetjmp>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -47,7 +49,6 @@
 #include <nlohmann/json_fwd.hpp>
 #include <ostream>
 
-#include "lodepng.h"
 #include "plotstream.hpp"
 #include "xoctave_interpreter.hpp"
 
@@ -59,7 +60,7 @@ using base64 = cppcodec::base64_rfc4648;
 namespace xoctave {
 
 notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
-    glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
+	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
 	if (!glfwInit()) {
 		std::clog << "Cannot initialize GLFW" << std::endl;
@@ -158,14 +159,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	std::clog << "Render time: " << render_duration.count() << std::endl;
 #endif
 
-#ifndef NDEBUG
-	auto copy_start = high_resolution_clock::now();
-#endif
-
-	std::vector<unsigned char> out;
-
 	unsigned char* screen;
-	unsigned char* flip = new unsigned char[width * height * 3];
 
 #ifdef NOTEBOOK_TOOLKIT_CPU
 	glfwGetOSMesaColorBuffer(window, &width, &height, NULL, (void**) &screen);
@@ -174,20 +168,34 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, screen);
 #endif
 
-	for (int i = 0; i < height; i++) {
-		std::memcpy(&flip[(height - i - 1) * width * 3], &screen[i * width * 3], width * 3);
-	}
-#ifndef NDEBUG
-	auto copy_stop = high_resolution_clock::now();
-	auto copy_duration = duration_cast<microseconds>(copy_stop - copy_start);
-	std::clog << "Copy time: " << copy_duration.count() << std::endl;
-#endif
-
 #ifndef NDEBUG
 	auto encode_start = high_resolution_clock::now();
 #endif
 
-	lodepng::encode(out, flip, width, height, LCT_RGB);
+	std::vector<unsigned char> out;
+	png_structp p = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+	png_infop i = png_create_info_struct(p);
+
+	setjmp(png_jmpbuf(p));
+
+	png_set_IHDR(p, i, width, height, 8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+	std::vector<unsigned char*> rows(height);
+	for (int y = 0; y < height; y++)
+		rows[height - 1 - y] = screen + y * width * 3;
+	png_set_rows(p, i, &rows[0]);
+
+	png_set_write_fn(
+		p, &out, [](png_structp p, png_bytep d, png_size_t l) {
+			std::vector<unsigned char>* out = static_cast<std::vector<unsigned char>*>(png_get_io_ptr(p));
+			out->insert(out->end(), d, d + l);
+		},
+		nullptr);
+
+	png_write_png(p, i, PNG_TRANSFORM_IDENTITY, NULL);
+
+	png_destroy_write_struct(&p, &i);
+
 #ifndef NDEBUG
 	auto encode_stop = high_resolution_clock::now();
 	auto encode_duration = duration_cast<microseconds>(encode_stop - encode_start);
@@ -216,7 +224,6 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 #ifndef NOTEBOOK_TOOLKIT_CPU
 	delete[] screen;
 #endif
-	delete[] flip;
 
 #ifndef NDEBUG
 	auto stop = high_resolution_clock::now();

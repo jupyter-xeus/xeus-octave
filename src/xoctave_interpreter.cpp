@@ -61,6 +61,9 @@ using namespace octave;
 namespace xoctave {
 
 void xoctave_interpreter::do_print_output(bool drawnow) {
+	bool draw = drawnow && (buf_stderr.str().length() ||
+							buf_stdout.str().length());
+
 	// Print output if necessary
 	if (!buf_stderr.str().empty()) {
 		publish_stream("stderr", buf_stderr.str());
@@ -78,7 +81,7 @@ void xoctave_interpreter::do_print_output(bool drawnow) {
 		buf_stdout.clear();
 	}
 
-	if (drawnow)
+	if (draw)
 		octave::feval("drawnow");
 }
 
@@ -191,6 +194,9 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 			}
 		} while (exit_status == 0);
 	}
+
+	// Update the figure if present
+	octave::feval("drawnow");
 
 	return result;
 }

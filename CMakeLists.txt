@@ -64,12 +64,6 @@ FetchContent_Declare(
   GIT_TAG        f21198f5934c90b034afee9b36c47b0e7b456c6b
 )
 
-FetchContent_Declare(
-  lodepng
-  GIT_REPOSITORY https://github.com/lvandeve/lodepng.git
-  GIT_TAG        7fdcc96a5e5864eee72911c3ca79b1d9f0d12292
-)
-
 macro(FetchContent_MakeAvailableCustom content)
   FetchContent_GetProperties(${content})
   if(NOT ${content}_POPULATED)
@@ -98,15 +92,6 @@ FetchContent_MakeAvailableCustom(xproperty)
 set(XWIDGETS_BUILD_SHARED_LIBS OFF)
 FetchContent_MakeAvailableCustom(xwidgets)
 
-# lodepng: manual loading
-FetchContent_GetProperties(lodepng)
-if(NOT lodepng_POPULATED)
-  FetchContent_Populate(lodepng)
-
-  add_library(lodepng STATIC ${lodepng_SOURCE_DIR}/lodepng.cpp  ${lodepng_SOURCE_DIR}/lodepng.h)
-  target_include_directories(lodepng PUBLIC $<BUILD_INTERFACE:${lodepng_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
-endif()
-
 ################################################################################
 # FIND OCTAVE
 ################################################################################
@@ -114,6 +99,7 @@ find_package(PkgConfig REQUIRED)
 find_package(xeus REQUIRED)
 find_package(xwidgets REQUIRED)
 find_package(xproperty REQUIRED)
+find_package(PNG REQUIRED)
 
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET octinterp)
 
@@ -154,7 +140,7 @@ target_compile_definitions(${EXECUTABLE_NAME} PRIVATE XOCTAVE_OVERRIDE_PATH="${C
 
 target_link_libraries(${EXECUTABLE_NAME} xeus-static xwidgets-static xproperty pthread)
 target_link_libraries(${EXECUTABLE_NAME} PkgConfig::octinterp)
-target_link_libraries(${EXECUTABLE_NAME} lodepng)
+target_link_libraries(${EXECUTABLE_NAME} PNG::PNG)
 
 if (NOTEBOOK_TOOLKIT_RENDER_TYPE STREQUAL "GPU")
   find_package(OpenGL REQUIRED)
