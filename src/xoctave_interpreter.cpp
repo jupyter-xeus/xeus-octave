@@ -24,6 +24,7 @@
 #include <octave/graphics-handle.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/graphics.h>
+#include <octave/interpreter.h>
 #include <octave/lo-array-errwarn.h>
 #include <octave/oct-stream.h>
 #include <octave/ov.h>
@@ -184,12 +185,14 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 	}
 
 	// Update the figure if present
-	octave::feval("drawnow");
+	interpreter.feval("drawnow");
 
 	return result;
 }
 
 void xoctave_interpreter::configure_impl() {
+	octave::install_signal_handlers();
+
 	interpreter.read_init_files(true);
 
 	interpreter.execute();
