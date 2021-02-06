@@ -48,7 +48,7 @@
 #include <vector>
 
 #include "config.h"
-#include "input.hpp"
+#include "io.hpp"
 #include "toolkits/notebook.hpp"
 #include "toolkits/plotly.hpp"
 #include "xeus/xinterpreter.hpp"
@@ -59,31 +59,6 @@ namespace nl = nlohmann;
 using namespace octave;
 
 namespace xoctave {
-
-void xoctave_interpreter::do_print_output(bool drawnow) {
-	bool draw = drawnow && (buf_stderr.str().length() ||
-							buf_stdout.str().length());
-
-	// Print output if necessary
-	if (!buf_stderr.str().empty()) {
-		publish_stream("stderr", buf_stderr.str());
-
-		// Clear stream
-		buf_stderr.str("");
-		buf_stderr.clear();
-	}
-
-	if (!buf_stdout.str().empty()) {
-		publish_stream("stdout", buf_stdout.str());
-
-		// Clear stream
-		buf_stdout.str("");
-		buf_stdout.clear();
-	}
-
-	if (draw)
-		octave::feval("drawnow");
-}
 
 void xoctave_interpreter::publish_stream(const std::string& name, const std::string& text) {
 	if (!m_silent)
@@ -110,6 +85,24 @@ void xoctave_interpreter::publish_execution_error(const std::string& ename,
 												  const std::vector<std::string>& trace_back) {
 	if (!m_silent)
 		xinterpreter::publish_execution_error(ename, evalue, trace_back);
+}
+
+std::string xoctave_interpreter::blocking_input_request(const std::string& prompt, bool password) {
+	if (m_allow_stdin) {
+		// Register the input handler
+		std::string value;
+		register_input_handler([&value](const std::string& v) { value = v; });
+
+		// Send the input request
+		input_request(prompt, password);
+
+		// Remove input handler
+		register_input_handler(nullptr);
+
+		return value;
+	}
+
+	throw std::runtime_error("This frontend does not support input requests");
 }
 
 nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
@@ -160,7 +153,6 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 
 					if (stmt_list) {
 						interpreter.get_evaluator().eval(stmt_list, false);
-						do_print_output();
 					} else if (str_parser.at_end_of_input()) {
 						exit_status = EOF;
 						break;
@@ -168,14 +160,12 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 				}
 			} catch (const interrupt_exception&) {
 				interpreter.recover_from_exception();
-				do_print_output();
 				publish_execution_error("Interrupt exception", "Kernel was interrupted", std::vector<std::string>());
 				result["status"] = "error";
 			} catch (const index_exception& e) {
 				error = e.message();
 				error += "\n" + e.stack_trace();
 				interpreter.recover_from_exception();
-				do_print_output(false);
 				publish_execution_error("Index exception", error, std::vector<std::string>());
 				result["status"] = "error";
 			} catch (const execution_exception& ee) {
@@ -183,12 +173,10 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 				error += "\n" + ee.stack_trace();
 				interpreter.get_error_system().save_exception(ee);
 				interpreter.recover_from_exception();
-				do_print_output(false);
 				publish_execution_error("Execution exception", error, std::vector<std::string>());
 				result["status"] = "error";
 			} catch (const std::bad_alloc&) {
 				interpreter.recover_from_exception();
-				do_print_output(false);
 				publish_execution_error("Out of memory", "Trying to return to prompt", std::vector<std::string>());
 				result["status"] = "error";
 			}
@@ -229,8 +217,10 @@ void xoctave_interpreter::configure_impl() {
 	octave::feval("graphics_toolkit", ovl("plotly"));
 #endif
 
-	// Override the default input system
-	input::set_command_editor(input_handler);
+	// Override the default io system
+	input::override(m_stdin);
+	output::override(std::cout, m_stdout);
+	output::override(std::cerr, m_stderr);
 
 	// Create the xoctave package
 	auto xoctave_package = interpreter.get_cdef_manager().make_package("xoctave");
@@ -240,10 +230,6 @@ void xoctave_interpreter::configure_impl() {
 
 	// Register the xoctave package
 	interpreter.get_cdef_manager().register_package(xoctave_package);
-
-	// Redirect output to string
-	std::cout.rdbuf(buf_stdout.rdbuf());
-	std::cerr.rdbuf(buf_stderr.rdbuf());
 }
 
 nl::json xoctave_interpreter::complete_request_impl(const std::string& code,
@@ -333,8 +319,11 @@ nl::json xoctave_interpreter::kernel_info_request_impl() {
 }
 
 void xoctave_interpreter::shutdown_request_impl() {
-	// Recover the old input system before shutting down the interpreter
-	input::reset_command_editor();
+	// Recover the old io system before shutting down the interpreter
+	input::restore();
+	output::restore(std::cout, m_stdout);
+	output::restore(std::cerr, m_stderr);
+
 	interpreter.shutdown();
 
 #ifndef NDEBUG

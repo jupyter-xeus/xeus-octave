@@ -23,11 +23,12 @@
 #include <octave/interpreter.h>
 #include <octave/oct-stream.h>
 
+#include <functional>
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <xeus/xinterpreter.hpp>
 
-#include "input.hpp"
+#include "io.hpp"
 
 using nlohmann::json;
 using xeus::xinterpreter;
@@ -35,8 +36,6 @@ using xeus::xinterpreter;
 namespace xoctave {
 
 class xoctave_interpreter : public xinterpreter {
-	friend input;
-
 private:
 	octave::interpreter interpreter;
 
@@ -64,8 +63,6 @@ private:
 	void shutdown_request_impl() override;
 
 public:
-	void do_print_output(bool drawnow = true);
-
 	void publish_stream(const std::string& name, const std::string& text);
 	void display_data(json data, json metadata = json::object(), json transient = json::object());
 	void update_display_data(json data, json metadata = json::object(), json transient = json::object());
@@ -73,13 +70,15 @@ public:
 	void publish_execution_error(const std::string& ename,
 								 const std::string& evalue,
 								 const std::vector<std::string>& trace_back);
+	std::string blocking_input_request(const std::string& prompt, bool password);
 
 private:
 	std::string get_symbol(const std::string& code, int cursor_pos) const;
 	json get_help_for_symbol(const std::string& symbol);
 
-	std::stringstream buf_stdout, buf_stderr;
-	input input_handler;
+	output m_stdout{std::bind(&xoctave_interpreter::publish_stream, this, "stdout", std::placeholders::_1)};
+	output m_stderr{std::bind(&xoctave_interpreter::publish_stream, this, "stderr", std::placeholders::_1)};
+	input m_stdin{std::bind(&xoctave_interpreter::blocking_input_request, this, std::placeholders::_1, false)};
 
 	bool m_silent, m_allow_stdin;
 };

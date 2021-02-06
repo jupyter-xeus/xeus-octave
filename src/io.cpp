@@ -17,7 +17,7 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "input.hpp"
+#include "io.hpp"
 
 #include <iostream>
 
@@ -55,31 +55,59 @@ void _reset_command_editor();
 
 }  // namespace
 
-void input::set_command_editor(octave::command_editor& n) {
+void input::override(input& n) {
 	_set_command_editor(n);
 }
-void input::reset_command_editor() {
+
+void input::restore() {
 	_reset_command_editor();
 }
 
+input::input(std::function<std::string(const std::string&)> callback) : m_callback(std::move(callback)) {}
+
 std::string input::do_readline(const std::string& prompt, bool&) {
-	auto& interpreter = dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter());
+	return m_callback(prompt);
+}
 
-	if (interpreter.m_allow_stdin) {
-		// Print any output if needed
-		interpreter.do_print_output();
+void output::override(std::ostream& stream, output& buf) {
+	// Backup previous buffer
+	buf.p_oldbuf = stream.rdbuf();
 
-		// Perform the read request
-		auto input = xeus::blocking_input_request(prompt, false);
+	stream.rdbuf(&buf);
+}
 
-		// Print newline
-		std::cout << std::endl;
-		interpreter.do_print_output();
+void output::restore(std::ostream& stream, output& buf) {
+	stream.rdbuf(buf.p_oldbuf);
+}
 
-		return input;
+output::output(std::function<void(const std::string&)> callback)
+	: m_callback(std::move(callback)) {
+}
+
+output::int_type output::overflow(output::int_type c) {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	// Called for each output character.
+	if (!traits_type::eq_int_type(c, traits_type::eof())) {
+		m_output.push_back(traits_type::to_char_type(c));
 	}
+	return c;
+}
 
-	throw std::runtime_error("This frontend does not support input requests");
+std::streamsize output::xsputn(const char* s, std::streamsize count) {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	// Called for a string of characters.
+	m_output.append(s, count);
+	return count;
+}
+
+output::int_type output::sync() {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	// Called in case of flush.
+	if (!m_output.empty()) {
+		m_callback(m_output);
+		m_output.clear();
+	}
+	return 0;
 }
 
 }  // namespace xoctave

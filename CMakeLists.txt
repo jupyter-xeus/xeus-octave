@@ -117,8 +117,8 @@ configure_file(
 set(XEUS_OCTAVE_SRC
     src/xoctave_interpreter.cpp
     src/xoctave_interpreter.hpp
-    src/input.cpp
-    src/input.hpp
+    src/io.cpp
+    src/io.hpp
     src/toolkits/plotly.cpp
     src/toolkits/plotly.hpp
     src/toolkits/notebook.cpp
