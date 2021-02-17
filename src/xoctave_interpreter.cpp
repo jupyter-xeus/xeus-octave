@@ -225,14 +225,8 @@ void xoctave_interpreter::configure_impl() {
 	output::override(std::cout, m_stdout);
 	output::override(std::cerr, m_stderr);
 
-	// Create the xoctave package
-	auto xoctave_package = interpreter.get_cdef_manager().make_package("xoctave");
-
-	// Register subpackages and classes
-	xoctave::display::register_all(xoctave_package, interpreter);
-
-	// Register the xoctave package
-	interpreter.get_cdef_manager().register_package(xoctave_package);
+	// Register embedded functions
+	xoctave::display::register_all(interpreter);
 }
 
 nl::json xoctave_interpreter::complete_request_impl(const std::string& code,

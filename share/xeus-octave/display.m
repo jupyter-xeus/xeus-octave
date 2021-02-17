@@ -78,7 +78,7 @@ function display(varargin)
 					try
 						displayjson(name, value);
 					catch
-						warning("displayjson function not present")
+						warning("jsonencode function not present")
 						displaytext(name, value);
 					end
 				otherwise
@@ -90,11 +90,11 @@ function display(varargin)
 end
 
 function displaymatrixhtml (name, value, fmt)
-	xoctave.display_data("text/html", xoctave.matrix_to_html(name, value, fmt));
+	display_data("text/html", __matrix_to_html__(name, value, fmt));
 end
 
 function displaymatrixlatex (name, value, fmt)
-	xoctave.display_data("text/latex", xoctave.matrix_to_latex(name, value, fmt));
+	display_data("text/latex", __matrix_to_latex__(name, value, fmt));
 end
 
 function displayscalarlatex (name, value)
@@ -102,17 +102,17 @@ function displayscalarlatex (name, value)
 	x = [ x num2str(value) ];
 	x = [ x "$$" ];
 
-	xoctave.display_data("text/latex", x);
+	display_data("text/latex", x);
 end
 
 function displayjson (name, value)
 	metadata.root = name;
 
-	xoctave.display_data("application/json", jsonencode(value), true, jsonencode(metadata));
+	display_data("application/json", jsonencode(value), true, jsonencode(metadata));
 end
 
 function displaytext (name, value)
-	xoctave.display_data("text/plain", [name, " = ", disp(value)]);
+	display_data("text/plain", [name, " = ", disp(value)]);
 end
 
 

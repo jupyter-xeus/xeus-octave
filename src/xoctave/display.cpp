@@ -153,23 +153,18 @@ octave_value_list matrix_to_latex(const octave_value_list& args, int /*nargout*/
 
 }  // namespace
 
-void register_all(octave::cdef_package& p, octave::interpreter& i) {
+void register_all(octave::interpreter& i) {
 	auto &s = i.get_symbol_table();
 
 	auto display_data_func = new octave_builtin(display_data, "display_data", __FILE__, "");
-	auto override_path_func = new octave_builtin(override_path, "OVERRIDE_PATH", __FILE__, "");
-	auto matrix_to_html_func = new octave_builtin(matrix_to_html, "matrix_to_html", __FILE__, "");
-	auto matrix_to_latex_func = new octave_builtin(matrix_to_latex, "matrix_to_latex", __FILE__, "");
+	auto override_path_func = new octave_builtin(override_path, "XOCTAVE_OVERRIDE_PATH", __FILE__, "");
+	auto matrix_to_html_func = new octave_builtin(matrix_to_html, "__matrix_to_html__", __FILE__, "");
+	auto matrix_to_latex_func = new octave_builtin(matrix_to_latex, "__matrix_to_latex__", __FILE__, "");
 
-	p.install_function(display_data_func, "display_data");
-	p.install_function(override_path_func, "OVERRIDE_PATH");
-	p.install_function(matrix_to_html_func, "matrix_to_html");
-	p.install_function(matrix_to_latex_func, "matrix_to_latex");
-
-	s.install_built_in_function("xoctave.display_data", display_data_func);
-	s.install_built_in_function("xoctave.OVERRIDE_PATH", override_path_func);
-	s.install_built_in_function("xoctave.matrix_to_html", matrix_to_html_func);
-	s.install_built_in_function("xoctave.matrix_to_latex", matrix_to_latex_func);
+	s.install_built_in_function("display_data", display_data_func);
+	s.install_built_in_function("XOCTAVE_OVERRIDE_PATH", override_path_func);
+	s.install_built_in_function("__matrix_to_html__", matrix_to_html_func);
+	s.install_built_in_function("__matrix_to_latex__", matrix_to_latex_func);
 }
 
 }  // namespace xoctave::display

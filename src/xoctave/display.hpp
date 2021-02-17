@@ -25,7 +25,7 @@
 
 namespace xoctave::display {
 
-void register_all(octave::cdef_package&, octave::interpreter&);
+void register_all(octave::interpreter&);
 
 }
 
