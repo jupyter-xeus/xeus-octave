@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install libzmq
-      run: sudo apt-get install libzmq3-dev
+    - name: Install dependencies
+      run: sudo apt-get install libzmq3-dev nlohmann-json3-dev
       
     - uses: actions/checkout@v2
 
