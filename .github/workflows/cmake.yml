@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install libzmq
+      run: sudo apt-get install libzmq-dev
+      
     - uses: actions/checkout@v2
 
     - name: Create Build Environment
