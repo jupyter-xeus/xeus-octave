@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Install libzmq
-      run: sudo apt-get install libzmq-dev
+      run: sudo apt-get update && sudo apt-get install libzmq-dev
       
     - uses: actions/checkout@v2
 
