@@ -27,6 +27,7 @@
 #include <octave/interpreter.h>
 #include <octave/lo-array-errwarn.h>
 #include <octave/oct-stream.h>
+#include <octave/ov-builtin.h>
 #include <octave/ov.h>
 #include <octave/ovl.h>
 #include <octave/parse.h>
@@ -227,6 +228,9 @@ void xoctave_interpreter::configure_impl() {
 
 	// Register embedded functions
 	xoctave::display::register_all(interpreter);
+
+	// Install version variable
+	interpreter.get_symbol_table().install_built_in_function("XOCTAVE", new octave_builtin([](const octave_value_list&, int) { return ovl(XOCTAVE_VERSION); }, "XOCTAVE"));
 }
 
 nl::json xoctave_interpreter::complete_request_impl(const std::string& code,
@@ -306,7 +310,7 @@ nl::json xoctave_interpreter::kernel_info_request_impl() {
 	result["implementation"] = "xeus-octave";
 	result["implementation_version"] = "0.1.0";
 	result["language_info"]["name"] = "octave";
-	result["language_info"]["version"] = "5.2";
+	result["language_info"]["version"] = OCTAVE_VERSION;
 	result["language_info"]["mimetype"] = "text/x-octave";
 	result["language_info"]["file_extension"] = ".m";
 	result["language_info"]["codemirror_mode"] = "octave";
