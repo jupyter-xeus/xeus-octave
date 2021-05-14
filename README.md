@@ -14,6 +14,7 @@ Available visualisations are:
 * Matrices shown as tables
 * Structs shown as json
 * Symbolic classes as latex
+* Transfer functions in `control` package
 * Many others coming...
 
 ## Installation
