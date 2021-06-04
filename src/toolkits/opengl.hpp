@@ -22,10 +22,15 @@
 // <https://www.gnu.org/licenses/>.
 //
 ////////////////////////////////////////////////////////////////////////
-
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#include <OpenGL/glext.h>
+#else
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <GL/glu.h>
+#endif
 
 #include <iostream>
 
