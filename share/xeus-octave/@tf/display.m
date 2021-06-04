@@ -12,28 +12,50 @@ function display(sys)
 		den = sys.den;
 	endif
 
-	for nu = 1 : m
-		for ny = 1 : p
-			pre = [ "\\mathit{" sysname, "(", sys.tfvar, ")} = \\frac{", inname{nu}, "(", sys.tfvar, ")}{", outname{ny} ,"(", sys.tfvar, ")}"];
+	out = [ "\\mathit{" sysname, "(", sys.tfvar, ")} = " ];
+	showmatrix = m > 1 || p > 1;
 
-			tfp = isa (num{ny, nu}, "tfpoly");
+	if (showmatrix)
+		out = [ out " \\begin{bmatrix} " ];
+	endif
 
-			if (num{ny, nu} == tfpoly ([0]))
+	for nu = 1 : p
+		for ny = 1 : m
+			thenum = num{nu, ny};
+			theden = den{nu, ny};
+
+			tfp = isa (thenum, "tfpoly");
+
+			if (thenum == tfpoly ([0]))
 				def = "0";
 			## elseif (den == tfpoly (1)) doesn't work because it
 			## would mistakingly accept non-tfpoly denominators like [0, 1]
-			elseif ((tfp && den{ny, nu} == 1) || (! tfp && isequal (den{ny, nu}, 1)))
-				def = __latex_fix_sci_not__(tfpoly2str (num{ny, nu}, sys.tfvar));
+			elseif ((tfp && theden == 1) || (! tfp && isequal (theden, 1)))
+				def = __latex_fix_sci_not__(tfpoly2str (thenum, sys.tfvar));
 			else
-				numstr = __latex_fix_sci_not__(tfpoly2str (num{ny, nu}, sys.tfvar));
-				denstr = __latex_fix_sci_not__(tfpoly2str (den{ny, nu}, sys.tfvar));
+				numstr = __latex_fix_sci_not__(tfpoly2str (thenum, sys.tfvar));
+				denstr = __latex_fix_sci_not__(tfpoly2str (theden, sys.tfvar));
 
 				def = [ "\\frac{" numstr "}{", denstr, "}" ];
 			endif
 
-			display_data("text/latex", [ "$$ " pre, "=", def, " $$"]);
+			out = [ out, def ];
+
+			if (showmatrix && ny != m)
+				out = [ out " & " ];
+			endif
 		endfor
+
+		if (showmatrix && nu != p)
+			out = [ out " \\\\ " ];
+		endif
 	endfor
+
+	if (showmatrix)
+		out = [ out " \\end{bmatrix} " ];
+	endif
+
+	display_data("text/latex", [ "$$ " out, " $$"]);
 
 	display (sys.lti);  # display sampling time
 
@@ -46,32 +68,6 @@ function display(sys)
 	endif
 
 	disp("")
-
-	% if (sys.inv && ! isct (sys))
-	% 	[num, den] = filtdata (sys);        # 'num' and 'den' are cells of real-valued vectors
-	% else
-	% 	num = sys.num;                      # 'num' and 'den' are cells of 'tfpoly' objects
-	% 	den = sys.den;
-	% endif
-
-	% for nu = 1 : m
-	% 	disp (["Transfer function '", sysname, "' from input '", inname{nu}, "' to output ..."]);
-	% 	disp ("");
-	% 	for ny = 1 : p
-	% 		__disp_frac__ (num{ny, nu}, den{ny, nu}, sys.tfvar, outname{ny});
-	% 	endfor
-	% endfor
-
-	% display (sys.lti);  # display sampling time
-
-	% if (tsam == -2)
-	% 	disp ("Static gain.");
-	% elseif (tsam == 0)
-	% 	disp ("Continuous-time model.");
-	% else
-	% 	disp ("Discrete-time model.");
-	% endif
-
 end
 
 ##
