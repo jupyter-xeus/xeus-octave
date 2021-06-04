@@ -121,6 +121,11 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 	m_silent = silent;
 	m_allow_stdin = allow_stdin;
 
+	// Override the default io system
+	input::override(m_stdin);
+	output::override(std::cout, m_stdout);
+	output::override(std::cerr, m_stderr);
+
 	result["status"] = "ok";
 
 	// Extract magic ?
@@ -188,6 +193,11 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 	// Update the figure if present
 	interpreter.feval("drawnow");
 
+	// Recover the old io system
+	input::restore();
+	output::restore(std::cout, m_stdout);
+	output::restore(std::cerr, m_stderr);
+
 	return result;
 }
 
@@ -220,11 +230,6 @@ void xoctave_interpreter::configure_impl() {
 #else
 	octave::feval("graphics_toolkit", ovl("plotly"));
 #endif
-
-	// Override the default io system
-	input::override(m_stdin);
-	output::override(std::cout, m_stdout);
-	output::override(std::cerr, m_stderr);
 
 	// Register embedded functions
 	xoctave::display::register_all(interpreter);
@@ -320,11 +325,6 @@ nl::json xoctave_interpreter::kernel_info_request_impl() {
 }
 
 void xoctave_interpreter::shutdown_request_impl() {
-	// Recover the old io system before shutting down the interpreter
-	input::restore();
-	output::restore(std::cout, m_stdout);
-	output::restore(std::cerr, m_stderr);
-
 	interpreter.shutdown();
 
 #ifndef NDEBUG
