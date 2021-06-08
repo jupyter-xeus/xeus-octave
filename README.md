@@ -1,5 +1,7 @@
 # `xeus-octave`: A native Octave kernel for jupyter with advanced visualization
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rapgenic/xeus-octave/master?filepath=examples)
+
 `xeus-octave` is an Octave kernel for Jupyter built with Xeus, a C++ framework
 for building Jupyter kernels, which means that it is completely native, and does
 not run a virtual Octave session in a forked process.
