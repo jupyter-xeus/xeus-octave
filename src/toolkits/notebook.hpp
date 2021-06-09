@@ -33,8 +33,6 @@
 #include <nlohmann/json.hpp>
 
 #include "opengl.hpp"
-#include "xwidgets/xtransport.hpp"
-#include "xwidgets/xwidget.hpp"
 
 namespace xoctave {
 
@@ -53,7 +51,9 @@ public:
 	void finalize(const graphics_object &) override;
 
 private:
+#ifndef NOTEBOOK_TOOLKIT_CPU
 	GLFWwindow *window = nullptr;
+#endif
 	octave::interpreter &m_interpreter;
 };
 

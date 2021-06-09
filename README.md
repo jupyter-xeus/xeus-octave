@@ -10,7 +10,8 @@ many types with ease.
 
 Available visualisations are:
 
-* Advanced plots using [plotly](https://github.com/plotly/plotly.js), with zoom, cursors, and hover tooltips
+* Image based plot rendering (using Octave native toolkit)
+* Experimental plots using [plotly](https://github.com/plotly/plotly.js), with zoom, cursors, and hover tooltips
 * Matrices shown as tables
 * Structs shown as json
 * Symbolic classes as latex
@@ -31,10 +32,36 @@ $ make
 $ sudo make install
 ```
 
+CMake will download and statically link xeus libraries within the final kernel binary if it cannot find them in the filesystem.
+
+This behaviour can be overridden by setting the CMake `<package>_FETCH` variable to `TRUE`, which forces CMake to explicitly download and build all the following dependencies.
+
+| Library | Variable            |
+| ------- | ------------------- |
+| cppzmq  | `CPPZMQ_FETCH=TRUE` |
+| xtl     | `XTL_FETCH=TRUE`    |
+| xeus    | `XEUS_FETCH=TRUE`   |
+| glfw3   | `GLFW3_FETCH=TRUE`  |
+
 If you use Jupyter lab you also need the plotly extension (nteract ships it by default):
 
 ```
 $ jupyter labextension install jupyterlab-plotly
+```
+
+### Building for headless systems
+
+Octave uses OpenGL for rendering, which means that it needs a display server to render figures. In order to work on headless systems (e.g. servers) `xeus-octave` supports linking against glfw with osmesa backend (a software based OpenGL implementation). For this set the `GLFW3_OSMESA_BACKEND` variable to `TRUE`.
+
+Usually distributions do not provide glfw with the osmesa backend, so it's probably best to build glfw in-tree with the `GLFW3_FETCH` option.
+
+This is an example invocation:
+
+```
+$ mkdir build && cd build
+$ cmake -DGLFW3_OSMESA_BACKEND=TRUE -DGLFW3_FETCH=TRUE ..
+$ make
+$ sudo make install
 ```
 
 ### Arch Linux users

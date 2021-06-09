@@ -59,6 +59,10 @@ using namespace nlohmann;
 namespace xoctave {
 
 notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
+	glfwSetErrorCallback([](int error, const char* description) {
+		std::clog << "GLFW Error: " << description << " (" << error << ")" << std::endl;
+	});
+
 	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
 	if (!glfwInit()) {
@@ -68,6 +72,7 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interp
 
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+#ifndef NOTEBOOK_TOOLKIT_CPU
 	window = glfwCreateWindow(100, 100, "", NULL, NULL);
 	if (!window) {
 		glfwTerminate();
@@ -79,11 +84,15 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interp
 #ifndef NDEBUG
 	std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
 #endif
+
+#endif
 }
 
 notebook_graphics_toolkit::~notebook_graphics_toolkit() {
+#ifndef NOTEBOOK_TOOLKIT_CPU
 	if (window)
 		glfwDestroyWindow(window);
+#endif
 
 	glfwTerminate();
 }
@@ -94,7 +103,10 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 		figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
 		float xscale, yscale;
 
-		glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xscale, &yscale);
+		if (auto* monitor = glfwGetPrimaryMonitor())
+			glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+		else
+			xscale = yscale = 1;
 
 		float dpr = std::max(xscale, yscale);
 
@@ -142,7 +154,12 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	octave::opengl_functions m_glfcns;
 	octave::opengl_renderer m_renderer(m_glfcns);
 
+#ifdef NOTEBOOK_TOOLKIT_CPU
+	auto window = glfwCreateWindow(width, height, "", NULL, NULL);
+	glfwMakeContextCurrent(window);
+#else
 	glfwSetWindowSize(window, width, height);
+#endif
 
 	m_renderer.set_viewport(width, height);
 	m_renderer.set_device_pixel_ratio(dpr);
@@ -160,12 +177,8 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 
 	unsigned char* screen;
 
-#ifdef NOTEBOOK_TOOLKIT_CPU
-	glfwGetOSMesaColorBuffer(window, &width, &height, NULL, (void**) &screen);
-#else
 	screen = new unsigned char[width * height * 3];
 	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, screen);
-#endif
 
 #ifndef NDEBUG
 	auto encode_start = high_resolution_clock::now();
@@ -220,14 +233,16 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	std::clog << "Send time: " << send_duration.count() << std::endl;
 #endif
 
-#ifndef NOTEBOOK_TOOLKIT_CPU
 	delete[] screen;
-#endif
 
 #ifndef NDEBUG
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 	std::clog << "Draw time: " << duration.count() << std::endl;
+#endif
+
+#ifdef NOTEBOOK_TOOLKIT_CPU
+	glfwDestroyWindow(window);
 #endif
 }
 

@@ -1,0 +1,37 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "base",
+            "displayName": "Base",
+            "description": "Base profile containing common settings",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Unix Makefiles",
+            "hidden": true
+        },
+        {
+            "name": "debug",
+            "description": "Debug",
+            "displayName": "Debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "inherits": [
+                "base"
+            ]
+        },
+        {
+            "name": "debug_osmesa",
+            "description": "Debug with software rendering",
+            "displayName": "Debug+Osmesa",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "GLFW3_FETCH": "TRUE",
+                "GLFW3_OSMESA_BACKEND": "TRUE"
+            },
+            "inherits": [
+                "base"
+            ]
+        }
+    ]
+}
