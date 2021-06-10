@@ -1,7 +1,7 @@
 function display(x)
       name = private_disp_name(x, inputname (1));
-
-      display_data("text/latex", [ "$$" name, "=", latex(x) ,"$$"]);
+      out.("text/latex") = [ "$$" name, "=", latex(x) ,"$$"];
+      display_data(out);
 end
 
 ##

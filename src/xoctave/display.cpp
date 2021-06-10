@@ -22,8 +22,10 @@
 #include <octave/cdef-package.h>
 #include <octave/defun-int.h>
 #include <octave/interpreter.h>
+#include <octave/oct-map.h>
 #include <octave/symtab.h>
 
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <regex>
 
@@ -35,24 +37,32 @@ namespace xoctave::display {
 namespace {
 
 octave_value_list display_data(const octave_value_list& args, int /*nargout*/) {
-	if (args.length() < 2 || args.length() > 4)
+	if (args.length() < 1 || args.length() > 2)
 		print_usage();
 
-	std::string type = args(0).xstring_value("TYPE must be a string");
-	std::string value = args(1).xstring_value("VALUE must be a string");
+	nlohmann::json data;
+	octave_map d = args(0).xmap_value("DATA must be a map");
 
-	nlohmann::json d;
+	for (auto value : d) {
+		auto v = d.contents(value.second);
+		if (value.first == "application/json")
+			data[value.first] = nlohmann::json::parse(v(0).xstring_value("DATA contents must be strings"));
+		else
+			data[value.first] = v(0).xstring_value("DATA contents must be strings");
+	}
+
 	nlohmann::json metadata;
 
-	if (args.length() > 2 && args(2).xbool_value("ENCODE must be a boolean flag"))
-		d[type] = nlohmann::json::parse(value);
-	else
-		d[type] = value;
+	if (args.length() > 1) {
+		octave_map m = args(0).xmap_value("METADATA must be a map");
 
-	if (args.length() > 3)
-		metadata[type] = nlohmann::json::parse(args(3).xstring_value("METADATA must be a json string"));
+		for (auto value : m) {
+			auto v = m.contents(value.second);
+			data[value.first] = v(0).xstring_value("METADATA contents must be strings");
+		}
+	}
 
-	dynamic_cast<xoctave::xoctave_interpreter&>(xeus::get_interpreter()).display_data(d, metadata);
+	dynamic_cast<xoctave::xoctave_interpreter&>(xeus::get_interpreter()).display_data(data, metadata);
 
 	return ovl();
 }

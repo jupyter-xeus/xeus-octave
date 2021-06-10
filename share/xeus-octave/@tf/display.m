@@ -55,7 +55,8 @@ function display(sys)
 		out = [ out " \\end{bmatrix} " ];
 	endif
 
-	display_data("text/latex", [ "$$ " out, " $$"]);
+	dout.("text/latex") = [ "$$ " out, " $$"];
+	display_data(dout);
 
 	display (sys.lti);  # display sampling time
 

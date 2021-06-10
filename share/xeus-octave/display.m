@@ -78,7 +78,6 @@ function display(varargin)
 					try
 						displayjson(name, value);
 					catch
-						warning("jsonencode function not present")
 						displaytext(name, value);
 					end
 				otherwise
@@ -90,11 +89,15 @@ function display(varargin)
 end
 
 function displaymatrixhtml (name, value, fmt)
-	display_data("text/html", __matrix_to_html__(name, value, fmt));
+	out.("text/html") = __matrix_to_html__(name, value, fmt);
+	out.("text/plain") = [name, " = ", disp(value)];
+	display_data(out);
 end
 
 function displaymatrixlatex (name, value, fmt)
-	display_data("text/latex", __matrix_to_latex__(name, value, fmt));
+	out.("text/latex") = __matrix_to_latex__(name, value, fmt);
+	out.("text/plain") = [name, " = ", disp(value)];
+	display_data(out);
 end
 
 function displayscalarlatex (name, value)
@@ -102,17 +105,21 @@ function displayscalarlatex (name, value)
 	x = [ x num2str(value) ];
 	x = [ x "$$" ];
 
-	display_data("text/latex", x);
+	out.("text/latex") = x;
+	out.("text/plain") = [name, " = ", disp(value)];
+	display_data(out);
 end
 
 function displayjson (name, value)
-	metadata.root = name;
-
-	display_data("application/json", jsonencode(value), true, jsonencode(metadata));
+	metadata.("application/json").root = name;
+	out.("application/json") = jsonencode(value);
+	out.("text/plain") = [name, " = ", disp(value)];
+	display_data(out);
 end
 
 function displaytext (name, value)
-	display_data("text/plain", [name, " = ", disp(value)]);
+	out.("text/plain") = [name, " = ", disp(value)];
+	display_data(out);
 end
 
 
