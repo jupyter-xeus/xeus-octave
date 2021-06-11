@@ -20,7 +20,6 @@
 #ifndef DISPLAY_H
 #define DISPLAY_H
 
-#include <octave/cdef-package.h>
 #include <octave/interpreter.h>
 
 namespace xoctave::display {

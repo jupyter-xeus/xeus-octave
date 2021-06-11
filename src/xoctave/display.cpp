@@ -19,7 +19,6 @@
 
 #include "display.hpp"
 
-#include <octave/cdef-package.h>
 #include <octave/defun-int.h>
 #include <octave/interpreter.h>
 #include <octave/oct-map.h>
