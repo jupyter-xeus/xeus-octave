@@ -19,91 +19,57 @@
 cmake_minimum_required(VERSION 3.15)
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 project(xeus-octave
         VERSION 0.0.1)
 
-include(FetchContent)
 include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-################################################################################
-# FETCH LIBRARIES
+set(GLFW3_OSMESA_BACKEND FALSE CACHE BOOL "Use the osmesa GLFW backend (for software rendering)")
+
+# Fetch libraries
 ################################################################################
 
-FetchContent_Declare(
+include(FindOrFetch)
+
+find_or_fetch_package(
   cppzmq
-  GIT_REPOSITORY https://github.com/zeromq/cppzmq.git
-  GIT_TAG        v4.7.1
+  https://github.com/zeromq/cppzmq.git v4.7.1
+  CPPZMQ_BUILD_TESTS OFF
 )
 
-FetchContent_Declare(
+find_or_fetch_package(
   xtl
-  GIT_REPOSITORY https://github.com/xtensor-stack/xtl.git
-  GIT_TAG        0.7.2
+  https://github.com/xtensor-stack/xtl.git 0.7.2
 )
 
-FetchContent_Declare(
+find_or_fetch_package(
   xeus
-  GIT_REPOSITORY https://github.com/jupyter-xeus/xeus.git
-  GIT_TAG        1.0.0
+  https://github.com/jupyter-xeus/xeus.git 1.0.0
+  XEUS_BUILD_SHARED_LIBS OFF
 )
 
-FetchContent_Declare(
-  xproperty
-  GIT_REPOSITORY https://github.com/jupyter-xeus/xproperty.git
-  GIT_TAG        0.11.0
+find_or_fetch_package(
+  glfw3
+  https://github.com/glfw/glfw 3.3.4
+  GLFW_USE_OSMESA ${GLFW3_OSMESA_BACKEND}
+  BUILD_SHARED_LIBS OFF
 )
 
-FetchContent_Declare(
-  xwidgets
-  GIT_REPOSITORY https://github.com/jupyter-xeus/xwidgets.git
-  GIT_TAG        f21198f5934c90b034afee9b36c47b0e7b456c6b
-)
-
-macro(FetchContent_MakeAvailableCustom content)
-  FetchContent_GetProperties(${content})
-  if(NOT ${content}_POPULATED)
-    FetchContent_Populate(${content})
-    add_subdirectory(${${content}_SOURCE_DIR} ${${content}_BINARY_DIR} EXCLUDE_FROM_ALL)
-    # This is a hack...
-    set(${content}_DIR ${${content}_BINARY_DIR})
-  endif()
-endmacro()
-
-# cppzmq
-set(CPPZMQ_BUILD_TESTS OFF)
-FetchContent_MakeAvailableCustom(cppzmq)
-
-# xtl
-FetchContent_MakeAvailableCustom(xtl)
-
-# xeus
-set(XEUS_BUILD_SHARED_LIBS OFF)
-FetchContent_MakeAvailableCustom(xeus)
-
-# xproperty
-FetchContent_MakeAvailableCustom(xproperty)
-
-# xwidgets
-set(XWIDGETS_BUILD_SHARED_LIBS OFF)
-FetchContent_MakeAvailableCustom(xwidgets)
-
+# Deps
 ################################################################################
-# FIND OCTAVE
-################################################################################
-find_package(PkgConfig REQUIRED)
-find_package(xeus REQUIRED)
-find_package(xwidgets REQUIRED)
-find_package(xproperty REQUIRED)
 find_package(PNG REQUIRED)
 
-pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET octinterp)
+# Octave
+################################################################################
+find_package(PkgConfig REQUIRED)
 
-set(NOTEBOOK_TOOLKIT_RENDER_TYPE "GPU" CACHE STRING "Rendering type for OpenGL native graphics toolkit. (Can be GPU, CPU, NONE)")
+pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
 
 set(EXECUTABLE_NAME xeus-octave)
 
@@ -138,26 +104,28 @@ add_executable(${EXECUTABLE_NAME} ${XEUS_OCTAVE_SRC})
 # Override path needed by kernel
 target_compile_definitions(${EXECUTABLE_NAME} PRIVATE XOCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/share/xeus-octave")
 
-target_link_libraries(${EXECUTABLE_NAME} xeus-static xwidgets-static xproperty pthread)
+if (XEUS_FETCH)
+  target_link_libraries(${EXECUTABLE_NAME} xeus-static)
+else()
+  target_link_libraries(${EXECUTABLE_NAME} xeus)
+endif()
+
+target_link_libraries(${EXECUTABLE_NAME} pthread)
 target_link_libraries(${EXECUTABLE_NAME} PkgConfig::octinterp)
+
+if (GLFW3_OSMESA_BACKEND)
+  pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
+  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::osmesa)
+  set(NOTEBOOK_TOOLKIT_CPU TRUE)
+else()
+  find_package(OpenGL REQUIRED)
+  target_link_libraries(${EXECUTABLE_NAME} OpenGL::OpenGL)
+endif()
+
+target_link_libraries(${EXECUTABLE_NAME} glfw)
 target_link_libraries(${EXECUTABLE_NAME} PNG::PNG)
 
-if (NOTEBOOK_TOOLKIT_RENDER_TYPE STREQUAL "GPU")
-  find_package(OpenGL REQUIRED)
-  pkg_check_modules(glfw3 REQUIRED IMPORTED_TARGET glfw3)
-  set(NOTEBOOK_TOOLKIT_ENABLED ON)
-  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::glfw3 OpenGL::GL)
-  message(STATUS "Notebook graphics toolkit will use hardware rendering")
-elseif (NOTEBOOK_TOOLKIT_RENDER_TYPE STREQUAL "CPU")
-  pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
-  pkg_check_modules(glfw3 REQUIRED IMPORTED_TARGET glfw3)
-  set(NOTEBOOK_TOOLKIT_ENABLED ON)
-  set(NOTEBOOK_TOOLKIT_CPU ON)
-  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::glfw3 PkgConfig::osmesa)
-  message(STATUS "Notebook graphics toolkit will use software rendering")
-else ()
-  message(STATUS "The notebook graphics toolkit will be disabled")
-endif()
+set(NOTEBOOK_TOOLKIT_ENABLED ON)
 
 configure_file(
   "${CMAKE_SOURCE_DIR}/config.h.in"
@@ -180,9 +148,8 @@ set_target_properties(${EXECUTABLE_NAME} PROPERTIES
 )
 
 # Installation
-# ============
+################################################################################
 
-# Install my_kernel
 install(TARGETS ${EXECUTABLE_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

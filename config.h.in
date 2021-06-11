@@ -19,3 +19,5 @@
 
 #cmakedefine NOTEBOOK_TOOLKIT_ENABLED
 #cmakedefine NOTEBOOK_TOOLKIT_CPU
+
+#define XOCTAVE_VERSION "@xeus-octave_VERSION@"
