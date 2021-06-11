@@ -16,9 +16,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             },
-            "inherits": [
-                "base"
-            ]
+            "inherits": "base"
         },
         {
             "name": "debug_osmesa",
@@ -29,9 +27,7 @@
                 "GLFW3_FETCH": "TRUE",
                 "GLFW3_OSMESA_BACKEND": "TRUE"
             },
-            "inherits": [
-                "base"
-            ]
+            "inherits": "base"
         }
     ]
 }
