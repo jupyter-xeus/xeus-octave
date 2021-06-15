@@ -119,7 +119,7 @@ if (GLFW3_OSMESA_BACKEND)
   set(NOTEBOOK_TOOLKIT_CPU TRUE)
 else()
   find_package(OpenGL REQUIRED)
-  target_link_libraries(${EXECUTABLE_NAME} OpenGL::OpenGL)
+  target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)
 endif()
 
 target_link_libraries(${EXECUTABLE_NAME} glfw)
