@@ -12,7 +12,6 @@
 #include <octave/interpreter.h>
 #include <octave/ov.h>
 #include <png.h>
-#include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <chrono>
@@ -31,6 +30,7 @@
 #include "xeus/xinterpreter.hpp"
 #include "xtl/xbase64.hpp"
 #include "xeus-octave/plotstream.hpp"
+#include "xeus-octave/opengl.hpp"
 #include "xeus-octave/tk_notebook.hpp"
 
 namespace nl = nlohmann;
@@ -50,7 +50,7 @@ namespace xeus_octave::tk::notebook {
 
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-		window = glfwCreateWindow(100, 100, "", NULL, NULL);
+		GLFWwindow *window = glfwCreateWindow(1, 1, "", NULL, NULL);
 		if (!window) {
 			glfwTerminate();
 			return;
@@ -58,15 +58,15 @@ namespace xeus_octave::tk::notebook {
 
 		glfwMakeContextCurrent(window);
 
+		gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
+		std::clog << "GLFW Platform: " << std::hex << glfwGetPlatform() << std::endl;
 		std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
 
 		glfwDestroyWindow(window);
 	}
 
 	notebook_graphics_toolkit::~notebook_graphics_toolkit() {
-		if (window)
-			glfwDestroyWindow(window);
-
 		glfwTerminate();
 	}
 
@@ -139,7 +139,7 @@ namespace xeus_octave::tk::notebook {
 		octave::opengl_renderer m_renderer(m_glfcns);
 
 		// Create a hidden GLFW window
-		auto window = glfwCreateWindow(width, height, "", NULL, NULL);
+		GLFWwindow* window = glfwCreateWindow(width, height, "", NULL, NULL);
 		glfwMakeContextCurrent(window);
 
 		// Render
@@ -186,7 +186,7 @@ namespace xeus_octave::tk::notebook {
 		dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
 			.update_display_data(data, meta, tran);
 
-		// Destroy GLFW window
+		// Destroy window
 		glfwDestroyWindow(window);
 	}
 

@@ -18,8 +18,6 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
-#include "xeus-octave/opengl.hpp"
-
 namespace xeus_octave::tk::notebook {
 	class notebook_graphics_toolkit : public octave::base_graphics_toolkit {
 		public:
@@ -37,8 +35,6 @@ namespace xeus_octave::tk::notebook {
 
 		private:
 			octave::interpreter &m_interpreter;
-
-			GLFWwindow *window = nullptr;
 	};
 
 	void register_all(octave::interpreter &interpreter);

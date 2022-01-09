@@ -49,7 +49,7 @@ configure_file (
 OPTION(XEUS_OCTAVE_DISABLE_ARCH_NATIVE "disable -march=native flag" OFF)
 OPTION(XEUS_OCTAVE_DISABLE_TUNE_GENERIC "disable -mtune=generic flag" OFF)
 
-option(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" ON)
+OPTION(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" OFF)
 OPTION(XEUS_OCTAVE_BUILD_SHARED "Split xoctave build into executable and library" ON)
 OPTION(XEUS_OCTAVE_BUILD_EXECUTABLE "Build the xoctave executable" ON)
 
@@ -87,7 +87,27 @@ endif ()
 
 find_package(PNG REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(glfw3 REQUIRED)
+
+include(FetchContent)
+FetchContent_Declare(
+  glfw3
+  GIT_REPOSITORY https://github.com/glfw/glfw
+  GIT_TAG df8d7bc892937a8b0f7c604c92a9f64f383cf48c
+)
+
+FetchContent_GetProperties(glfw3)
+if(NOT glfw3_POPULATED)
+  # Fetch the content using previously declared details
+  FetchContent_Populate(glfw3)
+
+  set(GLFW_LIBRARY_TYPE STATIC)
+  set(GLFW_USE_WAYLAND ON)
+  set(GLFW_INSTALL OFF)
+
+  # Bring the populated content into the build
+  add_subdirectory(${glfw3_SOURCE_DIR} ${glfw3_BINARY_DIR})
+endif()
+
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
 
 
@@ -158,6 +178,7 @@ set(XEUS_OCTAVE_SRC
     src/display.cpp
     src/output.cpp
     src/tk_notebook.cpp
+    glad/src/glad.c
 )
 
 set(XEUS_OCTAVE_MAIN_SRC
@@ -273,6 +294,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
                                PUBLIC
                                $<BUILD_INTERFACE:${XEUS_OCTAVE_INCLUDE_DIR}>
                                $<INSTALL_INTERFACE:include>)
+    target_include_directories(${target_name} PRIVATE "glad/include")
 
     if (XEUS_OCTAVE_USE_SHARED_XEUS)
         set(XEUS_OCTAVE_XEUS_TARGET xeus)
@@ -280,7 +302,8 @@ macro(xeus_octave_create_target target_name linkage output_name)
         set(XEUS_OCTAVE_XEUS_TARGET xeus-static)
     endif ()
 
-    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG glfw)
+    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG)
+    target_link_libraries(${target_name} PRIVATE glfw)
 
     if (WIN32 OR CYGWIN)
         #
