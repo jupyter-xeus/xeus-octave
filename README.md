@@ -1,70 +1,91 @@
-# `xeus-octave`: A native Octave kernel for jupyter with advanced visualization
+# ![xeus-octave](docs/source/xeus-logo.svg)
 
-`xeus-octave` is an Octave kernel for Jupyter built with Xeus, a C++ framework
-for building Jupyter kernels, which means that it is completely native, and does
-not run a virtual Octave session in a forked process.
 
-Thanks to its being native, xeus-octave has access to the internal representation
-of all Octave objects, and thus it is able to provide advanced visualisation of
-many types with ease.
 
-Available visualisations are:
 
-* Image based plot rendering (using Octave native toolkit)
-* Experimental plots using [plotly](https://github.com/plotly/plotly.js), with zoom, cursors, and hover tooltips
-* Matrices shown as tables
-* Structs shown as json
-* Symbolic classes as latex
-* Transfer functions in `control` package
-* Many others coming...
+[![Build Status](https://github.com/rapgenic/xeus-octave/actions/workflows/main.yml/badge.svg)](https://github.com/rapgenic/xeus-octave/actions/workflows/main.yml)
+
+[![Documentation Status](http://readthedocs.org/projects/xeus-python/badge/?version=latest)](https://xeus-octavereadthedocs.io/en/latest/?badge=latest)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rapgenic/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb)
+
+`xeus-octave` is a Jupyter kernel for octave based on the native implementation of the
+Jupyter protocol [xeus](https://github.com/jupyter-xeus/xeus).
 
 ## Installation
 
-Jupyter lab or an alternative interface (e.g. nteract) is of course required.
+xeus-octave has not been packaged for the mamba (or conda) package manager.
 
-To compile, first install [xeus](https://github.com/jupyter-xeus/xeus) and
-octave. Then run in a terminal:
+To ensure that the installation works, it is preferable to install `xeus-octave` in a
+fresh environment. It is also needed to use a
+[miniforge](https://github.com/conda-forge/miniforge#mambaforge) or
+[miniconda](https://conda.io/miniconda.html) installation because with the full
+[anaconda](https://www.anaconda.com/) you may have a conflict with the `zeromq` library
+which is already installed in the anaconda distribution.
 
-```
-$ mkdir build && cd build
-$ cmake ..
-$ make
-$ sudo make install
-```
+The safest usage is to create an environment named `xeus-octave`
 
-CMake will download and statically link xeus libraries within the final kernel binary if it cannot find them in the filesystem.
-
-This behaviour can be overridden by setting the CMake `<package>_FETCH` variable to `TRUE`, which forces CMake to explicitly download and build all the following dependencies.
-
-| Library | Variable            |
-| ------- | ------------------- |
-| cppzmq  | `CPPZMQ_FETCH=TRUE` |
-| xtl     | `XTL_FETCH=TRUE`    |
-| xeus    | `XEUS_FETCH=TRUE`   |
-| glfw3   | `GLFW3_FETCH=TRUE`  |
-
-If you use Jupyter lab you also need the plotly extension (nteract ships it by default):
-
-```
-$ jupyter labextension install jupyterlab-plotly
+```bash
+mamba create -n xeus-octave
+source activate xeus-octave
 ```
 
-### Building for headless systems
+<!-- ### Installing from conda-forge
 
-Octave uses OpenGL for rendering, which means that it needs a display server to render figures. In order to work on headless systems (e.g. servers) `xeus-octave` supports linking against glfw with osmesa backend (a software based OpenGL implementation). For this set the `GLFW3_OSMESA_BACKEND` variable to `TRUE`.
+Then you can install in this environment `xeus-octave` and its dependencies
 
-Usually distributions do not provide glfw with the osmesa backend, so it's probably best to build glfw in-tree with the `GLFW3_FETCH` option.
+```bash
+mamba install`xeus-octave` notebook -c conda-forge
+``` -->
 
-This is an example invocation:
+### Installing from source
 
+Or you can install it from the sources, you will first need to install dependencies
+
+```bash
+mamba install cmake xeus nlohmann_json cppzmq xtl jupyterlab octave -c conda-forge
 ```
-$ mkdir build && cd build
-$ cmake -DGLFW3_OSMESA_BACKEND=TRUE -DGLFW3_FETCH=TRUE ..
-$ make
-$ sudo make install
+
+Then you can compile the sources (replace `$CONDA_PREFIX` with a custom installation
+prefix if need be)
+
+```bash
+mkdir build && cd build
+cmake .. -D CMAKE_PREFIX_PATH=$CONDA_PREFIX -D CMAKE_INSTALL_PREFIX=$CONDA_PREFIX -D CMAKE_INSTALL_LIBDIR=lib
+make && make install
 ```
 
-### Arch Linux users
+<!-- ## Trying it online
 
-For arch linux users a PKGBUILD has been provided (you still need to install jupyterlab plotly extension)
+To try out xeus-octave interactively in your web browser, just click on the binder link:
+(Once Conda Package is Ready)
 
+[![Binder](binder-logo.svg)](https://mybinder.org/v2/gh/rapgenic/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb) -->
+
+
+
+## Documentation
+
+To get started with using `xeus-octave`, check out the full documentation
+
+http://xeus-octave.readthedocs.io
+
+
+## Dependencies
+
+`xeus-octave` depends on
+
+- [xeus](https://github.com/jupyter-xeus/xeus)
+- [xtl](https://github.com/xtensor-stack/xtl)
+- [nlohmann_json](https://github.com/nlohmann/json)
+
+
+
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) to know how to contribute and set up a
+development environment.
+
+## License
+
+This software is licensed under the `GNU General Public License v3`. See the [LICENSE](LICENSE)
+file for details.

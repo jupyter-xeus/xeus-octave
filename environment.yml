@@ -1,0 +1,8 @@
+name: xeus-octave
+channels:
+  - conda-forge
+dependencies:
+  - xeus-octave=0.1.0
+  - notebook
+  - ipywidgets>=7.6
+  - jupyterlab=3

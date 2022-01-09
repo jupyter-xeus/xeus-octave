@@ -1,0 +1,19 @@
+name: xeus-octave
+channels:
+  - conda-forge
+dependencies:
+  # Build dependencies
+  - make
+  - cmake
+  # Host dependencies
+  - xeus >= 2.0
+  - nlohmann_json
+  - cppzmq
+  - xtl
+  - octave
+  - jupyterlab
+  # Test dependencies
+  - pytest
+  - jupyter_kernel_test>=0.4.3
+  - nbval
+  - pytest-rerunfailures
