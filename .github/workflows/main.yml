@@ -114,208 +114,208 @@ jobs:
           pytest .  --reruns 5
 
 
-  emscripten_wasm_docker:
-    runs-on: ubuntu-20.04
+  # emscripten_wasm_docker:
+  #   runs-on: ubuntu-20.04
 
-    strategy:
-      fail-fast: false
-      matrix:
-        container: ["emscripten/emsdk:2.0.27", "emscripten/emsdk:2.0.32", "emscripten/emsdk:latest"]
-
-
-    container: ${{ matrix.container}}
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Verify emscripten
-        run: emcc -v
-
-      - name: "install xtl"
-        run: |
-          mkdir -p /opt/xtl/build
-          git clone https://github.com/xtensor-stack/xtl.git  /opt/xtl/src
-          cd /opt/xtl/src
-          git checkout 0.7.2
-          cd /opt/xtl/build
-          emcmake cmake ../src/ -DCMAKE_INSTALL_PREFIX=/custom_sysroot
-          emmake make -j2 install
-
-      - name: "install nlohmann-json"
-        run: |
-          mkdir -p /opt/nlohmannjson/build
-          git clone https://github.com/nlohmann/json.git  /opt/nlohmannjson/src
-          cd  /opt/nlohmannjson/src
-          git checkout v3.9.0
-          cd /opt/nlohmannjson/build
-          emcmake cmake ../src/  -DJSON_BuildTests=OFF -DCMAKE_INSTALL_PREFIX=/custom_sysroot
-          emmake make -j2 install
-
-      - name: "install xeus"
-        run: |
-          mkdir -p /opt/xeus/build
-          git clone https://github.com/jupyter-xeus/xeus.git  /opt/xeus/src
-          cd  /opt/xeus/src
-          git checkout 2.2.0
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       container: ["emscripten/emsdk:2.0.27", "emscripten/emsdk:2.0.32", "emscripten/emsdk:latest"]
 
 
-          cd /opt/xeus/build
-          emcmake cmake ../src \
-            -DXEUS_EMSCRIPTEN_WASM_BUILD=ON \
-            -DXEUS_BUILD_TESTS=ON \
-            -DCMAKE_INSTALL_PREFIX=/custom_sysroot\
-            -Dxtl_DIR=/custom_sysroot/share/cmake/xtl \
-            -Dnlohmann_json_DIR=/custom_sysroot/lib/cmake/nlohmann_json
+  #   container: ${{ matrix.container}}
 
-          emmake make -j2
-          emmake make -j2 install
+  #   steps:
+  #     - uses: actions/checkout@v2
 
+  #     - name: Verify emscripten
+  #       run: emcc -v
 
-      - name: cmake configure rendered project
-        shell: bash -l {0}
-        run: |
-          mkdir -p bld
-          cd bld
-          emcmake cmake .. \
-           -DXEUS_OCTAVE_EMSCRIPTEN_WASM_BUILD=ON \
-           -Dxtl_DIR=/custom_sysroot/share/cmake/xtl \
-           -Dnlohmann_json_DIR=/custom_sysroot/lib/cmake/nlohmann_json \
-           -Dxeus_DIR=/custom_sysroot/lib/cmake/xeus \
-           -DCMAKE_INSTALL_PREFIX=/custom_sysroot
+  #     - name: "install xtl"
+  #       run: |
+  #         mkdir -p /opt/xtl/build
+  #         git clone https://github.com/xtensor-stack/xtl.git  /opt/xtl/src
+  #         cd /opt/xtl/src
+  #         git checkout 0.7.2
+  #         cd /opt/xtl/build
+  #         emcmake cmake ../src/ -DCMAKE_INSTALL_PREFIX=/custom_sysroot
+  #         emmake make -j2 install
 
-      - name: build rendered project
-        shell: bash -l {0}
-        run: |
-          cd bld
-          emmake make -j2
+  #     - name: "install nlohmann-json"
+  #       run: |
+  #         mkdir -p /opt/nlohmannjson/build
+  #         git clone https://github.com/nlohmann/json.git  /opt/nlohmannjson/src
+  #         cd  /opt/nlohmannjson/src
+  #         git checkout v3.9.0
+  #         cd /opt/nlohmannjson/build
+  #         emcmake cmake ../src/  -DJSON_BuildTests=OFF -DCMAKE_INSTALL_PREFIX=/custom_sysroot
+  #         emmake make -j2 install
 
-      - name: install rendered project
-        shell: bash -l {0}
-        run: |
-          cd bld
-          make install
-
-  emscripten_wasm:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        emsdk_ver: ["2.0.27","2.0.32", "latest"]
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: make_install_dir
-        shell: bash -l {0}
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/custom_sysroot
-
-      - name: install emsdk
-        shell: bash -l {0}
-        run: |
-          git clone https://github.com/emscripten-core/emsdk.git /opt/emsdk
-          cd /opt/emsdk
-
-          ./emsdk install ${{matrix.emsdk_ver}}
+  #     - name: "install xeus"
+  #       run: |
+  #         mkdir -p /opt/xeus/build
+  #         git clone https://github.com/jupyter-xeus/xeus.git  /opt/xeus/src
+  #         cd  /opt/xeus/src
+  #         git checkout 2.2.0
 
 
-      - name: install mamba
-        uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: environment-dev.yml
-          environment-name: xeus-octave
+  #         cd /opt/xeus/build
+  #         emcmake cmake ../src \
+  #           -DXEUS_EMSCRIPTEN_WASM_BUILD=ON \
+  #           -DXEUS_BUILD_TESTS=ON \
+  #           -DCMAKE_INSTALL_PREFIX=/custom_sysroot\
+  #           -Dxtl_DIR=/custom_sysroot/share/cmake/xtl \
+  #           -Dnlohmann_json_DIR=/custom_sysroot/lib/cmake/nlohmann_json
 
-      - name: "install xtl"
-        run: |
-          cd /opt/emsdk
-
-          ./emsdk activate ${{matrix.emsdk_ver}}
-
-          source "/opt/emsdk/emsdk_env.sh"
-          mkdir -p /opt/xtl/build
-
-          git clone https://github.com/xtensor-stack/xtl.git  /opt/xtl/src
-          cd /opt/xtl/src
-          git checkout 0.7.2
-          cd /opt/xtl/build
-          emcmake cmake ../src/ -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot
-          emmake make -j2 install
-
-      - name: "install nlohmann-json"
-        run: |
-          cd /opt/emsdk
-
-          ./emsdk activate ${{matrix.emsdk_ver}}
-
-          source "/opt/emsdk/emsdk_env.sh"
-          mkdir -p /opt/nlohmannjson/build
-          git clone https://github.com/nlohmann/json.git  /opt/nlohmannjson/src
-          cd  /opt/nlohmannjson/src
-          git checkout v3.9.0
-          cd /opt/nlohmannjson/build
-          emcmake cmake ../src/  -DJSON_BuildTests=OFF -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot
-          emmake make -j2 install
-
-      - name: "install xeus"
-        run: |
-          cd /opt/emsdk
-
-          ./emsdk activate ${{matrix.emsdk_ver}}
-
-          source "/opt/emsdk/emsdk_env.sh"
-          mkdir -p /opt/xeus/build
-          git clone https://github.com/jupyter-xeus/xeus.git  /opt/xeus/src
-          cd  /opt/xeus/src
-          git checkout 2.2.0
-          cd /opt/xeus/build
-          emcmake cmake ../src \
-            -DXEUS_EMSCRIPTEN_WASM_BUILD=ON \
-            -DXEUS_BUILD_TESTS=ON \
-            -Dxtl_DIR=$GITHUB_WORKSPACE/custom_sysroot/share/cmake/xtl \
-            -Dnlohmann_json_DIR=$GITHUB_WORKSPACE/custom_sysroot/lib/cmake/nlohmann_json \
-            -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot
-          emmake make -j2
-          emmake make -j2 install
+  #         emmake make -j2
+  #         emmake make -j2 install
 
 
-      - name: cmake configure this repo
-        shell: bash -l {0}
-        run: |
-          cd /opt/emsdk
+  #     - name: cmake configure rendered project
+  #       shell: bash -l {0}
+  #       run: |
+  #         mkdir -p bld
+  #         cd bld
+  #         emcmake cmake .. \
+  #          -DXEUS_OCTAVE_EMSCRIPTEN_WASM_BUILD=ON \
+  #          -Dxtl_DIR=/custom_sysroot/share/cmake/xtl \
+  #          -Dnlohmann_json_DIR=/custom_sysroot/lib/cmake/nlohmann_json \
+  #          -Dxeus_DIR=/custom_sysroot/lib/cmake/xeus \
+  #          -DCMAKE_INSTALL_PREFIX=/custom_sysroot
 
-          ./emsdk activate ${{matrix.emsdk_ver}}
+  #     - name: build rendered project
+  #       shell: bash -l {0}
+  #       run: |
+  #         cd bld
+  #         emmake make -j2
 
-          source "/opt/emsdk/emsdk_env.sh"
-          cd $GITHUB_WORKSPACE
-          mkdir -p bld
-          cd bld
-          emcmake cmake .. \
-           -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot \
-           -DXEUS_MYLANG_EMSCRIPTEN_WASM_BUILD=ON \
-           -Dxtl_DIR=$GITHUB_WORKSPACE/custom_sysroot/share/cmake/xtl \
-           -Dnlohmann_json_DIR=$GITHUB_WORKSPACE/custom_sysroot/lib/cmake/nlohmann_json \
-           -Dxeus_DIR=$GITHUB_WORKSPACE/custom_sysroot/lib/cmake/xeus
+  #     - name: install rendered project
+  #       shell: bash -l {0}
+  #       run: |
+  #         cd bld
+  #         make install
 
-      - name: build rendered project
-        shell: bash
-        run: |
-          cd /opt/emsdk
+  # emscripten_wasm:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       emsdk_ver: ["2.0.27","2.0.32", "latest"]
 
-          ./emsdk activate ${{matrix.emsdk_ver}}
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-          source "/opt/emsdk/emsdk_env.sh"
-          cd $GITHUB_WORKSPACE
-          cd bld
-          emmake make -j8
+  #     - name: make_install_dir
+  #       shell: bash -l {0}
+  #       run: |
+  #         mkdir -p $GITHUB_WORKSPACE/custom_sysroot
 
-      - name: install rendered project
-        shell: bash -l {0}
-        run: |
-          cd /opt/emsdk
+  #     - name: install emsdk
+  #       shell: bash -l {0}
+  #       run: |
+  #         git clone https://github.com/emscripten-core/emsdk.git /opt/emsdk
+  #         cd /opt/emsdk
 
-          ./emsdk activate ${{matrix.emsdk_ver}}
+  #         ./emsdk install ${{matrix.emsdk_ver}}
 
-          source "/opt/emsdk/emsdk_env.sh"
-          cd $GITHUB_WORKSPACE
-          cd bld
-          make install
+
+  #     - name: install mamba
+  #       uses: mamba-org/provision-with-micromamba@main
+  #       with:
+  #         environment-file: environment-dev.yml
+  #         environment-name: xeus-octave
+
+  #     - name: "install xtl"
+  #       run: |
+  #         cd /opt/emsdk
+
+  #         ./emsdk activate ${{matrix.emsdk_ver}}
+
+  #         source "/opt/emsdk/emsdk_env.sh"
+  #         mkdir -p /opt/xtl/build
+
+  #         git clone https://github.com/xtensor-stack/xtl.git  /opt/xtl/src
+  #         cd /opt/xtl/src
+  #         git checkout 0.7.2
+  #         cd /opt/xtl/build
+  #         emcmake cmake ../src/ -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot
+  #         emmake make -j2 install
+
+  #     - name: "install nlohmann-json"
+  #       run: |
+  #         cd /opt/emsdk
+
+  #         ./emsdk activate ${{matrix.emsdk_ver}}
+
+  #         source "/opt/emsdk/emsdk_env.sh"
+  #         mkdir -p /opt/nlohmannjson/build
+  #         git clone https://github.com/nlohmann/json.git  /opt/nlohmannjson/src
+  #         cd  /opt/nlohmannjson/src
+  #         git checkout v3.9.0
+  #         cd /opt/nlohmannjson/build
+  #         emcmake cmake ../src/  -DJSON_BuildTests=OFF -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot
+  #         emmake make -j2 install
+
+  #     - name: "install xeus"
+  #       run: |
+  #         cd /opt/emsdk
+
+  #         ./emsdk activate ${{matrix.emsdk_ver}}
+
+  #         source "/opt/emsdk/emsdk_env.sh"
+  #         mkdir -p /opt/xeus/build
+  #         git clone https://github.com/jupyter-xeus/xeus.git  /opt/xeus/src
+  #         cd  /opt/xeus/src
+  #         git checkout 2.2.0
+  #         cd /opt/xeus/build
+  #         emcmake cmake ../src \
+  #           -DXEUS_EMSCRIPTEN_WASM_BUILD=ON \
+  #           -DXEUS_BUILD_TESTS=ON \
+  #           -Dxtl_DIR=$GITHUB_WORKSPACE/custom_sysroot/share/cmake/xtl \
+  #           -Dnlohmann_json_DIR=$GITHUB_WORKSPACE/custom_sysroot/lib/cmake/nlohmann_json \
+  #           -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot
+  #         emmake make -j2
+  #         emmake make -j2 install
+
+
+  #     - name: cmake configure this repo
+  #       shell: bash -l {0}
+  #       run: |
+  #         cd /opt/emsdk
+
+  #         ./emsdk activate ${{matrix.emsdk_ver}}
+
+  #         source "/opt/emsdk/emsdk_env.sh"
+  #         cd $GITHUB_WORKSPACE
+  #         mkdir -p bld
+  #         cd bld
+  #         emcmake cmake .. \
+  #          -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/custom_sysroot \
+  #          -DXEUS_MYLANG_EMSCRIPTEN_WASM_BUILD=ON \
+  #          -Dxtl_DIR=$GITHUB_WORKSPACE/custom_sysroot/share/cmake/xtl \
+  #          -Dnlohmann_json_DIR=$GITHUB_WORKSPACE/custom_sysroot/lib/cmake/nlohmann_json \
+  #          -Dxeus_DIR=$GITHUB_WORKSPACE/custom_sysroot/lib/cmake/xeus
+
+  #     - name: build rendered project
+  #       shell: bash
+  #       run: |
+  #         cd /opt/emsdk
+
+  #         ./emsdk activate ${{matrix.emsdk_ver}}
+
+  #         source "/opt/emsdk/emsdk_env.sh"
+  #         cd $GITHUB_WORKSPACE
+  #         cd bld
+  #         emmake make -j8
+
+  #     - name: install rendered project
+  #       shell: bash -l {0}
+  #       run: |
+  #         cd /opt/emsdk
+
+  #         ./emsdk activate ${{matrix.emsdk_ver}}
+
+  #         source "/opt/emsdk/emsdk_env.sh"
+  #         cd $GITHUB_WORKSPACE
+  #         cd bld
+  #         make install

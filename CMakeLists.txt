@@ -280,7 +280,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
         set(XEUS_OCTAVE_XEUS_TARGET xeus-static)
     endif ()
 
-    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG OpenGL::OpenGL OpenGL::EGL)
+    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG OpenGL::GL OpenGL::EGL)
     if (WIN32 OR CYGWIN)
         #
     elseif (APPLE)
