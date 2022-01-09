@@ -62,56 +62,56 @@ jobs:
           cd test
           pytest .  --reruns 5
 
-  win:
+  # win:
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ windows-latest]
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ windows-latest]
 
-    steps:
-      - uses: actions/checkout@v2
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: install mamba
-        uses: mamba-org/provision-with-micromamba@main
-        with:
-          environment-file: environment-dev.yml
-          environment-name: xeus-octave
+  #     - name: install mamba
+  #       uses: mamba-org/provision-with-micromamba@main
+  #       with:
+  #         environment-file: environment-dev.yml
+  #         environment-name: xeus-octave
 
-      - name: micromamba shell hook
-        shell: powershell
-        run: |
-          micromamba shell hook -s cmd.exe -p C:\Users\runneradmin\micromamba
+  #     - name: micromamba shell hook
+  #       shell: powershell
+  #       run: |
+  #         micromamba shell hook -s cmd.exe -p C:\Users\runneradmin\micromamba
 
-      - name: install cxx compiler
-        shell: powershell
-        run: |
-          micromamba install cxx-compiler -c conda-forge -y
+  #     - name: install cxx compiler
+  #       shell: powershell
+  #       run: |
+  #         micromamba install cxx-compiler -c conda-forge -y
 
-      - name: cmake configure
-        shell: cmd
-        run: |
-          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
-          mkdir -p bld
-          cd bld
-          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DXEUS_BUILD_TESTS=ON -DDEPENDENCY_SEARCH_PREFIX="%CONDA_PREFIX%\Library" -DCMAKE_PREFIX_PATH="%CONDA_PREFIX%\Library" -DCMAKE_INSTALL_PREFIX="%CONDA_PREFIX%"
+  #     - name: cmake configure
+  #       shell: cmd
+  #       run: |
+  #         call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+  #         mkdir -p bld
+  #         cd bld
+  #         cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DXEUS_BUILD_TESTS=ON -DDEPENDENCY_SEARCH_PREFIX="%CONDA_PREFIX%\Library" -DCMAKE_PREFIX_PATH="%CONDA_PREFIX%\Library" -DCMAKE_INSTALL_PREFIX="%CONDA_PREFIX%"
 
-      - name: build
-        shell: cmd
-        run: |
-          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
-          cd bld
-          set CL=/MP
-          nmake install
+  #     - name: build
+  #       shell: cmd
+  #       run: |
+  #         call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+  #         cd bld
+  #         set CL=/MP
+  #         nmake install
 
-      - name: test
-        shell: cmd
-        run: |
-          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
-          cd test
-          pytest .  --reruns 5
+  #     - name: test
+  #       shell: cmd
+  #       run: |
+  #         call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+  #         cd test
+  #         pytest .  --reruns 5
 
 
   # emscripten_wasm_docker:
