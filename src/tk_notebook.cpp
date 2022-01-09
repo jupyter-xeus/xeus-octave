@@ -60,7 +60,26 @@ namespace xeus_octave::tk::notebook {
 
 		gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
-		std::clog << "GLFW Platform: " << std::hex << glfwGetPlatform() << std::endl;
+		std::clog << "GLFW Platform: ";
+
+		switch (glfwGetPlatform()) {
+			case GLFW_PLATFORM_WIN32:
+				std::clog << "WIN32" << std::endl;
+				break;
+			case GLFW_PLATFORM_COCOA:
+				std::clog << "COCOA" << std::endl;
+				break;
+			case GLFW_PLATFORM_WAYLAND:
+				std::clog << "WAYLAND" << std::endl;
+				break;
+			case GLFW_PLATFORM_X11:
+				std::clog << "X11" << std::endl;
+				break;
+			case GLFW_PLATFORM_NULL:
+				std::clog << "NULL" << std::endl;
+				break;
+		}
+
 		std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
 
 		glfwDestroyWindow(window);

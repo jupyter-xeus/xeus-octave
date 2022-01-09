@@ -101,7 +101,6 @@ if(NOT glfw3_POPULATED)
   FetchContent_Populate(glfw3)
 
   set(GLFW_LIBRARY_TYPE STATIC)
-  set(GLFW_USE_WAYLAND ON)
   set(GLFW_INSTALL OFF)
 
   # Bring the populated content into the build
