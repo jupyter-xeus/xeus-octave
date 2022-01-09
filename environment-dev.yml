@@ -13,6 +13,7 @@ dependencies:
   - octave
   - jupyterlab
   - glfw
+  - mesa
   # Test dependencies
   - pytest
   - jupyter_kernel_test>=0.4.3
