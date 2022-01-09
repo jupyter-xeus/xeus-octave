@@ -50,7 +50,17 @@ namespace xeus_octave::tk::notebook {
 
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+		window = glfwCreateWindow(100, 100, "", NULL, NULL);
+		if (!window) {
+			glfwTerminate();
+			return;
+		}
+
+		glfwMakeContextCurrent(window);
+
 		std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
+
+		glfwDestroyWindow(window);
 	}
 
 	notebook_graphics_toolkit::~notebook_graphics_toolkit() {
