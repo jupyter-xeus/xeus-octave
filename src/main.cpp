@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
     // will get a SIGPIPE and exit.
     if (std::getenv("JPY_PARENT_PID") != NULL)
     {
-        //std::clog.setstate(std::ios_base::failbit);
+        std::clog.setstate(std::ios_base::failbit);
     }
 
     // Registering SIGSEGV handler
