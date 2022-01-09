@@ -12,8 +12,12 @@ dependencies:
   - xtl
   - octave
   - jupyterlab
-  - glfw
   - mesa-libgl-devel-cos7-x86_64
+  # glfw deps
+  - xorg-libx11            # [linux]
+  - xorg-libxrandr         # [linux]
+  - xorg-libxinerama       # [linux]
+  - xorg-libxcursor        # [linux]
   - xorg-libxi
   # Test dependencies
   - pytest
