@@ -10,7 +10,7 @@
 #ifndef XEUS_OCTAVE_TK_NOTEBOOK_HPP
 #define XEUS_OCTAVE_TK_NOTEBOOK_HPP
 
-#include <EGL/egl.h>
+#include <GLFW/glfw3.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 
@@ -38,12 +38,7 @@ namespace xeus_octave::tk::notebook {
 		private:
 			octave::interpreter &m_interpreter;
 
-			EGLDisplay display;
-			EGLConfig config;
-			EGLContext context;
-			EGLSurface surface;
-			GLuint frameBuffer;
-			GLuint texture;
+			GLFWwindow *window = nullptr;
 	};
 
 	void register_all(octave::interpreter &interpreter);

@@ -86,8 +86,8 @@ if (NOT TARGET xeus AND NOT TARGET xeus-static)
 endif ()
 
 find_package(PNG REQUIRED)
-find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
+find_package(glfw3 REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
 
 
@@ -280,7 +280,8 @@ macro(xeus_octave_create_target target_name linkage output_name)
         set(XEUS_OCTAVE_XEUS_TARGET xeus-static)
     endif ()
 
-    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG OpenGL::GL OpenGL::EGL)
+    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG glfw)
+
     if (WIN32 OR CYGWIN)
         #
     elseif (APPLE)

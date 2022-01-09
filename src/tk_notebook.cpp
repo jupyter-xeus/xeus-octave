@@ -12,6 +12,7 @@
 #include <octave/interpreter.h>
 #include <octave/ov.h>
 #include <png.h>
+#include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <chrono>
@@ -36,37 +37,27 @@ namespace nl = nlohmann;
 
 namespace xeus_octave::tk::notebook {
 	notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
-		// EGL Initialization (platform)
-		EGLint num_config;
-		display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-		eglInitialize(display, nullptr, nullptr);
-		eglChooseConfig(display, nullptr, &config, 1, &num_config);
-		eglBindAPI(EGL_OPENGL_API);
-		context = eglCreateContext(display, config, EGL_NO_CONTEXT, NULL);
-		eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
+		glfwSetErrorCallback([](int error, const char* description) {
+			std::clog << "GLFW Error: " << description << " (" << error << ")" << std::endl;
+		});
 
-		// OpenGL initialization (common)
-		glGenFramebuffers(1, &frameBuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+		glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
+
+		if (!glfwInit()) {
+			std::clog << "Cannot initialize GLFW" << std::endl;
+			return;
+		}
+
+		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 		std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
 	}
 
 	notebook_graphics_toolkit::~notebook_graphics_toolkit() {
-		// GL
-		glDeleteTextures(1, &texture);
-		glDeleteFramebuffers(1, &frameBuffer);
+		if (window)
+			glfwDestroyWindow(window);
 
-		// EGL
-		eglDestroyContext(display, context);
-		eglTerminate(display);
+		glfwTerminate();
 	}
 
 	bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
@@ -75,9 +66,14 @@ namespace xeus_octave::tk::notebook {
 			// Set the pixel ratio
 			figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
 
-			// At the moment use a hardcoded scale factor of 2
+			// Get monitor scale
 			float xscale, yscale;
-			xscale = yscale = 2;
+
+			if (auto* monitor = glfwGetPrimaryMonitor())
+				glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+			else
+				xscale = yscale = 1;
+
 			float dpr = std::max(xscale, yscale);
 
 			// Store it in the figure
@@ -132,8 +128,9 @@ namespace xeus_octave::tk::notebook {
 		octave::opengl_functions m_glfcns;
 		octave::opengl_renderer m_renderer(m_glfcns);
 
-		// Use a texture as painting surface
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		// Create a hidden GLFW window
+		auto window = glfwCreateWindow(width, height, "", NULL, NULL);
+		glfwMakeContextCurrent(window);
 
 		// Render
 		m_renderer.set_viewport(width, height);
@@ -178,6 +175,9 @@ namespace xeus_octave::tk::notebook {
 		// Update
 		dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
 			.update_display_data(data, meta, tran);
+
+		// Destroy GLFW window
+		glfwDestroyWindow(window);
 	}
 
 	void notebook_graphics_toolkit::update(const graphics_object&, int) {

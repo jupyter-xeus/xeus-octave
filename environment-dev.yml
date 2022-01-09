@@ -12,6 +12,7 @@ dependencies:
   - xtl
   - octave
   - jupyterlab
+  - glfw
   # Test dependencies
   - pytest
   - jupyter_kernel_test>=0.4.3
