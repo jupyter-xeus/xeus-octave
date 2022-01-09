@@ -20,7 +20,25 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         "text": "graphics_",
         "matches": ["graphics_toolkit"]
     }]
-    # code_display_data = [{'code': 'x = [0 1 2]', 'mime': 'text/html'}]
+    code_display_data = [
+        {'code': 'x = [0 1 2]', 'mime': 'text/html'},
+    ]
+
+    def test_plot(self):
+        self.flush_channels()
+        reply, output_msgs = self.execute_helper('sombrero')
+
+        self.assertEqual(reply['content']['status'], 'ok')
+
+        self.assertGreaterEqual(len(output_msgs), 1)
+        found = False
+        for msg in output_msgs:
+            if msg['msg_type'] == 'update_display_data':
+                found = True
+            else:
+                continue
+            self.assertIn('image/png', msg['content']['data'])
+        assert found, 'plot not found'
 
 
 if __name__ == "__main__":

@@ -31,7 +31,7 @@ namespace {
 			print_usage();
 
 		// Get the data object
-		nl::json data;
+		nl::json data(nl::json::value_t::object);
 		octave_map d = args(0).xmap_value("DATA must be a map");
 
 		for (auto value : d) {
@@ -43,7 +43,7 @@ namespace {
 		}
 
 		// Get the metadata object
-		nl::json metadata;
+		nl::json metadata(nl::json::value_t::object);
 
 		if (args.length() > 1) {
 			octave_map m = args(0).xmap_value("METADATA must be a map");
