@@ -117,8 +117,8 @@ namespace xeus_octave::tk::notebook {
 		// future updates
 		dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
 			.display_data(
-				nl::json::object(),
-				nl::json::object(),
+				nl::json(nl::json::value_t::object),
+				nl::json(nl::json::value_t::object),
 				{{"display_id", id}}
 			);
 	}
