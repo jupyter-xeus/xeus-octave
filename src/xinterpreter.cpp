@@ -159,7 +159,6 @@ namespace xeus_octave
         // Override IO system
         std::cout.rdbuf(&m_stdout);
         std::cerr.rdbuf(&m_stderr);
-        // TODO: override input
 
         // Extract magic ?
         std::string trim = code;
@@ -272,7 +271,6 @@ namespace xeus_octave
         // Restore IO system
         std::cout.rdbuf(old_stdout);
         std::cerr.rdbuf(old_stderr);
-        // TODO: Restore input
 
         return kernel_res;
     }
@@ -310,6 +308,9 @@ namespace xeus_octave
         // Register embedded functions
         xeus_octave::display::register_all(interpreter);
         xeus_octave::interpreter::register_all(interpreter);
+
+        // Register the input system
+        xeus_octave::io::register_input(m_stdin);
 
         // Install version variable
         interpreter.get_symbol_table().install_built_in_function(

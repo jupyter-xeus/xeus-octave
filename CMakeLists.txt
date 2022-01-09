@@ -176,6 +176,7 @@ set(XEUS_OCTAVE_SRC
     src/xinterpreter.cpp
     src/display.cpp
     src/output.cpp
+    src/input.cpp
     src/tk_notebook.cpp
     glad/src/glad.c
 )

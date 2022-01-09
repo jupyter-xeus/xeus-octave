@@ -1,11 +1,10 @@
 /***************************************************************************
-* Copyright (c) 2022, Giulio Girardi
-*
-* Distributed under the terms of the GNU General Public License v3.
-*
-* The full license is in the file LICENSE, distributed with this software.
-****************************************************************************/
-
+ * Copyright (c) 2022, Giulio Girardi
+ *
+ * Distributed under the terms of the GNU General Public License v3.
+ *
+ * The full license is in the file LICENSE, distributed with this software.
+ ****************************************************************************/
 
 #ifndef XEUS_OCTAVE_PLOTSTREAM_HPP
 #define XEUS_OCTAVE_PLOTSTREAM_HPP
@@ -40,6 +39,6 @@ inline void setPlotStream(const graphics_object& o, std::string p) {
 	setPlotStream(_go, p);
 }
 
-}
+}  // namespace xeus_octave
 
 #endif

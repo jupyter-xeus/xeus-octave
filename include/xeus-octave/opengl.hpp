@@ -23,9 +23,9 @@
 //
 ////////////////////////////////////////////////////////////////////////
 
-#include "glad/glad.h"
-
 #include <iostream>
+
+#include "glad/glad.h"
 
 namespace octave {
 class opengl_functions {
