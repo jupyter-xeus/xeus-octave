@@ -7,6 +7,8 @@
 #############################################################################
 
 import unittest
+import os
+import os.path
 import jupyter_kernel_test
 
 
@@ -39,6 +41,19 @@ class KernelTests(jupyter_kernel_test.KernelTests):
                 continue
             self.assertIn('image/png', msg['content']['data'])
         assert found, 'plot not found'
+
+    def test_octave_scripts(self):
+        directory = os.fsencode(os.path.join(os.path.dirname(__file__), 'octave'))
+
+        for file in os.listdir(directory):
+            filename = os.fsdecode(file)
+            if filename.endswith(".m"):
+                self.flush_channels()
+                with open(os.path.join(os.path.dirname(__file__), 'octave', filename)) as script:
+                    code = script.read()
+                    reply, output_msgs = self.execute_helper(code)
+
+                    assert reply['content']['status'] == 'ok', code
 
 
 if __name__ == "__main__":

@@ -1,11 +1,8 @@
 # ![xeus-octave](docs/source/xeus-logo.svg)
 
-
-
-
 [![Build Status](https://github.com/rapgenic/xeus-octave/actions/workflows/main.yml/badge.svg)](https://github.com/rapgenic/xeus-octave/actions/workflows/main.yml)
 
-[![Documentation Status](http://readthedocs.org/projects/xeus-python/badge/?version=latest)](https://xeus-octavereadthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](http://readthedocs.org/projects/xeus-octave/badge/?version=latest)](https://xeus-octave.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rapgenic/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb)
 
 `xeus-octave` is a Jupyter kernel for octave based on the native implementation of the
@@ -75,6 +72,7 @@ http://xeus-octave.readthedocs.io
 `xeus-octave` depends on
 
 - [xeus](https://github.com/jupyter-xeus/xeus)
+- [octave](https://www.gnu.org/software/octave/index)
 - [xtl](https://github.com/xtensor-stack/xtl)
 - [nlohmann_json](https://github.com/nlohmann/json)
 

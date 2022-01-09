@@ -49,7 +49,7 @@ configure_file (
 OPTION(XEUS_OCTAVE_DISABLE_ARCH_NATIVE "disable -march=native flag" OFF)
 OPTION(XEUS_OCTAVE_DISABLE_TUNE_GENERIC "disable -mtune=generic flag" OFF)
 
-OPTION(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" OFF)
+OPTION(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" ON)
 OPTION(XEUS_OCTAVE_BUILD_SHARED "Split xoctave build into executable and library" ON)
 OPTION(XEUS_OCTAVE_BUILD_EXECUTABLE "Build the xoctave executable" ON)
 
