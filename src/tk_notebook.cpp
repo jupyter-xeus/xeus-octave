@@ -60,6 +60,7 @@ namespace xeus_octave::tk::notebook {
 
 		gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+#if (GLFW_VERSION_MAJOR >= 3) && (GLFW_VERSION_MINOR >= 4)
 		std::clog << "GLFW Platform: ";
 
 		switch (glfwGetPlatform()) {
@@ -79,6 +80,7 @@ namespace xeus_octave::tk::notebook {
 				std::clog << "NULL" << std::endl;
 				break;
 		}
+#endif
 
 		std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
 
