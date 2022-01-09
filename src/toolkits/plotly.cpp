@@ -41,12 +41,13 @@
 
 #include "plotstream.hpp"
 #include "tex2html.hpp"
+#include "xeus/xguid.hpp"
 
 namespace xoctave {
 
 bool plotly_graphics_toolkit::initialize(const graphics_object& go) {
 	if (go.isa("figure")) {
-		setPlotStream(go, rand());
+		setPlotStream(go, xeus::new_xguid());
 		show_figure(go);
 
 		return true;
@@ -56,7 +57,7 @@ bool plotly_graphics_toolkit::initialize(const graphics_object& go) {
 }
 
 void plotly_graphics_toolkit::redraw_figure(const graphics_object& go) const {
-	int id = getPlotStream(go);
+	auto id = getPlotStream(go);
 
 	if (go.isa("figure")) {
 		std::map<std::string, std::vector<unsigned long>> ids;
@@ -457,7 +458,7 @@ void plotly_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 }
 
 void plotly_graphics_toolkit::show_figure(const graphics_object& go) const {
-	int id = getPlotStream(go);
+	auto id = getPlotStream(go);
 
 	json tran;
 	tran["display_id"] = id;

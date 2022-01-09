@@ -23,13 +23,6 @@
 
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
 
-#include <GLFW/glfw3.h>
-
-#ifdef NOTEBOOK_TOOLKIT_CPU
-#define GLFW_EXPOSE_NATIVE_OSMESA
-#include <GLFW/glfw3native.h>
-#endif
-
 #include <octave/gl-render.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/graphics.h>
@@ -50,6 +43,7 @@
 #include <string>
 
 #include "plotstream.hpp"
+#include "xeus/xguid.hpp"
 #include "xoctave_interpreter.hpp"
 #include "xtl/xbase64.hpp"
 
@@ -59,42 +53,36 @@ using namespace nlohmann;
 namespace xoctave {
 
 notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
-	glfwSetErrorCallback([](int error, const char* description) {
-		std::clog << "GLFW Error: " << description << " (" << error << ")" << std::endl;
-	});
+	EGLint num_config;
 
-	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
+	display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+	eglInitialize(display, nullptr, nullptr);
+	eglChooseConfig(display, nullptr, &config, 1, &num_config);
+	eglBindAPI(EGL_OPENGL_API);
+	context = eglCreateContext(display, config, EGL_NO_CONTEXT, NULL);
+	eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
 
-	if (!glfwInit()) {
-		std::clog << "Cannot initialize GLFW" << std::endl;
-		return;
-	}
-
-	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-#ifndef NOTEBOOK_TOOLKIT_CPU
-	window = glfwCreateWindow(100, 100, "", NULL, NULL);
-	if (!window) {
-		glfwTerminate();
-		return;
-	}
-
-	glfwMakeContextCurrent(window);
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
 
 #ifndef NDEBUG
 	std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << std::endl;
 #endif
-
-#endif
 }
 
 notebook_graphics_toolkit::~notebook_graphics_toolkit() {
-#ifndef NOTEBOOK_TOOLKIT_CPU
-	if (window)
-		glfwDestroyWindow(window);
-#endif
+	glDeleteTextures(1, &texture);
+	glDeleteFramebuffers(1, &frameBuffer);
 
-	glfwTerminate();
+	eglDestroyContext(display, context);
+	eglTerminate(display);
 }
 
 bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
@@ -103,10 +91,7 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 		figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
 		float xscale, yscale;
 
-		if (auto* monitor = glfwGetPrimaryMonitor())
-			glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-		else
-			xscale = yscale = 1;
+		xscale = yscale = 2;
 
 		float dpr = std::max(xscale, yscale);
 
@@ -116,7 +101,7 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 
 		figureProperties.set___device_pixel_ratio__(dpr);
 
-		setPlotStream(go, rand());
+		setPlotStream(go, xeus::new_xguid());
 		show_figure(go);
 
 		return true;
@@ -129,7 +114,7 @@ void notebook_graphics_toolkit::finalize(const graphics_object&) {
 }
 
 void notebook_graphics_toolkit::show_figure(const graphics_object& go) const {
-	int id = getPlotStream(go);
+	auto id = getPlotStream(go);
 
 	json tran;
 	tran["display_id"] = id;
@@ -142,7 +127,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	auto start = high_resolution_clock::now();
 #endif
 
-	int id = getPlotStream(go);
+	auto id = getPlotStream(go);
 	figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
 	Matrix figurePosition = figureProperties.get_position().matrix_value();
 
@@ -154,19 +139,13 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	octave::opengl_functions m_glfcns;
 	octave::opengl_renderer m_renderer(m_glfcns);
 
-#ifdef NOTEBOOK_TOOLKIT_CPU
-	auto window = glfwCreateWindow(width, height, "", NULL, NULL);
-	glfwMakeContextCurrent(window);
-#else
-	glfwSetWindowSize(window, width, height);
-#endif
-
-	m_renderer.set_viewport(width, height);
-	m_renderer.set_device_pixel_ratio(dpr);
 #ifndef NDEBUG
 	auto render_start = high_resolution_clock::now();
 #endif
 
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+	m_renderer.set_viewport(width, height);
+	m_renderer.set_device_pixel_ratio(dpr);
 	m_renderer.draw(go);
 
 #ifndef NDEBUG
@@ -239,10 +218,6 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
 	std::clog << "Draw time: " << duration.count() << std::endl;
-#endif
-
-#ifdef NOTEBOOK_TOOLKIT_CPU
-	glfwDestroyWindow(window);
 #endif
 }
 

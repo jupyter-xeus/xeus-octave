@@ -10,11 +10,23 @@
             "hidden": true
         },
         {
+            "name": "customglfw",
+            "displayName": "Custom GLFW",
+            "description": "Custom GLFW",
+            "cacheVariables": {
+                "GLFW3_FETCH": "TRUE"
+            },
+            "inherits": [
+                "base"
+            ]
+        },
+        {
             "name": "debug",
             "description": "Debug",
             "displayName": "Debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "XEUS_FETCH": "TRUE"
             },
             "inherits": [
                 "base"

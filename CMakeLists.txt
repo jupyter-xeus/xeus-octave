@@ -30,8 +30,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(GLFW3_OSMESA_BACKEND FALSE CACHE BOOL "Use the osmesa GLFW backend (for software rendering)")
-
 # Fetch libraries
 ################################################################################
 
@@ -50,20 +48,14 @@ find_or_fetch_package(
 
 find_or_fetch_package(
   xeus
-  https://github.com/jupyter-xeus/xeus.git 1.0.0
+  https://github.com/jupyter-xeus/xeus.git 2.3.0
   XEUS_BUILD_SHARED_LIBS OFF
-)
-
-find_or_fetch_package(
-  glfw3
-  https://github.com/glfw/glfw 3.3.4
-  GLFW_USE_OSMESA ${GLFW3_OSMESA_BACKEND}
-  BUILD_SHARED_LIBS OFF
 )
 
 # Deps
 ################################################################################
 find_package(PNG REQUIRED)
+find_package(OpenGL REQUIRED)
 
 # Octave
 ################################################################################
@@ -112,17 +104,7 @@ endif()
 
 target_link_libraries(${EXECUTABLE_NAME} pthread)
 target_link_libraries(${EXECUTABLE_NAME} PkgConfig::octinterp)
-
-if (GLFW3_OSMESA_BACKEND)
-  pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
-  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::osmesa)
-  set(NOTEBOOK_TOOLKIT_CPU TRUE)
-else()
-  find_package(OpenGL REQUIRED)
-  target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)
-endif()
-
-target_link_libraries(${EXECUTABLE_NAME} glfw)
+target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL OpenGL::EGL)
 target_link_libraries(${EXECUTABLE_NAME} PNG::PNG)
 
 set(NOTEBOOK_TOOLKIT_ENABLED ON)

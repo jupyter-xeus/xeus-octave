@@ -24,7 +24,7 @@
 
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
 
-#include <GLFW/glfw3.h>
+#include <EGL/egl.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 
@@ -51,10 +51,14 @@ public:
 	void finalize(const graphics_object &) override;
 
 private:
-#ifndef NOTEBOOK_TOOLKIT_CPU
-	GLFWwindow *window = nullptr;
-#endif
 	octave::interpreter &m_interpreter;
+
+	EGLDisplay display;
+	EGLConfig config;
+	EGLContext context;
+	EGLSurface surface;
+	GLuint frameBuffer;
+	GLuint texture;
 };
 
 }  // namespace xoctave
