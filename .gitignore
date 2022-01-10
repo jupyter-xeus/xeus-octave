@@ -51,3 +51,6 @@ build/
 bld
 compile_commands.json
 .cache
+
+micromamba
+envs/

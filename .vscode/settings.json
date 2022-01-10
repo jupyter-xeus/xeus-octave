@@ -1,5 +1,5 @@
 {
-	"python.pythonPath": "/home/ggirardi/miniconda3/envs/xeus-octave/bin/python",
+	"python.pythonPath": "/home/ggirardi/.local/opt/miniconda3/envs/xeus-octave/bin/python",
 	"python.testing.pytestArgs": [
 		"test"
 	],
