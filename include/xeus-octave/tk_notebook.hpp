@@ -9,7 +9,6 @@
 #ifndef XEUS_OCTAVE_TK_NOTEBOOK_HPP
 #define XEUS_OCTAVE_TK_NOTEBOOK_HPP
 
-#include <GLFW/glfw3.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 

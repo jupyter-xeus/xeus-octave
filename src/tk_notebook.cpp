@@ -6,10 +6,12 @@
  * The full license is in the file LICENSE, distributed with this software.
  ****************************************************************************/
 
+#include "xeus-octave/tk_notebook.hpp"
+
+// Prevent include reordering
 #include "xeus-octave/opengl.hpp"
-
-#pragma
-
+// Prevent include reordering
+#include <GLFW/glfw3.h>
 #include <octave/gl-render.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/graphics.h>
@@ -30,7 +32,6 @@
 #include <string>
 
 #include "xeus-octave/plotstream.hpp"
-#include "xeus-octave/tk_notebook.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 #include "xeus/xguid.hpp"
 #include "xeus/xinterpreter.hpp"
@@ -47,8 +48,8 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interp
 	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
 #ifdef __linux__
-	const char *wayland = std::getenv("WAYLAND_DISPLAY");
-	const char *x11 = std::getenv("DISPLAY");
+	const char* wayland = std::getenv("WAYLAND_DISPLAY");
+	const char* x11 = std::getenv("DISPLAY");
 
 	// Select the correct display manager
 	if (wayland && strcmp(wayland, "") && glfwPlatformSupported(GLFW_PLATFORM_WAYLAND))
