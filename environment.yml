@@ -3,8 +3,11 @@ channels:
   - conda-forge
 dependencies:
   # - xeus-octave=0.1.0
-  # - cxx-compiler
-  # - fortran-compiler
+  - octave
+  - xeus
+  #
+  - cxx-compiler
+  - fortran-compiler
   - notebook
   - ipywidgets>=7.6
   - jupyterlab=3
