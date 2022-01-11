@@ -46,6 +46,19 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interp
 
 	glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
+#ifdef __linux__
+	const char *wayland = std::getenv("WAYLAND_DISPLAY");
+	const char *x11 = std::getenv("DISPLAY");
+
+	// Select the correct display manager
+	if (wayland && strcmp(wayland, "") && glfwPlatformSupported(GLFW_PLATFORM_WAYLAND))
+		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+	else if (x11 && strcmp(x11, ""))
+		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+	else
+		glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_NULL);
+#endif
+
 	if (!glfwInit()) {
 		std::clog << "Cannot initialize GLFW" << std::endl;
 		return;
