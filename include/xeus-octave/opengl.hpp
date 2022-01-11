@@ -38,10 +38,6 @@ public:
 
 	virtual ~opengl_functions(void) = default;
 
-	// If OpenGL is not available, opengl_functions will be a dummy
-	// class that does nothing.  This makes the implementation of
-	// other things that rely on this class slightly simpler.
-
 	virtual void glAlphaFunc(GLenum func, GLclampf ref) {
 		::glAlphaFunc(func, ref);
 	}

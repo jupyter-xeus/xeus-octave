@@ -28,6 +28,7 @@
 #include "xeus-octave/display.hpp"
 #include "xeus-octave/tk_notebook.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+#include "xeus-octave/xwidgets.hpp"
 #include "xeus/xhelper.hpp"
 #include "xeus/xinput.hpp"
 
@@ -298,6 +299,9 @@ void xoctave_interpreter::configure_impl() {
 
 	// Register the input system
 	xeus_octave::io::register_input(m_stdin);
+
+	// Register the widget system
+	xeus_octave::widgets::register_all(interpreter);
 
 	// Install version variable
 	interpreter.get_symbol_table().install_built_in_function(

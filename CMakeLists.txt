@@ -77,13 +77,22 @@ endif()
 
 set(xtl_REQUIRED_VERSION 0.6.23)
 set(xeus_REQUIRED_VERSION 2.0.0)
+set(xwidgets_REQUIRED_VERSION 0.26.1)
+set(xproperty_REQUIRED_VERSION 0.11.0)
 
 if (NOT TARGET xtl)
     find_package(xtl ${xtl_REQUIRED_VERSION} REQUIRED)
 endif ()
+if (NOT TARGET xproperty)
+    find_package(xproperty ${xproperty_REQUIRED_VERSION} REQUIRED)
+endif ()
 if (NOT TARGET xeus AND NOT TARGET xeus-static)
     find_package(xeus ${xeus_REQUIRED_VERSION} REQUIRED)
 endif ()
+if (NOT TARGET xwidgets AND NOT TARGET xwidgets-static)
+    find_package(xwidgets ${xwidgets_REQUIRED_VERSION} REQUIRED)
+endif ()
+
 
 find_package(PNG REQUIRED)
 find_package(PkgConfig REQUIRED)
@@ -180,6 +189,7 @@ set(XEUS_OCTAVE_SRC
     src/display.cpp
     src/output.cpp
     src/input.cpp
+    src/xwidgets.cpp
     src/tk_notebook.cpp
     glad/src/glad.c
 )
@@ -300,12 +310,12 @@ macro(xeus_octave_create_target target_name linkage output_name)
     target_include_directories(${target_name} PRIVATE "glad/include")
 
     if (XEUS_OCTAVE_USE_SHARED_XEUS)
-        set(XEUS_OCTAVE_XEUS_TARGET xeus)
+        set(XEUS_OCTAVE_XEUS_TARGET xeus xwidgets)
     else ()
-        set(XEUS_OCTAVE_XEUS_TARGET xeus-static)
+        set(XEUS_OCTAVE_XEUS_TARGET xeus-static xwidgets-static)
     endif ()
 
-    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl PkgConfig::octinterp PNG::PNG)
+    target_link_libraries(${target_name} PUBLIC ${XEUS_OCTAVE_XEUS_TARGET} xtl xproperty PkgConfig::octinterp PNG::PNG)
     target_link_libraries(${target_name} PRIVATE glfw)
 
     if (WIN32 OR CYGWIN)
