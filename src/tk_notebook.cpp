@@ -119,7 +119,8 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 		if (auto* monitor = glfwGetPrimaryMonitor())
 			glfwGetMonitorContentScale(monitor, &xscale, &yscale);
 		else
-			xscale = yscale = 1;
+			// Force double scale if no monitor is detected (hidpi will look good)
+			xscale = yscale = 2;
 
 		float dpr = std::max(xscale, yscale);
 
