@@ -15,6 +15,9 @@ jobs:
   linux:
     runs-on: ubuntu-latest
 
+    env:
+      CFLAGS: -D_POSIX_C_SOURCE=199309L
+
     steps:
       - uses: actions/checkout@v2
 
@@ -37,7 +40,7 @@ jobs:
         run: |
           mkdir -p bld
           cd bld
-          CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L" cmake .. \
+          cmake .. \
            -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
@@ -61,9 +64,6 @@ jobs:
 
   macos:
     runs-on: macos-latest
-
-    env:
-        MACOSX_DEPLOYMENT_TARGET: 10.8
 
     steps:
       - uses: actions/checkout@v2
