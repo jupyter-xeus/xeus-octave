@@ -49,7 +49,7 @@ configure_file (
 OPTION(XEUS_OCTAVE_DISABLE_ARCH_NATIVE "disable -march=native flag" OFF)
 OPTION(XEUS_OCTAVE_DISABLE_TUNE_GENERIC "disable -mtune=generic flag" OFF)
 
-OPTION(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" ON)
+OPTION(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" OFF)
 OPTION(XEUS_OCTAVE_BUILD_SHARED "Split xoctave build into executable and library" ON)
 OPTION(XEUS_OCTAVE_BUILD_EXECUTABLE "Build the xoctave executable" ON)
 
@@ -87,25 +87,25 @@ endif ()
 
 find_package(PNG REQUIRED)
 find_package(PkgConfig REQUIRED)
-find_package(glfw3 REQUIRED)
-# include(FetchContent)
-# FetchContent_Declare(
-#   glfw3
-#   GIT_REPOSITORY https://github.com/glfw/glfw
-#   GIT_TAG df8d7bc892937a8b0f7c604c92a9f64f383cf48c
-# )
+# find_package(glfw3 REQUIRED)
+include(FetchContent)
+FetchContent_Declare(
+  glfw3
+  GIT_REPOSITORY https://github.com/glfw/glfw
+  GIT_TAG df8d7bc892937a8b0f7c604c92a9f64f383cf48c
+)
 
-# FetchContent_GetProperties(glfw3)
-# if(NOT glfw3_POPULATED)
-#   # Fetch the content using previously declared details
-#   FetchContent_Populate(glfw3)
+FetchContent_GetProperties(glfw3)
+if(NOT glfw3_POPULATED)
+  # Fetch the content using previously declared details
+  FetchContent_Populate(glfw3)
 
-#   set(GLFW_LIBRARY_TYPE STATIC)
-#   set(GLFW_INSTALL OFF)
+  set(GLFW_LIBRARY_TYPE STATIC)
+  set(GLFW_INSTALL OFF)
 
-#   # Bring the populated content into the build
-#   add_subdirectory(${glfw3_SOURCE_DIR} ${glfw3_BINARY_DIR})
-# endif()
+  # Bring the populated content into the build
+  add_subdirectory(${glfw3_SOURCE_DIR} ${glfw3_BINARY_DIR})
+endif()
 
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
 

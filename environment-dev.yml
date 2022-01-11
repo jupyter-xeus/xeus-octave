@@ -13,7 +13,14 @@ dependencies:
   - octave
   - jupyterlab
   - mesa-libgl-devel-cos7-x86_64
-  - glfw
+  #- glfw
+  - xorg-libx11            # [linux]
+  - xorg-libxrandr         # [linux]
+  - xorg-libxinerama       # [linux]
+  - xorg-libxcursor        # [linux]
+  - xorg-libxi             # [linux]
+  - xorg-libxrandr         # [linux]
+  - xorg-libxcursor        # [linux]
   # Test dependencies
   - pytest
   - jupyter_kernel_test>=0.4.3
