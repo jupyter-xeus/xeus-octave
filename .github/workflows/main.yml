@@ -40,7 +40,7 @@ jobs:
         run: |
           mkdir -p bld
           cd bld
-          cmake .. \
+          CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L" cmake .. \
            -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX
 
