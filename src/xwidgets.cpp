@@ -20,43 +20,6 @@
 
 #define XWIDGETS_POINTER_PROPERTY "__pointer__"
 
-#define XWIDGETS_MAKE_CLASS(i, klass, widget)                                                                              \
-	{                                                                                                                      \
-		using widget_type = widget;                                                                                        \
-		const std::string widget_name = #klass;                                                                            \
-		octave::interpreter& widget_interp = i;                                                                            \
-		octave::cdef_class widget_class = widget_interp.get_cdef_manager().make_class(widget_name);                        \
-                                                                                                                           \
-		octave_builtin::fcn constructor = [](const octave_value_list& args, int) {                                         \
-			set_widget(args(0).classdef_object_value(), new widget_type);                                                  \
-			return args;                                                                                                   \
-		};                                                                                                                 \
-		octave_builtin::fcn display = [](const octave_value_list& args, int) {                                             \
-			get_widget<widget_type>(args(0).classdef_object_value())->display();                                           \
-			return ovl();                                                                                                  \
-		};                                                                                                                 \
-		octave_builtin::fcn destructor = [](const octave_value_list& args, int) {                                          \
-			delete get_widget<widget_type>(args(0).classdef_object_value());                                               \
-			return ovl();                                                                                                  \
-		};                                                                                                                 \
-		widget_class.install_method(widget_interp.get_cdef_manager().make_method(widget_class, widget_name, constructor)); \
-		widget_class.install_method(widget_interp.get_cdef_manager().make_method(widget_class, "display", display));       \
-		widget_class.install_method(widget_interp.get_cdef_manager().make_method(widget_class, "delete", destructor));     \
-		widget_interp.get_symbol_table().install_built_in_function(widget_name, widget_class.get_constructor_function());
-
-#define XWIDGETS_MAKE_CLASS_END() \
-	}
-
-#define XWIDGETS_MAKE_PROPERTY(property)                                                                                                                                       \
-	{                                                                                                                                                                          \
-		octave_fcn_handle* get_##property##_h = new octave_fcn_handle(new octave_builtin(get_property<&widget_type::property, widget_type>, widget_name + ">get." #property)); \
-		octave_fcn_handle* set_##property##_h = new octave_fcn_handle(new octave_builtin(set_property<&widget_type::property, widget_type>, widget_name + ">set." #property)); \
-		widget_class.install_property(widget_interp.get_cdef_manager().make_property(                                                                                          \
-			widget_class, #property,                                                                                                                                           \
-			get_##property##_h, "public",                                                                                                                                      \
-			set_##property##_h, "public"));                                                                                                                                    \
-	}
-
 namespace {
 
 template <class W>
@@ -70,7 +33,7 @@ inline void set_widget(octave_classdef* cls, W* wdg) {
 }
 
 template <class V, class T>
-inline void set_property_from_ov(xp::xproperty<V, T>& property, octave_value value) {
+inline void set_property(xp::xproperty<V, T>& property, octave_value value) {
 	if constexpr (std::is_same_v<V, double>)
 		property = value.double_value();
 	else if constexpr (std::is_same_v<V, std::string>)
@@ -79,24 +42,72 @@ inline void set_property_from_ov(xp::xproperty<V, T>& property, octave_value val
 		std::cerr << "Type " << typeid(V).name() << " is not handled" << std::endl;
 }
 
-template <auto property, class W>
+template <class W, auto P>
 inline octave_value_list set_property(const octave_value_list& args, int) {
-	set_property_from_ov(get_widget<W>(args(0).classdef_object_value())->*property, args(1));
+	set_property(get_widget<W>(args(0).classdef_object_value())->*P, args(1));
 	return ovl();
 }
 
-template <auto property, class W>
+template <class W, auto P>
 inline octave_value_list get_property(const octave_value_list& args, int) {
-	return ovl((get_widget<W>(args(0).classdef_object_value())->*property)());
+	return ovl((get_widget<W>(args(0).classdef_object_value())->*P)());
+}
+
+template <class W>
+inline octave_value_list constructor(const octave_value_list& args, int) {
+	set_widget(args(0).classdef_object_value(), new W);
+	return args;
+}
+
+template <class W>
+inline octave_value_list display(const octave_value_list& args, int) {
+	get_widget<W>(args(0).classdef_object_value())->display();
+	return ovl();
+}
+
+template <class W>
+inline octave_value_list destructor(const octave_value_list& args, int) {
+	delete get_widget<W>(args(0).classdef_object_value());
+	return ovl();
+};
+
+template <class W>
+inline octave::cdef_class xwidgets_make_class(octave::interpreter& interpreter, std::string name) {
+	octave::cdef_manager& cm = interpreter.get_cdef_manager();
+
+	// Build the class type
+	octave::cdef_class klass = cm.make_class(name);
+
+	// Add basic methods
+	klass.install_method(cm.make_method(klass, name, constructor<W>));
+	klass.install_method(cm.make_method(klass, "display", display<W>));
+	klass.install_method(cm.make_method(klass, "delete", destructor<W>));
+
+	// Register the constructor
+	interpreter.get_symbol_table().install_built_in_function(name, klass.get_constructor_function());
+
+	return klass;
+}
+
+template <class W, auto P>
+inline void xwidgets_add_property(octave::interpreter& interpreter, octave::cdef_class& klass, std::string name) {
+	octave::cdef_manager& cm = interpreter.get_cdef_manager();
+
+	std::string kname = klass.get_name();
+
+	octave_fcn_handle* getter = new octave_fcn_handle(new octave_builtin(get_property<W, P>, kname + ">get." + name));
+	octave_fcn_handle* setter = new octave_fcn_handle(new octave_builtin(set_property<W, P>, kname + ">set." + name));
+
+	klass.install_property(cm.make_property(klass, name, getter, "public", setter, "public"));
 }
 
 void register_slider(octave::interpreter& interpreter) {
-	XWIDGETS_MAKE_CLASS(interpreter, slider, xw::slider<double>)
-	XWIDGETS_MAKE_PROPERTY(value)
-	XWIDGETS_MAKE_PROPERTY(readout_format)
-	XWIDGETS_MAKE_CLASS_END()
+	using W = xw::slider<double>;
 
-	octave_builtin::fcn a = set_property<&xw::text::disabled, xw::text>;
+	octave::cdef_class slider = xwidgets_make_class<W>(interpreter, "slider");
+
+	xwidgets_add_property<W, &W::value>(interpreter, slider, "value");
+	xwidgets_add_property<W, &W::readout_format>(interpreter, slider, "readout_format");
 }
 
 }  // namespace
