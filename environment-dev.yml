@@ -7,6 +7,8 @@ dependencies:
   - cmake
   # Host dependencies
   - xeus >= 2.0
+  - xwidgets
+  - xproperty
   - nlohmann_json
   - cppzmq
   - xtl
