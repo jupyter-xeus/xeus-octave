@@ -11,29 +11,32 @@
 
 #include <octave/graphics.h>
 
+#include "xwidgets/ximage.hpp"
+
 namespace xeus_octave {
 
 /**
  * Retrieve from the graphics object the plot_stream property
  */
-inline std::string getPlotStream(const graphics_object& o) {
-	return dynamic_cast<const figure::properties&>(o.get_ancestor("figure").get_properties())
-		.get___plot_stream__()
-		.string_value();
+inline xw::image* getPlotStream(const graphics_object& o) {
+	return reinterpret_cast<xw::image*>(
+		dynamic_cast<const figure::properties&>(o.get_ancestor("figure").get_properties())
+			.get___plot_stream__()
+			.long_value());
 }
 
 /**
  * Set in the graphics object the plot_stream propert
  */
-inline void setPlotStream(graphics_object& o, std::string p) {
+inline void setPlotStream(graphics_object& o, xw::image* p) {
 	if (o.isa("figure"))
-		dynamic_cast<figure::properties&>(o.get_properties()).set___plot_stream__(p);
+		dynamic_cast<figure::properties&>(o.get_properties()).set___plot_stream__(reinterpret_cast<intptr_t>(p));
 }
 
 /**
  * Set in the graphics object the plot_stream propert (const version)
  */
-inline void setPlotStream(const graphics_object& o, std::string p) {
+inline void setPlotStream(const graphics_object& o, xw::image* p) {
 	// deCONSTify the graphics_object
 	auto _go = o;
 	setPlotStream(_go, p);

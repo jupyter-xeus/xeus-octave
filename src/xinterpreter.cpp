@@ -186,8 +186,8 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_count,		 // Typ
 		// This is useful for creating a figure in every cell, otherwise running code
 		// in subsequent cells updates a previously displayed figure.
 		// The current figure is stored in the properties of the root gh object (id 0)
-		root_figure::properties& root_figure = dynamic_cast<root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
-		root_figure.set_currentfigure(octave_value(NAN));
+		// root_figure::properties& root_figure = dynamic_cast<root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
+		// root_figure.set_currentfigure(octave_value(NAN));
 
 		// Code evaluation
 		int exit_status = 0;

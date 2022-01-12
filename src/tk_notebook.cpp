@@ -35,9 +35,7 @@
 #include "xeus-octave/xinterpreter.hpp"
 #include "xeus/xguid.hpp"
 #include "xeus/xinterpreter.hpp"
-#include "xtl/xbase64.hpp"
-
-namespace nl = nlohmann;
+#include "xwidgets/ximage.hpp"
 
 namespace xeus_octave::tk::notebook {
 notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
@@ -128,8 +126,10 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 		// Store it in the figure
 		figureProperties.set___device_pixel_ratio__(dpr);
 
+		xw::image* figure = new xw::image;
+
 		// Create a new object id and store it in the figure
-		setPlotStream(go, xeus::new_xguid());
+		setPlotStream(go, figure);
 
 		// Request to show the empty figure (this serves as a placeholder to
 		// keep the output order, as the figures are drawn after the last line
@@ -142,28 +142,28 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 	return false;
 }
 
-void notebook_graphics_toolkit::finalize(const graphics_object&) {
-	// Unused
+void notebook_graphics_toolkit::finalize(const graphics_object& go) {
+	// Get an unique identifier for this object, to be used as a display id
+	// in the display_data request for subsequent updates of the plot
+	xw::image* figure = getPlotStream(go);
+
+	delete figure;
 }
 
 void notebook_graphics_toolkit::show_figure(const graphics_object& go) const {
 	// Get an unique identifier for this object, to be used as a display id
 	// in the display_data request for subsequent updates of the plot
-	std::string id = getPlotStream(go);
+	xw::image* figure = getPlotStream(go);
 
 	// Display an empty figure (this is equivalent to the action of creating)
 	// a window, and prepares a display with the correct display_id for
 	// future updates
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-		.display_data(
-			nl::json(nl::json::value_t::object),
-			nl::json(nl::json::value_t::object),
-			{{"display_id", id}});
+	figure->display();
 }
 
 void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	// Retrieve the figure id
-	std::string id = getPlotStream(go);
+	xw::image* figure = getPlotStream(go);
 
 	// Get width height and scale factor
 	figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
@@ -190,7 +190,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, screen);
 
 	// Encode as PNG
-	std::string out;
+	std::vector<char> out;
 	std::vector<unsigned char*> rows(height);
 	png_structp p = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
 	png_infop i = png_create_info_struct(p);
@@ -201,7 +201,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	png_set_rows(p, i, &rows[0]);
 	png_set_write_fn(
 		p, &out, [](png_structp p, png_bytep d, png_size_t l) {
-			std::string* out = static_cast<std::string*>(png_get_io_ptr(p));
+			std::vector<char>* out = static_cast<std::vector<char>*>(png_get_io_ptr(p));
 			out->insert(out->end(), d, d + l);
 		},
 		nullptr);
@@ -209,20 +209,10 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	png_destroy_write_struct(&p, &i);
 	delete[] screen;
 
-	nl::json data, meta, tran;
-
-	data["image/png"] = xtl::base64encode(out);
-	// Send real width and height through metadata for optimal scaling
-	meta["image/png"] = {
-		{"width", width / dpr},
-		{"height", height / dpr},
-	};
-	// Dislplay id for updating existing display
-	tran["display_id"] = id;
-
-	// Update
-	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-		.update_display_data(data, meta, tran);
+	// TODO check value is changed before setting
+	figure->width = std::to_string(width / dpr);
+	figure->height = std::to_string(height / dpr);
+	figure->value = out;
 
 	// Destroy window
 	glfwDestroyWindow(window);

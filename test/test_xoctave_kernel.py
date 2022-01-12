@@ -26,21 +26,21 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         {'code': 'x = [0 1 2]', 'mime': 'text/html'},
     ]
 
-    def test_plot(self):
-        self.flush_channels()
-        reply, output_msgs = self.execute_helper('sombrero')
+    # def test_plot(self):
+    #     self.flush_channels()
+    #     reply, output_msgs = self.execute_helper('sombrero')
 
-        self.assertEqual(reply['content']['status'], 'ok')
+    #     self.assertEqual(reply['content']['status'], 'ok')
 
-        self.assertGreaterEqual(len(output_msgs), 1)
-        found = False
-        for msg in output_msgs:
-            if msg['msg_type'] == 'update_display_data':
-                found = True
-            else:
-                continue
-            self.assertIn('image/png', msg['content']['data'])
-        assert found, 'plot not found'
+    #     self.assertGreaterEqual(len(output_msgs), 1)
+    #     found = False
+    #     for msg in output_msgs:
+    #         if msg['msg_type'] == 'update_display_data':
+    #             found = True
+    #         else:
+    #             continue
+    #         self.assertIn('image/png', msg['content']['data'])
+    #     assert found, 'plot not found'
 
     def test_octave_scripts(self):
         directory = os.fsencode(os.path.join(os.path.dirname(__file__), 'octave'))
