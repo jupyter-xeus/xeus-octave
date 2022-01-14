@@ -48,6 +48,17 @@ struct ov<std::string> {
 	}
 };
 
+// int conversion
+template <>
+struct ov<int> {
+	static inline int from(const octave_value &v) {
+		return v.int_value();
+	}
+	static inline octave_value to(const int &v) {
+		return octave_value(v);
+	}
+};
+
 // xguid
 template <>
 struct ov<xeus::xguid> {

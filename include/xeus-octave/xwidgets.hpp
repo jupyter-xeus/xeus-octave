@@ -17,8 +17,6 @@
 
 namespace xeus_octave::widgets {
 
-namespace utils {
-
 using namespace xeus_octave::utils;
 
 #define XWIDGETS_POINTER_PROPERTY "__pointer__"
@@ -171,8 +169,7 @@ inline octave::cdef_class xwidgets_make_class(octave::interpreter& interpreter, 
 
 	return cls;
 }
-
-}  // namespace utils
+// namespace utils
 
 void register_all(octave::interpreter& interpreter);
 }  // namespace xeus_octave::widgets

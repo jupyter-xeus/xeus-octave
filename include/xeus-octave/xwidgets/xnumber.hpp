@@ -11,9 +11,9 @@
 
 #include <xeus-octave/xwidgets.hpp>
 
-namespace xeus_octave::widgets::xnumber::utils {
+namespace xeus_octave::widgets::xnumber {
 
-using namespace xeus_octave::widgets::utils;
+using namespace xeus_octave::widgets;
 
 template <class W>
 inline void xwidgets_inherit_xnumber(octave::interpreter& interpreter, octave::cdef_class& cls) {
@@ -24,6 +24,6 @@ inline void xwidgets_inherit_xnumber(octave::interpreter& interpreter, octave::c
 	xwidgets_add_property<W, &W::max>(interpreter, cls, "Max");
 }
 
-}  // namespace xeus_octave::widgets::xnumber::utils
+}  // namespace xeus_octave::widgets::xnumber
 
 #endif

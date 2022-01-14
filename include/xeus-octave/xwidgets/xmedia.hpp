@@ -9,17 +9,17 @@
 #ifndef XEUS_OCTAVE_XMEDIA_HPP
 #define XEUS_OCTAVE_XMEDIA_HPP
 
-#include <xeus-octave/xwidgets.hpp>
+#include "xeus-octave/xwidgets.hpp"
 
-namespace xeus_octave::widgets::xmedia::utils {
+namespace xeus_octave::widgets::xmedia {
 
-using namespace xeus_octave::widgets::utils;
+using namespace xeus_octave::widgets;
 
 template <class W>
 inline void xwidgets_inherit_xmedia(octave::interpreter& interpreter, octave::cdef_class& cls) {
 	xwidgets_add_property<W, &W::value>(interpreter, cls, "Value");
 }
 
-}  // namespace xeus_octave::widgets::xmedia::utils
+}  // namespace xeus_octave::widgets::xmedia
 
 #endif
