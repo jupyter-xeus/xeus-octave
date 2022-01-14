@@ -147,14 +147,6 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_count,		 // Typ
 	// Protocol response (successful)
 	nl::json kernel_res = xeus::create_successful_reply();
 
-	// Save output buffers
-	std::streambuf* old_stdout = std::cout.rdbuf();
-	std::streambuf* old_stderr = std::cerr.rdbuf();
-
-	// Override IO system
-	std::cout.rdbuf(&m_stdout);
-	std::cerr.rdbuf(&m_stderr);
-
 	// Extract magic ?
 	std::string trim = code;
 	trim.erase(trim.find_last_not_of(" \n\r\t") + 1);
@@ -257,14 +249,14 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_count,		 // Typ
 	// Update the figure if present
 	interpreter.feval("drawnow");
 
-	// Restore IO system
-	std::cout.rdbuf(old_stdout);
-	std::cerr.rdbuf(old_stderr);
-
 	return kernel_res;
 }
 
 void xoctave_interpreter::configure_impl() {
+	// Override output system
+	std::cout.rdbuf(&m_stdout);
+	std::cerr.rdbuf(&m_stderr);
+
 	// Install signal handlers to listen for CTRL+C
 	octave::install_signal_handlers();
 

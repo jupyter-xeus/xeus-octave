@@ -15,146 +15,88 @@
 #include <iostream>
 #include <typeinfo>
 
+#include "xeus-octave/plotstream.hpp"
+#include "xeus-octave/utils.hpp"
+#include "xeus-octave/xwidgets/xbox.hpp"
+#include "xeus-octave/xwidgets/xmedia.hpp"
+#include "xeus-octave/xwidgets/xnumber.hpp"
+#include "xwidgets/xbox.hpp"
 #include "xwidgets/xbutton.hpp"
 #include "xwidgets/xslider.hpp"
 
-#define XWIDGETS_POINTER_PROPERTY "__pointer__"
-
 namespace {
 
-inline octave_value make_fcn_handle(octave_builtin::fcn ff, const std::string& nm) {
-	octave_value fcn(new octave_builtin(ff, nm));
-	return octave_value(new octave_fcn_handle(fcn));
-}
+using namespace xeus_octave::widgets::utils;
+using namespace xeus_octave::widgets::xnumber::utils;
+using namespace xeus_octave::widgets::xmedia::utils;
+using namespace xeus_octave::widgets::xbox::utils;
 
-template <class W>
-inline W* get_widget(const octave_classdef* cls) {
-	return reinterpret_cast<W*>(cls->get_property(0, XWIDGETS_POINTER_PROPERTY).long_value());
-}
-
-template <class W>
-inline void set_widget(octave_classdef* cls, const W* wdg) {
-	cls->set_property(0, XWIDGETS_POINTER_PROPERTY, reinterpret_cast<intptr_t>(wdg));
-}
-
-template <class V, class T>
-inline void set_property(xp::xproperty<V, T>& property, const octave_value& value) {
-	if constexpr (std::is_same_v<V, double>)
-		property = value.double_value();
-	else if constexpr (std::is_same_v<V, std::string>)
-		property = value.string_value();
-	else
-		std::cerr << "Type " << typeid(V).name() << " is not handled" << std::endl;
-}
-
-template <class W, auto P>
-inline octave_value_list set_property(const octave_value_list& args, int) {
-	set_property(get_widget<W>(args(0).classdef_object_value())->*P, args(1));
-	return ovl();
-}
-
-template <class W, auto P>
-inline octave_value_list get_property(const octave_value_list& args, int) {
-	return ovl((get_widget<W>(args(0).classdef_object_value())->*P)());
-}
-
-template <class W, auto P>
-inline octave_value_list set_callback(octave::interpreter& interpreter, const octave_value_list& args, int) {
-	(get_widget<W>(args(0).classdef_object_value())->*P)(
-		[callback = args(1), &interpreter]() {
-			interpreter.feval(callback);
-		});
-
-	return ovl();
-}
-
-template <class W>
-inline octave_value_list constructor(const octave_value_list& args, int) {
-	set_widget(args(0).classdef_object_value(), new W);
-	return args;
-}
-
-template <class W>
-inline octave_value_list display(const octave_value_list& args, int) {
-	get_widget<W>(args(0).classdef_object_value())->display();
-	return ovl();
-}
-
-template <class W, auto P>
-inline octave_value_list observe(octave::interpreter& interpreter, const octave_value_list& args, int) {
-	auto w = get_widget<W>(args(0).classdef_object_value());
-
-	w->observe((w->*P).name(), [callback = args(1), &interpreter](const auto&) {
-		interpreter.feval(callback);
-	});
-
-	return ovl();
-};
-
-template <class W>
-inline octave_value_list destructor(const octave_value_list& args, int) {
-	delete get_widget<W>(args(0).classdef_object_value());
-	return ovl();
-};
-
-template <class W>
-inline octave::cdef_class xwidgets_make_class(octave::interpreter& interpreter, std::string name) {
-	octave::cdef_manager& cm = interpreter.get_cdef_manager();
-
-	// Build the class type
-	octave::cdef_class klass = cm.make_class(name);
-
-	// Add basic methods
-	klass.install_method(cm.make_method(klass, name, constructor<W>));
-	klass.install_method(cm.make_method(klass, "display", display<W>));
-	klass.install_method(cm.make_method(klass, "delete", destructor<W>));
-
-	// Register the constructor
-	interpreter.get_symbol_table().install_built_in_function(name, klass.get_constructor_function());
-
-	return klass;
-}
-
-template <class W, auto P>
-inline void xwidgets_add_property(octave::interpreter& interpreter, octave::cdef_class& klass, std::string name) {
-	octave::cdef_manager& cm = interpreter.get_cdef_manager();
-
-	std::string kname = klass.get_name();
-
-	klass.install_property(cm.make_property(
-		klass, name,
-		make_fcn_handle(get_property<W, P>, kname + ">get." + name), "public",
-		make_fcn_handle(set_property<W, P>, kname + ">set." + name), "public"));
-
-	klass.install_method(cm.make_method(klass, "observe_" + name, observe<W, P>));
-}
-
-template <class W, auto P>
-inline void xwidgets_add_callback(octave::interpreter& interpreter, octave::cdef_class& klass, std::string name) {
-	octave::cdef_manager& cm = interpreter.get_cdef_manager();
-
-	// Add basic methods
-	klass.install_method(cm.make_method(klass, name, set_callback<W, P>));
-}
-
+template <typename N>
 void register_slider(octave::interpreter& interpreter) {
-	using W = xw::slider<double>;
+	using W = xw::slider<N>;
 
-	octave::cdef_class slider = xwidgets_make_class<W>(interpreter, "slider");
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xslider");
 
-	xwidgets_add_property<W, &W::value>(interpreter, slider, "Value");
-	xwidgets_add_property<W, &W::readout_format>(interpreter, slider, "ReadoutFormat");
+	xwidgets_inherit_xnumber<W>(interpreter, cls);
+
+	xwidgets_add_property<W, &W::step>(interpreter, cls, "Step");
+	xwidgets_add_property<W, &W::orientation>(interpreter, cls, "Orientation");
+	xwidgets_add_property<W, &W::readout>(interpreter, cls, "Readout");
+	xwidgets_add_property<W, &W::readout_format>(interpreter, cls, "ReadoutFormat");
+	xwidgets_add_property<W, &W::continuous_update>(interpreter, cls, "ContinuousUpdate");
+	xwidgets_add_property<W, &W::disabled>(interpreter, cls, "Disabled");
+	// TODO: style
 }
 
 void register_button(octave::interpreter& interpreter) {
 	using W = xw::button;
 
-	octave::cdef_class slider = xwidgets_make_class<W>(interpreter, "button");
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xbutton");
 
-	xwidgets_add_property<W, &W::description>(interpreter, slider, "Description");
-	xwidgets_add_property<W, &W::button_style>(interpreter, slider, "ButtonStyle");
+	xwidgets_add_property<W, &W::description>(interpreter, cls, "Description");
 
-	xwidgets_add_callback<W, &W::on_click>(interpreter, slider, "on_click");
+	xwidgets_add_property<W, &W::tooltip>(interpreter, cls, "Tooltip");
+	xwidgets_add_property<W, &W::disabled>(interpreter, cls, "Disabled");
+	xwidgets_add_property<W, &W::icon>(interpreter, cls, "Icon");
+	xwidgets_add_property<W, &W::button_style>(interpreter, cls, "ButtonStyle");
+	// TODO: style
+
+	xwidgets_add_callback<W, &W::on_click>(interpreter, cls, "on_click");
+}
+
+void register_image(octave::interpreter& interpreter) {
+	using W = xw::image;
+
+	octave::cdef_manager& cm = interpreter.get_cdef_manager();
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "ximage");
+
+	xwidgets_inherit_xmedia<W>(interpreter, cls);
+
+	xwidgets_add_property<W, &W::format>(interpreter, cls, "Format");
+	xwidgets_add_property<W, &W::width>(interpreter, cls, "Width");
+	xwidgets_add_property<W, &W::height>(interpreter, cls, "Height");
+
+	// Register __pointer__ property for xfigure access
+	cls.install_property(cm.make_property(
+		cls, XWIDGETS_POINTER_PROPERTY,
+		Matrix(), "protected",
+		Matrix(), "private"));
+}
+
+void register_hbox(octave::interpreter& interpreter) {
+	using W = xw::hbox;
+
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xhbox");
+
+	xwidgets_inherit_xbox<W>(interpreter, cls);
+}
+
+void register_vbox(octave::interpreter& interpreter) {
+	using W = xw::vbox;
+
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xvbox");
+
+	xwidgets_inherit_xbox<W>(interpreter, cls);
 }
 
 }  // namespace
@@ -162,8 +104,11 @@ void register_button(octave::interpreter& interpreter) {
 namespace xeus_octave::widgets {
 
 void register_all(octave::interpreter& interpreter) {
-	register_slider(interpreter);
+	register_slider<double>(interpreter);
 	register_button(interpreter);
+	register_image(interpreter);
+	register_hbox(interpreter);
+	register_vbox(interpreter);
 }
 
 }  // namespace xeus_octave::widgets

@@ -35,6 +35,7 @@
 #include "xeus-octave/xinterpreter.hpp"
 #include "xeus/xguid.hpp"
 #include "xeus/xinterpreter.hpp"
+#include "xtl/xbase64.hpp"
 #include "xwidgets/ximage.hpp"
 
 namespace xeus_octave::tk::notebook {
@@ -126,44 +127,23 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 		// Store it in the figure
 		figureProperties.set___device_pixel_ratio__(dpr);
 
-		xw::image* figure = new xw::image;
-
-		// Create a new object id and store it in the figure
-		setPlotStream(go, figure);
-
-		// Request to show the empty figure (this serves as a placeholder to
-		// keep the output order, as the figures are drawn after the last line
-		// is executed)
-		show_figure(go);
-
 		return true;
 	}
 
 	return false;
 }
 
-void notebook_graphics_toolkit::finalize(const graphics_object& go) {
-	// Get an unique identifier for this object, to be used as a display id
-	// in the display_data request for subsequent updates of the plot
-	xw::image* figure = getPlotStream(go);
-
-	delete figure;
+void notebook_graphics_toolkit::finalize(const graphics_object&) {
+	// Unused
 }
 
-void notebook_graphics_toolkit::show_figure(const graphics_object& go) const {
-	// Get an unique identifier for this object, to be used as a display id
-	// in the display_data request for subsequent updates of the plot
-	xw::image* figure = getPlotStream(go);
-
-	// Display an empty figure (this is equivalent to the action of creating)
-	// a window, and prepares a display with the correct display_id for
-	// future updates
-	figure->display();
+void notebook_graphics_toolkit::show_figure(const graphics_object&) const {
+	// Unused
 }
 
 void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	// Retrieve the figure id
-	xw::image* figure = getPlotStream(go);
+	xw::image* figure = getPlotStream<xw::image*>(go);
 
 	// Get width height and scale factor
 	figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
@@ -172,7 +152,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	int width = figurePosition(2) * dpr;
 	int height = figurePosition(3) * dpr;
 
-	// Use the octave renderer to draw the plot on the EGL context
+	// Use the octave renderer to draw the plot on the GL context
 	octave::opengl_functions m_glfcns;
 	octave::opengl_renderer m_renderer(m_glfcns);
 
@@ -209,10 +189,42 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	png_destroy_write_struct(&p, &i);
 	delete[] screen;
 
-	// TODO check value is changed before setting
-	figure->width = std::to_string(width / dpr);
-	figure->height = std::to_string(height / dpr);
-	figure->value = out;
+	if (figure != nullptr) {
+		// TODO check value is changed before setting
+		figure->width = std::to_string(width / dpr);
+		figure->height = std::to_string(height / dpr);
+		figure->value = out;
+	} else {
+		std::string id = getPlotStream<std::string>(go);
+		nl::json data, meta, tran;
+
+		data["image/png"] = xtl::base64encode(std::string(out.begin(), out.end()));
+		// Send real width and height through metadata for optimal scaling
+		meta["image/png"] = {
+			{"width", width / dpr},
+			{"height", height / dpr},
+		};
+
+		if (id.empty()) {
+			std::string ps = xeus::new_xguid();
+			// Create a new object id and store it in the figure
+			setPlotStream(go, ps);
+			// Display an empty figure (this is equivalent to the action of creating)
+			// a window, and prepares a display with the correct display_id for
+			// future updates
+			tran["display_id"] = ps;
+
+			dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
+				.display_data(data, meta, tran);
+		} else {
+			// Dislplay id for updating existing display
+			tran["display_id"] = getPlotStream<std::string>(go);
+
+			// Update
+			dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
+				.update_display_data(data, meta, tran);
+		}
+	}
 
 	// Destroy window
 	glfwDestroyWindow(window);
