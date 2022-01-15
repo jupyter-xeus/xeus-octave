@@ -6,39 +6,35 @@
  * The full license is in the file LICENSE, distributed with this software.
  ****************************************************************************/
 
-#ifndef XEUS_OCTAVE_XSLIDER_HPP
-#define XEUS_OCTAVE_XSLIDER_HPP
+#ifndef XEUS_OCTAVE_XNUMERAL_HPP
+#define XEUS_OCTAVE_XNUMERAL_HPP
 
 #include "xeus-octave/xwidgets.hpp"
 #include "xeus-octave/xwidgets/xnumber.hpp"
-#include "xwidgets/xslider.hpp"
+#include "xwidgets/xnumeral.hpp"
 
-namespace xeus_octave::widgets::xslider {
+namespace xeus_octave::widgets::xnumeral {
 
 using namespace xeus_octave::widgets;
 using namespace xeus_octave::widgets::xnumber;
 
 template <typename N>
-inline void register_slider(octave::interpreter& interpreter) {
-	using W = xw::slider<N>;
+inline void register_numeral(octave::interpreter& interpreter) {
+	using W = xw::numeral<N>;
 
-	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xslider");
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xnumeral");
 
 	xwidgets_inherit_xnumber<W>(interpreter, cls);
 
 	xwidgets_add_property<W, &W::step>(interpreter, cls, "Step");
-	xwidgets_add_property<W, &W::orientation>(interpreter, cls, "Orientation");
-	xwidgets_add_property<W, &W::readout>(interpreter, cls, "Readout");
-	xwidgets_add_property<W, &W::readout_format>(interpreter, cls, "ReadoutFormat");
 	xwidgets_add_property<W, &W::continuous_update>(interpreter, cls, "ContinuousUpdate");
 	xwidgets_add_property<W, &W::disabled>(interpreter, cls, "Disabled");
-	// TODO: style
 }
 
 inline void register_all(octave::interpreter& interpreter) {
-	register_slider<double>(interpreter);
+	register_numeral<double>(interpreter);
 }
 
-}  // namespace xeus_octave::widgets::xslider
+}  // namespace xeus_octave::widgets::xnumeral
 
 #endif

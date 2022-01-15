@@ -6,32 +6,28 @@
  * The full license is in the file LICENSE, distributed with this software.
  ****************************************************************************/
 
-#ifndef XEUS_OCTAVE_XSLIDER_HPP
-#define XEUS_OCTAVE_XSLIDER_HPP
+#ifndef XEUS_OCTAVE_XPROGRESS_HPP
+#define XEUS_OCTAVE_XPROGRESS_HPP
 
 #include "xeus-octave/xwidgets.hpp"
 #include "xeus-octave/xwidgets/xnumber.hpp"
-#include "xwidgets/xslider.hpp"
+#include "xwidgets/xprogress.hpp"
 
-namespace xeus_octave::widgets::xslider {
+namespace xeus_octave::widgets::xprogress {
 
 using namespace xeus_octave::widgets;
 using namespace xeus_octave::widgets::xnumber;
 
 template <typename N>
 inline void register_slider(octave::interpreter& interpreter) {
-	using W = xw::slider<N>;
+	using W = xw::progress<N>;
 
 	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xslider");
 
 	xwidgets_inherit_xnumber<W>(interpreter, cls);
 
-	xwidgets_add_property<W, &W::step>(interpreter, cls, "Step");
 	xwidgets_add_property<W, &W::orientation>(interpreter, cls, "Orientation");
-	xwidgets_add_property<W, &W::readout>(interpreter, cls, "Readout");
-	xwidgets_add_property<W, &W::readout_format>(interpreter, cls, "ReadoutFormat");
-	xwidgets_add_property<W, &W::continuous_update>(interpreter, cls, "ContinuousUpdate");
-	xwidgets_add_property<W, &W::disabled>(interpreter, cls, "Disabled");
+	xwidgets_add_property<W, &W::bar_style>(interpreter, cls, "BarStyle");
 	// TODO: style
 }
 
