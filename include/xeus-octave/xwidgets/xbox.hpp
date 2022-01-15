@@ -17,14 +17,16 @@ namespace xeus_octave::widgets::xbox {
 using namespace xeus_octave::widgets;
 
 template <class W>
-inline octave_value_list add(octave::interpreter&, const octave_value_list& args, int) {
+inline octave_value_list add(octave::interpreter& interp, const octave_value_list& args, int) {
 	W* w = get_widget<W>(args(0).classdef_object_value());
 
-	if (args(1).is_string())
+	if (args(1).is_string()) {
 		w->add(xeus::xguid(args(1).string_value()));
-	else if (args(1).is_classdef_object())
-		// TODO: handle classdef and extract id
-		;
+	} else if (args(1).is_classdef_object()) {
+		octave_value id = interp.get_cdef_manager().find_method(XWIDGETS_BASE_CLASS_NAME, "id");
+		octave_value_list ret = interp.feval(id, args(1), 1);
+		w->add(xeus::xguid(ret(0).string_value()));
+	}
 
 	return ovl();
 }

@@ -29,7 +29,33 @@
 
 namespace xeus_octave::widgets {
 
+namespace xwidget {
+
+inline octave_value_list display(const octave_value_list& args, int) {
+	get_widget<xw::xcommon>(args(0).classdef_object_value())->display();
+	return ovl();
+}
+
+inline octave_value_list id(const octave_value_list& args, int) {
+	return ovl(ov<xeus::xguid>::to(get_widget<xw::xcommon>(args(0).classdef_object_value())->id()));
+}
+
+void register_xwidget(octave::interpreter& interpreter) {
+	octave::cdef_manager& cm = interpreter.get_cdef_manager();
+
+	// Build the class type
+	octave::cdef_class cls = cm.make_class(XWIDGETS_BASE_CLASS_NAME);
+
+	// Add xcommon methods
+	xwidgets_add_method(interpreter, cls, "display", display);
+	xwidgets_add_method(interpreter, cls, "id", id);
+}
+
+}  // namespace xwidget
+
 void register_all(octave::interpreter& interpreter) {
+	xwidget::register_xwidget(interpreter);
+
 	xslider::register_all(interpreter);
 	xbutton::register_all(interpreter);
 	ximage::register_all(interpreter);

@@ -14,12 +14,14 @@
 
 #include "xeus-octave/utils.hpp"
 #include "xproperty/xproperty.hpp"
+#include "xwidgets/xcommon.hpp"
 
 namespace xeus_octave::widgets {
 
 using namespace xeus_octave::utils;
 
 #define XWIDGETS_POINTER_PROPERTY "__pointer__"
+#define XWIDGETS_BASE_CLASS_NAME "xwidget"
 
 template <class W>
 inline W* get_widget(const octave_classdef* cls) {
@@ -67,17 +69,6 @@ template <class W>
 inline octave_value_list constructor(const octave_value_list& args, int) {
 	set_widget(args(0).classdef_object_value(), new W);
 	return args;
-}
-
-template <class W>
-inline octave_value_list display(const octave_value_list& args, int) {
-	get_widget<W>(args(0).classdef_object_value())->display();
-	return ovl();
-}
-
-template <class W>
-inline octave_value_list id(const octave_value_list& args, int) {
-	return ovl(ov<xeus::xguid>::to(get_widget<W>(args(0).classdef_object_value())->id()));
 }
 
 template <class W, auto P>
@@ -142,15 +133,11 @@ inline octave::cdef_class xwidgets_make_class(octave::interpreter& interpreter, 
 	octave::cdef_manager& cm = interpreter.get_cdef_manager();
 
 	// Build the class type
-	octave::cdef_class cls = cm.make_class(name);
+	octave::cdef_class cls = cm.make_class(name, cm.find_class(XWIDGETS_BASE_CLASS_NAME));
 
 	// Add basic methods (constructor and destructor)
 	xwidgets_add_method(interpreter, cls, name, constructor<W>);
 	xwidgets_add_method(interpreter, cls, "delete", destructor<W>);
-
-	// Add xcommon methods
-	xwidgets_add_method(interpreter, cls, "display", display<W>);
-	xwidgets_add_method(interpreter, cls, "id", id<W>);
 
 	// Add xobject properties
 	xwidgets_add_property<W, &W::_model_module>(interpreter, cls, "_ModelModule", true);
