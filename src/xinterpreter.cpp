@@ -103,13 +103,13 @@ std::string get_symbol_from_cursor_pos(const std::string& code, int cursor_pos) 
 	if (cursor_pos == (int) code.size())
 		cursor_pos = (int) code.size() - 1;
 
-	while (cursor_pos > 0 && (std::isalnum(code.at(cursor_pos)) || code.at(cursor_pos) == '_')) {
+	while (cursor_pos > 0 && (std::isalnum(code.at(cursor_pos)) || code.at(cursor_pos) == '_' || code.at(cursor_pos) == '.')) {
 		cursor_pos--;
 	}
 
 	int end_pos = cursor_pos ? ++cursor_pos : 0;
 
-	while (end_pos < (int) code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_')) {
+	while (end_pos < (int) code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_' || code.at(end_pos) == '.')) {
 		end_pos++;
 	}
 
