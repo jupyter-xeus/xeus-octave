@@ -22,7 +22,7 @@ template <typename N>
 inline void register_slider(octave::interpreter& interpreter) {
 	using W = xw::progress<N>;
 
-	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xslider");
+	octave::cdef_class cls = xwidgets_make_class<W>(interpreter, "xprogress");
 
 	xwidgets_inherit_xnumber<W>(interpreter, cls);
 
@@ -35,6 +35,6 @@ inline void register_all(octave::interpreter& interpreter) {
 	register_slider<double>(interpreter);
 }
 
-}  // namespace xeus_octave::widgets::xslider
+}  // namespace xeus_octave::widgets::xprogress
 
 #endif

@@ -10,7 +10,7 @@
 
 // Project version
 #define XEUS_OCTAVE_VERSION_MAJOR 0
-#define XEUS_OCTAVE_VERSION_MINOR 1
+#define XEUS_OCTAVE_VERSION_MINOR 2
 #define XEUS_OCTAVE_VERSION_PATCH 0
 
 // Composing the version string from major, minor and patch
