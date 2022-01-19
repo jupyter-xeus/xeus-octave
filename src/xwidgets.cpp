@@ -42,7 +42,9 @@ inline octave_value_list display(const octave_value_list& args, int) {
 }
 
 inline octave_value_list id(const octave_value_list& args, int) {
-	return ovl(ov<xeus::xguid>::to(get_widget<xw::xcommon>(args(0).classdef_object_value())->id()));
+	octave_value v;
+	to_ov(v, get_widget<xw::xcommon>(args(0).classdef_object_value())->id());
+	return v;
 }
 
 void register_xwidget(octave::interpreter& interpreter) {

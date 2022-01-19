@@ -57,6 +57,7 @@ OPTION(XEUS_OCTAVE_USE_SHARED_XEUS "Link xoctave  with the xeus shared library (
 OPTION(XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE "Link xoctave  with the xeus shared library (instead of the static library)" ON)
 OPTION(XEUS_OCTAVE_EMSCRIPTEN_WASM_BUILD "Build for wasm with emscripten" OFF)
 
+OPTION(XEUS_OCTAVE_BUILD_TESTS "Build xeus-octave test suite" OFF)
 
 if(XEUS_OCTAVE_EMSCRIPTEN_WASM_BUILD)
     add_compile_definitions(XEUS_OCTAVE_EMSCRIPTEN_WASM_BUILD)
@@ -368,6 +369,14 @@ endif()
 if(XEUS_OCTAVE_EMSCRIPTEN_WASM_BUILD)
     add_executable(xeus_kernel src/main_emscripten_kernel.cpp )
     target_link_libraries(xeus_kernel  xeus-octave-static)
+endif()
+
+
+# Tests
+# =====
+
+if(XEUS_OCTAVE_BUILD_TESTS)
+    add_subdirectory(test)
 endif()
 
 

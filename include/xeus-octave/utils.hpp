@@ -11,6 +11,7 @@
 
 #include <octave/ov-builtin.h>
 #include <octave/ov-fcn-handle.h>
+#include <octave/ov-null-mat.h>
 #include <octave/ov.h>
 
 #include <iostream>
@@ -20,104 +21,83 @@
 
 namespace xeus_octave::utils {
 
-/**
- * octave_value <==> standard/xeus types conversion
- */
 template <class T>
-struct ov;
+inline void from_ov(const octave_value &v, T &n) {
+	n = octave_value_extract<T>(v);
+}
 
-// Default conversion
+inline void from_ov(const octave_value &v, std::string &n) {
+	n = v.string_value();
+}
+
+inline void from_ov(const octave_value &v, int &n) {
+	n = v.int_value();
+}
+
+inline void from_ov(const octave_value &v, xeus::xguid &n) {
+	std::string s;
+	from_ov(v, s);
+	n = xeus::xguid(s);
+}
+
 template <class T>
-struct ov {
-	static inline T from(const octave_value &v) {
-		return octave_value_extract<T>(v);
-	}
-	static inline octave_value to(const T &v) {
-		return octave_value(v);
-	}
-};
+inline void from_ov(const octave_value &v, std::vector<T> &n) {
+	Cell cell = v.cell_value();
 
-// String conversion
-template <>
-struct ov<std::string> {
-	static inline std::string from(const octave_value &v) {
-		return v.string_value();
+	for (Cell::size_type i = 0; i < cell.size(0); i++) {
+		T e;
+		from_ov(cell(i), e);
+		n.push_back(e);
 	}
-	static inline octave_value to(const std::string &v) {
-		return octave_value(v);
-	}
-};
+}
 
-// int conversion
-template <>
-struct ov<int> {
-	static inline int from(const octave_value &v) {
-		return v.int_value();
+inline void from_ov(const octave_value &v, std::vector<char> &n) {
+	if (v.is_string()) {
+		std::string s = v.string_value();
+		std::copy(s.begin(), s.end(), std::back_inserter(n));
+	} else {
+		from_ov<char>(v, n);
 	}
-	static inline octave_value to(const int &v) {
-		return octave_value(v);
-	}
-};
+}
 
-// xguid
-template <>
-struct ov<xeus::xguid> {
-	static inline xeus::xguid from(const octave_value &v) {
-		return xeus::xguid(ov<std::string>::from(v));
-	}
-	static inline octave_value to(const xeus::xguid &v) {
-		return ov<std::string>::to(v);
-	}
-};
-
-// Forward vectors
 template <class T>
-struct ov<std::vector<T>> {
-	static inline std::vector<T> from(const octave_value &v) {
-		auto cell = v.cell_value();
-		std::vector<T> r;
+inline void from_ov(const octave_value &v, xtl::xoptional<T> &n) {
+	if (!v.isnull()) {
+		T e;
+		from_ov(v, e);
+		n = e;
+	} else
+		n = xtl::xoptional<T>();
+}
 
-		for (Cell::size_type i = 0; i < cell.size(0); i++)
-			r.push_back(ov<T>::from(cell(i)));
-
-		return r;
-	}
-
-	static inline octave_value to(const std::vector<T> &v) {
-		Cell a;
-		octave_idx_type i = 0;
-
-		a.resize(dim_vector(v.size(), 1));
-
-		for (auto e : v)
-			a.elem(i++, 0) = ov<T>::to(e);
-
-		return a;
-	}
-};
-
-// Forward the xoptional template
 template <class T>
-struct ov<xtl::xoptional<T>> {
-	static inline xtl::xoptional<T> from(const octave_value &v) {
-		if (v.is_defined())
-			return xtl::xoptional<T>(ov<T>::from(v));
+inline void to_ov(octave_value &n, const T &v) {
+	n = octave_value(v);
+}
 
-		return xtl::xoptional<T>();
-	}
+template <class T>
+inline void to_ov(octave_value &n, const std::vector<T> &v) {
+	Cell a;
+	octave_idx_type i = 0;
 
-	static inline octave_value to(const xtl::xoptional<T> &v) {
-		if (v.has_value())
-			return ov<T>::to(v.value());
+	a.resize(dim_vector(v.size(), 1));
 
-		return octave_value();
-	}
-};
+	for (auto e : v)
+		to_ov(a.elem(i++, 0), e);
 
-inline void x() {
-	xtl::xoptional<std::string> m;
+	n = a;
+}
 
-	xeus_octave::utils::ov<xtl::xoptional<std::string>>::to(m);
+template <class T>
+inline void to_ov(octave_value &n, const xtl::xoptional<T> &v) {
+	if (v.has_value())
+		to_ov(n, v.value());
+	else
+		n = octave_null_matrix::instance;
+}
+
+inline void to_ov(octave_value &n, const xeus::xguid &v) {
+	to_ov(n, std::string(v));
 }
 
 inline octave_value make_fcn_handle(octave_builtin::fcn ff, const std::string &nm) {

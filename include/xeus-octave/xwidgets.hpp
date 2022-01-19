@@ -35,8 +35,9 @@ inline void set_widget(octave_classdef* cls, const W* wdg) {
 
 template <class V, class T>
 inline void set_property(xp::xproperty<V, T>& property, const octave_value& value) {
-	V vec = ov<V>::from(value);
-	property = vec;
+	V n;
+	from_ov(value, n);
+	property = n;
 }
 
 template <class W, auto P>
@@ -47,7 +48,9 @@ inline octave_value_list set_property(const octave_value_list& args, int) {
 
 template <class V, class T>
 inline octave_value get_property(xp::xproperty<V, T>& property) {
-	return ov<V>::to(property);
+	octave_value n;
+	to_ov(n, property());
+	return n;
 }
 
 template <class W, auto P>
