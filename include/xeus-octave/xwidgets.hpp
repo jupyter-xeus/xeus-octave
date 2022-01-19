@@ -61,8 +61,16 @@ inline octave_value_list get_property(const octave_value_list& args, int) {
 template <class W, auto P>
 inline octave_value_list set_callback(octave::interpreter& interpreter, const octave_value_list& args, int) {
 	(get_widget<W>(args(0).classdef_object_value())->*P)(
-		[callback = args(1), &interpreter]() {
-			interpreter.feval(callback);
+		[cls = args(0),
+		 cb = args(1),
+		 args = args.slice(2, args.length() - 2),
+		 &interpreter]() {
+			octave_value_list cb_args;
+
+			cb_args(0) = cls;
+			cb_args.append(args);
+
+			interpreter.feval(cb, cb_args);
 		});
 
 	return ovl();
@@ -78,8 +86,16 @@ template <class W, auto P>
 inline octave_value_list observe(octave::interpreter& interpreter, const octave_value_list& args, int) {
 	W* w = get_widget<W>(args(0).classdef_object_value());
 
-	w->observe((w->*P).name(), [callback = args(1), &interpreter](const auto&) {
-		interpreter.feval(callback);
+	w->observe((w->*P).name(), [cls = args(0),
+								cb = args(1),
+								args = args.slice(2, args.length() - 2),
+								&interpreter](const auto&) {
+		octave_value_list cb_args;
+
+		cb_args(0) = cls;
+		cb_args.append(args);
+
+		interpreter.feval(cb, cb_args);
 	});
 
 	return ovl();

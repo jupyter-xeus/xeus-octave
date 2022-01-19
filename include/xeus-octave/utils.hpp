@@ -44,9 +44,9 @@ template <class T>
 inline void from_ov(const octave_value &v, std::vector<T> &n) {
 	Cell cell = v.cell_value();
 
-	for (Cell::size_type i = 0; i < cell.size(0); i++) {
+	for (Cell::size_type i = 0; i < cell.size(1); i++) {
 		T e;
-		from_ov(cell(i), e);
+		from_ov(cell(0, i), e);
 		n.push_back(e);
 	}
 }
