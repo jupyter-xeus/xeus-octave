@@ -17,6 +17,10 @@ classdef xfigure < ximage
 			x.h = figure("__plot_stream__", x.__pointer__, varargin{:});
 		endfunction
 
+		function select(obj)
+			set(0, "currentfigure", obj.h)
+		endfunction
+
 		function set.Width(obj, w)
 			p = get(obj.h, "position");
 			p(3) = w;
