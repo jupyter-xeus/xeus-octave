@@ -24,9 +24,9 @@
 #include <vector>
 
 #include "nlohmann/json.hpp"
-#include "xeus-octave/bindings.hpp"
 #include "xeus-octave/display.hpp"
 #include "xeus-octave/tk_notebook.hpp"
+#include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 #include "xeus-octave/xwidgets.hpp"
 #include "xeus/xhelper.hpp"
@@ -128,10 +128,13 @@ octave_value_list override_path(const octave_value_list& args, int /*nargout*/) 
 }  // namespace
 
 namespace xeus_octave {
+
 namespace interpreter {
+
 void register_all(octave::interpreter& interpreter) {
-	XEUS_OCTAVE_LANGUAGE_BINDING(interpreter, "XOCTAVE_OVERRIDE_PATH", override_path);
+	utils::add_native_binding(interpreter, "XOCTAVE_OVERRIDE_PATH", override_path);
 }
+
 }  // namespace interpreter
 
 xoctave_interpreter::xoctave_interpreter() {

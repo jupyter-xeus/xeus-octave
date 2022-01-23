@@ -9,6 +9,7 @@
 #ifndef XEUS_OCTAVE_UTILS_HPP
 #define XEUS_OCTAVE_UTILS_HPP
 
+#include <octave/interpreter.h>
 #include <octave/ov-builtin.h>
 #include <octave/ov-fcn-handle.h>
 #include <octave/ov-null-mat.h>
@@ -103,6 +104,11 @@ inline void to_ov(octave_value &n, const xeus::xguid &v) {
 inline octave_value make_fcn_handle(octave_builtin::fcn ff, const std::string &nm) {
 	octave_value fcn(new octave_builtin(ff, nm));
 	return octave_value(new octave_fcn_handle(fcn));
+}
+
+inline void add_native_binding(octave::interpreter &interpreter, const std::string &name, octave_builtin::fcn ff) {
+	octave_builtin *fcn = new octave_builtin(ff, name, __FILE__, "");
+	interpreter.get_symbol_table().install_built_in_function(name, fcn);
 }
 
 }  // namespace xeus_octave::utils

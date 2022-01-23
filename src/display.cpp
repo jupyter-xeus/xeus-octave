@@ -15,7 +15,7 @@
 #include <nlohmann/json.hpp>
 #include <regex>
 
-#include "xeus-octave/bindings.hpp"
+#include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 #include "xeus/xinterpreter.hpp"
 
@@ -185,10 +185,10 @@ octave_value_list matrix_to_latex(const octave_value_list& args, int /*nargout*/
 namespace xeus_octave::display {
 
 void register_all(octave::interpreter& interpreter) {
-	XEUS_OCTAVE_LANGUAGE_BINDING(interpreter, "display_data", display_data);
-	XEUS_OCTAVE_LANGUAGE_BINDING(interpreter, "__matrix_to_html__", matrix_to_html);
-	XEUS_OCTAVE_LANGUAGE_BINDING(interpreter, "__matrix_to_latex__", matrix_to_latex);
-	XEUS_OCTAVE_LANGUAGE_BINDING(interpreter, "__latex_fix_sci_not__", latex_fix_sci_not);
+	utils::add_native_binding(interpreter, "display_data", display_data);
+	utils::add_native_binding(interpreter, "__matrix_to_html__", matrix_to_html);
+	utils::add_native_binding(interpreter, "__matrix_to_latex__", matrix_to_latex);
+	utils::add_native_binding(interpreter, "__latex_fix_sci_not__", latex_fix_sci_not);
 }
 
 }  // namespace xeus_octave::display
