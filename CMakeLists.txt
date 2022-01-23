@@ -99,25 +99,28 @@ find_package(PNG REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 # TODO: Replace manual build with glfw 3.4 dependency once it's released
-# find_package(glfw3 REQUIRED)
-# Fetching master glfw
-include(FetchContent)
-FetchContent_Declare(
-  glfw3
-  GIT_REPOSITORY https://github.com/glfw/glfw
-  GIT_TAG df8d7bc892937a8b0f7c604c92a9f64f383cf48c
-)
+find_package(glfw3 REQUIRED)
 
-FetchContent_GetProperties(glfw3)
-if(NOT glfw3_POPULATED)
-  # Fetch the content using previously declared details
-  FetchContent_Populate(glfw3)
+if(NOT glfw3_FOUND)
+    # Fetching master glfw
+    include(FetchContent)
+    FetchContent_Declare(
+    glfw3
+    GIT_REPOSITORY https://github.com/glfw/glfw
+    GIT_TAG df8d7bc892937a8b0f7c604c92a9f64f383cf48c
+    )
 
-  set(GLFW_LIBRARY_TYPE STATIC)
-  set(GLFW_INSTALL OFF)
+    FetchContent_GetProperties(glfw3)
+    if(NOT glfw3_POPULATED)
+    # Fetch the content using previously declared details
+    FetchContent_Populate(glfw3)
 
-  # Bring the populated content into the build
-  add_subdirectory(${glfw3_SOURCE_DIR} ${glfw3_BINARY_DIR})
+    set(GLFW_LIBRARY_TYPE STATIC)
+    set(GLFW_INSTALL OFF)
+
+    # Bring the populated content into the build
+    add_subdirectory(${glfw3_SOURCE_DIR} ${glfw3_BINARY_DIR})
+    endif()
 endif()
 
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
