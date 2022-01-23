@@ -99,7 +99,7 @@ find_package(PNG REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 # TODO: Replace manual build with glfw 3.4 dependency once it's released
-find_package(glfw3 REQUIRED)
+find_package(glfw3)
 
 if(NOT glfw3_FOUND)
     # Fetching master glfw
