@@ -64,7 +64,7 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interp
 		return;
 	}
 
-	glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 	GLFWwindow* window = glfwCreateWindow(1, 1, "", NULL, NULL);
 	if (!window) {
