@@ -20,11 +20,6 @@
 					"description": "Abilita la riformattazione per gdb",
 					"text": "-enable-pretty-printing",
 					"ignoreFailures": true
-				},
-				{
-					"description": "Disabilita debuginfo",
-					"text": "source ${workspaceFolder}/.gdbinit",
-					"ignoreFailures": true
 				}
 			]
 		}

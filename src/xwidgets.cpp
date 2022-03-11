@@ -51,7 +51,7 @@ void register_xwidget(octave::interpreter& interpreter) {
 	octave::cdef_manager& cm = interpreter.get_cdef_manager();
 
 	// Build the class type
-	octave::cdef_class cls = cm.make_class(XWIDGETS_BASE_CLASS_NAME);
+	octave::cdef_class cls = cm.make_class(XWIDGETS_BASE_CLASS_NAME, cm.find_class("handle"));
 
 	// Add xcommon methods
 	xwidgets_add_method(interpreter, cls, "display", display);
