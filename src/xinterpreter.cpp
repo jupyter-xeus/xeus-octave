@@ -275,6 +275,10 @@ void xoctave_interpreter::configure_impl() {
 
 	// Prepend our override path to have precedence over default m-files
 	interpreter.get_load_path().prepend(XOCTAVE_OVERRIDE_PATH "/xeus-octave");
+	interpreter.get_load_path().set_add_hook([prevhook = interpreter.get_load_path().get_add_hook(), this](const std::string& s) {
+		interpreter.get_load_path().prepend(XOCTAVE_OVERRIDE_PATH "/xeus-octave");
+		prevhook(s);
+	});
 
 	// TODO: explain
 	interpreter.get_output_system().page_screen_output(true);
