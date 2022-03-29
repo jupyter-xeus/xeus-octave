@@ -105,9 +105,9 @@ if(NOT glfw3_FOUND)
     # Fetching master glfw
     include(FetchContent)
     FetchContent_Declare(
-    glfw3
-    GIT_REPOSITORY https://github.com/glfw/glfw
-    GIT_TAG df8d7bc892937a8b0f7c604c92a9f64f383cf48c
+        glfw3
+        GIT_REPOSITORY https://github.com/glfw/glfw
+        GIT_TAG 1461c59aa2426b25503102e62bc8f4b65e079c5f
     )
 
     FetchContent_GetProperties(glfw3)
@@ -117,6 +117,7 @@ if(NOT glfw3_FOUND)
 
     set(GLFW_LIBRARY_TYPE STATIC)
     set(GLFW_INSTALL OFF)
+    set(CMAKE_C_FLAGS -D_POSIX_C_SOURCE=199309L)
 
     # Bring the populated content into the build
     add_subdirectory(${glfw3_SOURCE_DIR} ${glfw3_BINARY_DIR})

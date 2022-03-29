@@ -17,7 +17,7 @@ classdef xfigure < ximage
 			x.h = figure("__plot_stream__", x.__pointer__, varargin{:});
 		endfunction
 
-		function select(obj)
+		function obj = select(obj)
 			set(0, "currentfigure", obj.h)
 		endfunction
 

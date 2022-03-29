@@ -1,4 +1,4 @@
-* xeus-cookiecutter version:
+* xeus-octave version:
 * Operating System:
 
 ### Description
