@@ -13,8 +13,12 @@ dependencies:
   - cppzmq
   - xtl
   - octave
-  - jupyterlab
   - mesa-libgl-devel-cos7-x86_64
+  - cxx-compiler
+  - fortran-compiler
+  - ipywidgets>=7.6
+  - jupyterlab=3
+  - sympy
   #- glfw
   - xorg-libx11            # [linux]
   - xorg-libxrandr         # [linux]
