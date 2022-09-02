@@ -43,12 +43,12 @@ public:
 
 	bool is_valid() const override { return true; }
 
-	bool initialize(const graphics_object &) override;
-	void redraw_figure(const graphics_object &) const override;
-	void show_figure(const graphics_object &) const override;
-	void update(const graphics_object &, int) override;
+	bool initialize(const octave::graphics_object &) override;
+	void redraw_figure(const octave::graphics_object &) const override;
+	void show_figure(const octave::graphics_object &) const override;
+	void update(const octave::graphics_object &, int) override;
 
-	void finalize(const graphics_object &) override;
+	void finalize(const octave::graphics_object &) override;
 
 private:
 #ifndef NOTEBOOK_TOOLKIT_CPU

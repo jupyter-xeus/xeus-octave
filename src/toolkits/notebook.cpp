@@ -97,10 +97,10 @@ notebook_graphics_toolkit::~notebook_graphics_toolkit() {
 	glfwTerminate();
 }
 
-bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
+bool notebook_graphics_toolkit::initialize(const octave::graphics_object& go) {
 	if (go.isa("figure")) {
 		// Set the pixel ratio
-		figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
+		figure::properties& figureProperties = dynamic_cast<figure::properties&>(octave::graphics_object(go).get_properties());
 		float xscale, yscale;
 
 		if (auto* monitor = glfwGetPrimaryMonitor())
@@ -125,10 +125,10 @@ bool notebook_graphics_toolkit::initialize(const graphics_object& go) {
 	return false;
 }
 
-void notebook_graphics_toolkit::finalize(const graphics_object&) {
+void notebook_graphics_toolkit::finalize(const octave::graphics_object&) {
 }
 
-void notebook_graphics_toolkit::show_figure(const graphics_object& go) const {
+void notebook_graphics_toolkit::show_figure(const octave::graphics_object& go) const {
 	int id = getPlotStream(go);
 
 	json tran;
@@ -136,14 +136,14 @@ void notebook_graphics_toolkit::show_figure(const graphics_object& go) const {
 	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).display_data(json::object(), json::object(), tran);
 }
 
-void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
+void notebook_graphics_toolkit::redraw_figure(const octave::graphics_object& go) const {
 #ifndef NDEBUG
 	std::clog << "------------" << std::endl;
 	auto start = high_resolution_clock::now();
 #endif
 
 	int id = getPlotStream(go);
-	figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
+	figure::properties& figureProperties = dynamic_cast<figure::properties&>(octave::graphics_object(go).get_properties());
 	Matrix figurePosition = figureProperties.get_position().matrix_value();
 
 	double dpr = figureProperties.get___device_pixel_ratio__();
@@ -246,7 +246,7 @@ void notebook_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 #endif
 }
 
-void notebook_graphics_toolkit::update(const graphics_object&, int) {
+void notebook_graphics_toolkit::update(const octave::graphics_object&, int) {
 }
 
 }  // namespace xoctave

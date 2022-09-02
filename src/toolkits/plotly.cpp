@@ -44,7 +44,7 @@
 
 namespace xoctave {
 
-bool plotly_graphics_toolkit::initialize(const graphics_object& go) {
+bool plotly_graphics_toolkit::initialize(const octave::graphics_object& go) {
 	if (go.isa("figure")) {
 		setPlotStream(go, rand());
 		show_figure(go);
@@ -55,12 +55,12 @@ bool plotly_graphics_toolkit::initialize(const graphics_object& go) {
 	return false;
 }
 
-void plotly_graphics_toolkit::redraw_figure(const graphics_object& go) const {
+void plotly_graphics_toolkit::redraw_figure(const octave::graphics_object& go) const {
 	int id = getPlotStream(go);
 
 	if (go.isa("figure")) {
 		std::map<std::string, std::vector<unsigned long>> ids;
-		figure::properties& figureProperties = dynamic_cast<figure::properties&>(graphics_object(go).get_properties());
+		figure::properties& figureProperties = dynamic_cast<figure::properties&>(octave::graphics_object(go).get_properties());
 		Matrix figurePosition = figureProperties.get_position().matrix_value();
 		json plot, output;
 
@@ -89,13 +89,13 @@ void plotly_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 			if (ax.isa("axes")) {
 				axes::properties& axisProperties = dynamic_cast<axes::properties&>(ax.get_properties());
 #if OCTAVE_MAJOR_VERSION >= 6
-				graphics_object xlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_xlabel());
-				graphics_object ylabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
-				graphics_object zlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
+				octave::graphics_object xlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_xlabel());
+				octave::graphics_object ylabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
+				octave::graphics_object zlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
 #else
-				graphics_object xlabel = gh_manager::get_object(axisProperties.get_xlabel());
-				graphics_object ylabel = gh_manager::get_object(axisProperties.get_ylabel());
-				graphics_object zlabel = gh_manager::get_object(axisProperties.get_ylabel());
+				octave::graphics_object xlabel = gh_manager::get_object(axisProperties.get_xlabel());
+				octave::graphics_object ylabel = gh_manager::get_object(axisProperties.get_ylabel());
+				octave::graphics_object zlabel = gh_manager::get_object(axisProperties.get_ylabel());
 #endif
 
 				text::properties& xlabelProperties = dynamic_cast<text::properties&>(xlabel.get_properties());
@@ -456,7 +456,7 @@ void plotly_graphics_toolkit::redraw_figure(const graphics_object& go) const {
 	}
 }
 
-void plotly_graphics_toolkit::show_figure(const graphics_object& go) const {
+void plotly_graphics_toolkit::show_figure(const octave::graphics_object& go) const {
 	int id = getPlotStream(go);
 
 	json tran;
@@ -464,10 +464,10 @@ void plotly_graphics_toolkit::show_figure(const graphics_object& go) const {
 	dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).display_data(json::object(), json::object(), tran);
 }
 
-std::vector<graphics_object> plotly_graphics_toolkit::children(const graphics_object& go, bool all) const {
+std::vector<octave::graphics_object> plotly_graphics_toolkit::children(const octave::graphics_object& go, bool all) const {
 	Matrix c = all ? go.get_properties().get_all_children() : go.get_properties().get_children();
 	int len = c.numel();
-	std::vector<graphics_object> ret;
+	std::vector<octave::graphics_object> ret;
 
 	for (int i = len - 1; i >= 0; i--) {
 		ret.push_back(m_interpreter.get_gh_manager().get_object(c(i)));
