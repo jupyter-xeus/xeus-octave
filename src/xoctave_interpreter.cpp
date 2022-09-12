@@ -147,7 +147,7 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 		parser str_parser(new lexer(code, interpreter));
 
 		// Clear current figure
-		root_figure::properties& root_figure = dynamic_cast<root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
+		auto& root_figure = dynamic_cast<octave::root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
 		root_figure.set_currentfigure(octave_value(NAN));
 
 		do {
@@ -335,8 +335,6 @@ nl::json xoctave_interpreter::kernel_info_request_impl() {
 }
 
 void xoctave_interpreter::shutdown_request_impl() {
-	interpreter.shutdown();
-
 #ifndef NDEBUG
 	std::clog << "Bye!!" << std::endl;
 #endif
