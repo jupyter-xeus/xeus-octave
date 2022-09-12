@@ -224,7 +224,17 @@ void xoctave_interpreter::configure_impl() {
 	interpreter.get_gtk_manager().register_toolkit("plotly");
 	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::plotly_graphics_toolkit(interpreter)));
 
-	octave::feval("graphics_toolkit", ovl("fltk"));
+	// For unknown resons, setting a graphical toolkit does not work, unless another "magic" toolkit
+	// such as gnuplot or fltk is loaded first.
+	// Since we do not know which are magic and which are available at compile-time, we go though
+	// them all.
+	{
+		auto const a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
+		for (auto i = octave_idx_type{0}; i< a.numel(); ++i) {
+			octave::feval("graphics_toolkit", ovl(a.elem(i)));
+		}
+	}
+
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
 	octave::feval("graphics_toolkit", ovl("notebook"));
 #else
