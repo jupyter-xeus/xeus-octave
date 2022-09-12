@@ -50,9 +50,9 @@ public:
 
 	bool is_valid() const override { return true; }
 
-	bool initialize(const graphics_object& go) override;
-	void redraw_figure(const graphics_object& go) const override;
-	void show_figure(const graphics_object& go) const override;
+	bool initialize(const octave::graphics_object& go) override;
+	void redraw_figure(const octave::graphics_object& go) const override;
+	void show_figure(const octave::graphics_object& go) const override;
 
 private:
 	/**
@@ -60,7 +60,7 @@ private:
 	 * polar), when more than one is present. The suffix for the first one is
 	 * always "" (empty), then 1,2,3...
 	 */
-	inline std::string getObjectNumber(const graphics_object& o, std::map<std::string, std::vector<unsigned long>>& ids) const {
+	inline std::string getObjectNumber(const octave::graphics_object& o, std::map<std::string, std::vector<unsigned long>>& ids) const {
 		double h = o.get_handle().value();
 		unsigned long id = *(unsigned long*) &h;
 		std::string type;
@@ -99,9 +99,9 @@ private:
 	}
 
 	/**
-	 * Get a vector of all the children of the @go graphics_object
+	 * Get a vector of all the children of the @go octave::graphics_object
 	 */
-	std::vector<graphics_object> children(const graphics_object& go, bool all = false) const;
+	std::vector<octave::graphics_object> children(const octave::graphics_object& go, bool all = false) const;
 
 	/**
 	 * Convert an octave color matrix to a css rgb string
