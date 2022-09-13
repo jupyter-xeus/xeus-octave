@@ -20,21 +20,20 @@
 #ifndef NOTEBOOK_TOOLKIT_H
 #define NOTEBOOK_TOOLKIT_H
 
-#include "config.h"
-
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
+
+#include <memory>
+#include <mutex>
 
 #include <GLFW/glfw3.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
-
-#include <memory>
-#include <mutex>
 #include <nlohmann/json.hpp>
 
+#include "xeus-octave/config.hpp"
 #include "opengl.hpp"
 
-namespace xoctave {
+namespace xeus_octave {
 
 class notebook_graphics_toolkit : public octave::base_graphics_toolkit {
 public:
@@ -57,7 +56,7 @@ private:
 	octave::interpreter &m_interpreter;
 };
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif
 

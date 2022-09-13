@@ -17,22 +17,21 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "display.hpp"
+#include <iostream>
+#include <regex>
 
 #include <octave/cdef-package.h>
 #include <octave/defun-int.h>
 #include <octave/interpreter.h>
 #include <octave/oct-map.h>
 #include <octave/symtab.h>
-
-#include <iostream>
 #include <nlohmann/json.hpp>
-#include <regex>
+#include <xeus/xinterpreter.hpp>
 
-#include "xeus/xinterpreter.hpp"
-#include "xoctave_interpreter.hpp"
+#include "xeus-octave/xinterpreter.hpp"
+#include "display.hpp"
 
-namespace xoctave::display {
+namespace xeus_octave::display {
 
 namespace {
 
@@ -62,7 +61,7 @@ octave_value_list display_data(const octave_value_list& args, int /*nargout*/) {
 		}
 	}
 
-	dynamic_cast<xoctave::xoctave_interpreter&>(xeus::get_interpreter()).display_data(data, metadata);
+	dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter()).display_data(data, metadata);
 
 	return ovl();
 }
@@ -71,7 +70,7 @@ octave_value_list override_path(const octave_value_list& args, int /*nargout*/) 
 	if (args.length() != 0)
 		print_usage();
 
-	return ovl(XOCTAVE_OVERRIDE_PATH);
+	return ovl(XEUS_OCTAVE_OVERRIDE_PATH);
 }
 
 /**
@@ -184,16 +183,16 @@ void register_all(octave::interpreter& i) {
 	auto& s = i.get_symbol_table();
 
 	auto display_data_func = new octave_builtin(display_data, "display_data", __FILE__, "");
-	auto override_path_func = new octave_builtin(override_path, "XOCTAVE_OVERRIDE_PATH", __FILE__, "");
+	auto override_path_func = new octave_builtin(override_path, "XEUS_OCTAVE_OVERRIDE_PATH", __FILE__, "");
 	auto matrix_to_html_func = new octave_builtin(matrix_to_html, "__matrix_to_html__", __FILE__, "");
 	auto matrix_to_latex_func = new octave_builtin(matrix_to_latex, "__matrix_to_latex__", __FILE__, "");
 	auto latex_fix_sci_not_func = new octave_builtin(latex_fix_sci_not, "__latex_fix_sci_not__", __FILE__, "");
 
 	s.install_built_in_function("display_data", display_data_func);
-	s.install_built_in_function("XOCTAVE_OVERRIDE_PATH", override_path_func);
+	s.install_built_in_function("XEUS_OCTAVE_OVERRIDE_PATH", override_path_func);
 	s.install_built_in_function("__matrix_to_html__", matrix_to_html_func);
 	s.install_built_in_function("__matrix_to_latex__", matrix_to_latex_func);
 	s.install_built_in_function("__latex_fix_sci_not__", latex_fix_sci_not_func);
 }
 
-}  // namespace xoctave::display
+}  // namespace xeus_octave::display

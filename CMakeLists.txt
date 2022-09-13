@@ -1,165 +1,357 @@
+#############################################################################
+# Copyright (c) 2022, Giulio Girardi
 #
-# Copyright (C) 2020 Giulio Girardi.
+# Distributed under the terms of the GNU General Public License v3.
 #
-# This file is part of xeus-octave.
-#
-# xeus-octave is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# xeus-octave is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
-#
-cmake_minimum_required(VERSION 3.15)
+# The full license is in the file LICENSE, distributed with this software.
+#############################################################################
 
-set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+cmake_minimum_required(VERSION 3.4.3)
+project(xeus-octave)
 
-project(xeus-octave
-        VERSION 0.0.1)
+set(XEUS_OCTAVE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# Versionning
+# ===========
+
+file(STRINGS "${XEUS_OCTAVE_INCLUDE_DIR}/xeus-octave/config.hpp" version_defines
+     REGEX "#define XEUS_OCTAVE_VERSION_(MAJOR|MINOR|PATCH)")
+foreach (ver ${version_defines})
+    if (ver MATCHES "#define XEUS_OCTAVE_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+        set(XEUS_OCTAVE_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+    endif ()
+endforeach ()
+set(${PROJECT_NAME}_VERSION
+    ${XEUS_OCTAVE_VERSION_MAJOR}.${XEUS_OCTAVE_VERSION_MINOR}.${XEUS_OCTAVE_VERSION_PATCH})
+message(STATUS "Building xeus-octave v${${PROJECT_NAME}_VERSION}")
+
+# Configuration
+# =============
 
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if (NOT DEFINED XEUS_OCTAVE_KERNELSPEC_PATH)
+    set(XEUS_OCTAVE_KERNELSPEC_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/")
+endif ()
 
-set(GLFW3_OSMESA_BACKEND FALSE CACHE BOOL "Use the osmesa GLFW backend (for software rendering)")
-
-# Fetch libraries
-################################################################################
-
-include(FindOrFetch)
-
-find_or_fetch_package(
-  cppzmq
-  https://github.com/zeromq/cppzmq.git v4.7.1
-  CPPZMQ_BUILD_TESTS OFF
+configure_file (
+    "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
 )
 
-find_or_fetch_package(
-  xtl
-  https://github.com/xtensor-stack/xtl.git 0.7.2
-)
+# Build options
+# =============
 
-find_or_fetch_package(
-  xeus
-  https://github.com/jupyter-xeus/xeus.git 1.0.0
-  XEUS_BUILD_SHARED_LIBS OFF
-)
+OPTION(XEUS_OCTAVE_DISABLE_ARCH_NATIVE "disable -march=native flag" OFF)
+OPTION(XEUS_OCTAVE_DISABLE_TUNE_GENERIC "disable -mtune=generic flag" OFF)
 
-find_or_fetch_package(
-  glfw3
-  https://github.com/glfw/glfw 3.3.4
-  GLFW_USE_OSMESA ${GLFW3_OSMESA_BACKEND}
-  BUILD_SHARED_LIBS OFF
-)
+OPTION(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" OFF)
+OPTION(XEUS_OCTAVE_BUILD_SHARED "Split xoctave build into executable and library" ON)
+OPTION(XEUS_OCTAVE_BUILD_EXECUTABLE "Build the xoctave executable" ON)
 
-# Deps
-################################################################################
+OPTION(XEUS_OCTAVE_USE_SHARED_XEUS "Link xeus-octave  with the xeus shared library (instead of the static library)" ON)
+OPTION(XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE "Link xoctave  with the xeus shared library (instead of the static library)" ON)
+
+# Dependencies
+# ============
+
+set(xtl_REQUIRED_VERSION 0.7.4)
+set(xeus_REQUIRED_VERSION 1.0.4)
+
+if (NOT TARGET xtl)
+    find_package(xtl ${xtl_REQUIRED_VERSION} REQUIRED)
+endif ()
+if (NOT TARGET xeus AND NOT TARGET xeus-static)
+    find_package(xeus ${xeus_REQUIRED_VERSION} REQUIRED)
+endif ()
+
 find_package(PNG REQUIRED)
+find_package(glfw3)
 
-# Octave
-################################################################################
 find_package(PkgConfig REQUIRED)
-
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
+if (XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
+  pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
+else()
+  find_package(OpenGL REQUIRED)
+endif()
 
-set(EXECUTABLE_NAME xeus-octave)
+# Flags
+# =====
+include(CheckCXXCompilerFlag)
 
-# We generate the kernel.json file, given the installation prefix and the executable name
-configure_file(
-    "${CMAKE_SOURCE_DIR}/share/jupyter/kernels/xeus-octave/kernel.json.in"
-    "${CMAKE_BINARY_DIR}/kernel.json"
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251 /wd4141")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4018 /wd4267 /wd4715 /wd4146 /wd4129")
+endif ()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter -Wextra -Wreorder")
+
+    if (XEUS_OCTAVE_DISABLE_ARCH_NATIVE AND NOT XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=generic")
+    elseif (XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    else ()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+    endif ()
+endif ()
+
+# Source files
+# ============
+
+set(XEUS_OCTAVE_HEADERS
+    include/xeus-octave/config.hpp
+    include/xeus-octave/xinterpreter.hpp
+    include/xeus-octave/io.hpp
+    src/toolkits/notebook.hpp
+    src/toolkits/opengl.hpp
+    src/toolkits/plotly.hpp
+    src/toolkits/plotstream.hpp
+    src/toolkits/tex2html.hpp
+    src/xoctave/display.hpp
 )
 
-# my_kernel source files
 set(XEUS_OCTAVE_SRC
-    src/xoctave_interpreter.cpp
-    src/xoctave_interpreter.hpp
     src/io.cpp
-    src/io.hpp
     src/toolkits/plotly.cpp
-    src/toolkits/plotly.hpp
     src/toolkits/notebook.cpp
-    src/toolkits/notebook.hpp
-    src/toolkits/tex2html.hpp
     src/xoctave/display.cpp
-    src/xoctave/display.hpp
+    src/xinterpreter.cpp
+)
+
+set(XEUS_OCTAVE_MAIN_SRC
     src/main.cpp
 )
 
-include_directories(
-  src
-  "${CMAKE_BINARY_DIR}"
-)
+# Targets and link - Macros
+# =========================
 
-add_executable(${EXECUTABLE_NAME} ${XEUS_OCTAVE_SRC})
-# Override path needed by kernel
-target_compile_definitions(${EXECUTABLE_NAME} PRIVATE XOCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/share/xeus-octave")
+include(CheckCXXCompilerFlag)
 
-if (XEUS_FETCH)
-  target_link_libraries(${EXECUTABLE_NAME} xeus-static)
-else()
-  target_link_libraries(${EXECUTABLE_NAME} xeus)
-endif()
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib; ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
 
-target_link_libraries(${EXECUTABLE_NAME} pthread)
-target_link_libraries(${EXECUTABLE_NAME} PkgConfig::octinterp)
+macro(xeus_octave_set_common_options target_name)
+    if (MSVC)
+        target_compile_options(${target_name} PUBLIC /wd4251 /wd4141)
+        target_compile_options(${target_name} PUBLIC /wd4018 /wd4267 /wd4715 /wd4146 /wd4129)
+    endif ()
 
-if (GLFW3_OSMESA_BACKEND)
-  pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
-  target_link_libraries(${EXECUTABLE_NAME} PkgConfig::osmesa)
-  set(NOTEBOOK_TOOLKIT_CPU TRUE)
-else()
-  find_package(OpenGL REQUIRED)
-  target_link_libraries(${EXECUTABLE_NAME} OpenGL::GL)
-endif()
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+        CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR
+        CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 
-target_link_libraries(${EXECUTABLE_NAME} glfw)
-target_link_libraries(${EXECUTABLE_NAME} PNG::PNG)
+        target_compile_options(${target_name} PUBLIC -Wunused-parameter -Wextra -Wreorder)
 
-set(NOTEBOOK_TOOLKIT_ENABLED ON)
+        # Mtune generic/native
+        if (XEUS_OCTAVE_DISABLE_ARCH_NATIVE AND NOT XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
+            target_compile_options(${target_name} PUBLIC -mtune=generic)
+        elseif (XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
+        else ()
+            target_compile_options(${target_name} PUBLIC -march=native)
+        endif ()
 
-configure_file(
-  "${CMAKE_SOURCE_DIR}/config.h.in"
-  "${CMAKE_BINARY_DIR}/config.h"
-)
+        target_compile_features(${target_name} PRIVATE cxx_std_17)
+    endif ()
 
-if (APPLE)
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-        MACOSX_RPATH ON
+    if (APPLE)
+        set_target_properties(${target_name} PROPERTIES
+            MACOSX_RPATH ON
+        )
+    else ()
+        set_target_properties(${target_name} PROPERTIES
+            BUILD_WITH_INSTALL_RPATH 1
+            SKIP_BUILD_RPATH FALSE
+        )
+    endif ()
+
+    set_target_properties(${target_name} PROPERTIES
+        INSTALL_RPATH_USE_LINK_PATH TRUE
     )
-else()
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-        BUILD_WITH_INSTALL_RPATH 1
-        SKIP_BUILD_RPATH FALSE
-    )
-endif()
+endmacro()
 
-set_target_properties(${EXECUTABLE_NAME} PROPERTIES
-    INSTALL_RPATH_USE_LINK_PATH TRUE
-)
+# Common macro kernels (xoctave )
+macro(xeus_octave_set_kernel_options target_name)
+    if (XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE)
+        target_link_libraries(${target_name} PRIVATE xeus-octave)
+        if(CMAKE_DL_LIBS)
+            target_link_libraries(${target_name} PRIVATE ${CMAKE_DL_LIBS} util)
+        endif()
+    else ()
+        target_link_libraries(${target_name} PRIVATE xeus-octave-static)
+    endif()
+
+    find_package(Threads) 
+    target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+endmacro()
+
+# Scripts directory for xeus-octave
+set(XEUS_OCTAVE_SCRIPTS_BASEDIR "share" CACHE STRING "Xeus-octave scripts base directory")
+
+# Common macro for shared and static library
+macro(xeus_octave_create_target target_name linkage output_name)
+    string(TOUPPER "${linkage}" linkage_upper)
+
+    if (NOT ${linkage_upper} MATCHES "^(SHARED|STATIC)$")
+        message(FATAL_ERROR "Invalid library linkage: ${linkage}")
+    endif ()
+
+    add_library(${target_name} ${linkage_upper} ${XEUS_OCTAVE_SRC} ${XEUS_OCTAVE_HEADERS})
+    xeus_octave_set_common_options(${target_name})
+
+    set_target_properties(${target_name} PROPERTIES
+                          PUBLIC_HEADER "${XEUS_OCTAVE_HEADERS}"
+                          PREFIX ""
+                          VERSION ${${PROJECT_NAME}_VERSION}
+                          SOVERSION ${XEUS_OCTAVE_VERSION_MAJOR}
+                          OUTPUT_NAME "lib${output_name}")
+
+    target_compile_definitions(${target_name}
+                               PUBLIC
+                               "XEUS_OCTAVE_EXPORTS"
+                               PRIVATE
+                               NOTEBOOK_TOOLKIT_ENABLED
+                               XEUS_OCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/share/xeus-octave")
+    target_compile_features(${target_name} PRIVATE cxx_std_17)
+
+    target_include_directories(${target_name}
+                               PUBLIC
+                               $<BUILD_INTERFACE:${XEUS_OCTAVE_INCLUDE_DIR}>
+                               $<INSTALL_INTERFACE:include>)
+
+    target_link_libraries(${target_name}
+                          PUBLIC xtl PkgConfig::octinterp
+                          PRIVATE glfw PNG::PNG)
+    if (XEUS_OCTAVE_USE_SHARED_XEUS)
+        target_link_libraries(${target_name} PUBLIC xeus)
+    else ()
+        target_link_libraries(${target_name} PUBLIC xeus-static)
+    endif ()
+
+
+    if (XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
+      target_link_libraries(${target_name} PRIVATE PkgConfig::osmesa)
+      # TODO # set(NOTEBOOK_TOOLKIT_CPU TRUE)
+    else()
+      target_link_libraries($target_name} PRIVATE OpenGL::GL)
+      # TODO # set(NOTEBOOK_TOOLKIT_CPU FLASE)
+    endif()
+
+
+    if (WIN32 OR CYGWIN)
+        #
+    elseif (APPLE)
+        target_link_libraries(${target_name} PRIVATE "-undefined dynamic_lookup")
+    endif ()
+    find_package(Threads)
+    target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+endmacro()
+
+# xeus-octave
+# ===========
+
+set(XEUS_OCTAVE_TARGETS "")
+
+if (XEUS_OCTAVE_BUILD_SHARED)
+    # Build libraries
+    xeus_octave_create_target(xeus-octave SHARED xeus-octave)
+    list(APPEND XEUS_OCTAVE_TARGETS xeus-octave)
+endif ()
+
+if (XEUS_OCTAVE_BUILD_STATIC)
+    # On Windows, a static library should use a different output name
+    # to avoid the conflict with the import library of a shared one.
+    if (CMAKE_HOST_WIN32)
+        xeus_octave_create_target(xeus-octave-static STATIC xeus-octave-static)
+    else ()
+        xeus_octave_create_target(xeus-octave-static STATIC xeus-octave)
+    endif ()
+    list(APPEND XEUS_OCTAVE_TARGETS xeus-octave-static)
+endif ()
+
+# xeus-octave
+# =======
+if (XEUS_OCTAVE_BUILD_EXECUTABLE)
+    add_executable(xoctave ${XEUS_OCTAVE_MAIN_SRC})
+    target_compile_features(xoctave PRIVATE cxx_std_17)
+    xeus_octave_set_common_options(xoctave)
+    xeus_octave_set_kernel_options(xoctave)
+endif()
 
 # Installation
-################################################################################
+# ============
 
-install(TARGETS ${EXECUTABLE_NAME}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+include(CMakePackageConfigHelpers)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/jupyter/kernels/xeus-octave
-        DESTINATION "share/jupyter/kernels"
-        PATTERN "*.in" EXCLUDE)
+set(XEUS_OCTAVE_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE STRING "install path for xeus-octaveConfig.cmake")
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/share/xeus-octave
-        DESTINATION "share"
-        PATTERN "*.in" EXCLUDE)
+# Install xeus-octave and xeus-octave-static
+if (XEUS_OCTAVE_BUILD_SHARED)
+    install(TARGETS ${XEUS_OCTAVE_TARGETS}
+            EXPORT ${PROJECT_NAME}-targets
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+            PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/xeus-octave)
 
-install(FILES ${CMAKE_BINARY_DIR}/kernel.json
-        DESTINATION "share/jupyter/kernels/xeus-octave")
+    # Makes the project importable from the build directory
+    export(EXPORT ${PROJECT_NAME}-targets
+           FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
+endif ()
+
+# Install xoctave
+if (XEUS_OCTAVE_BUILD_EXECUTABLE)
+    install(TARGETS xoctave
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    # Configuration and data directories for jupyter and xeus-octave
+    set(XJUPYTER_DATA_DIR "share/jupyter"    CACHE STRING "Jupyter data directory")
+
+    # Install xoctave Jupyter kernelspec
+    set(KERNELSPEC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels)
+    install(DIRECTORY ${KERNELSPEC_DIR}
+            DESTINATION ${XJUPYTER_DATA_DIR}
+            PATTERN "*.in" EXCLUDE)
+
+    # Install xoctave scripts
+    set(XOCTAVE_SCRIPTS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/share/xeus-octave)
+    install(DIRECTORY ${XOCTAVE_SCRIPTS_DIR}
+            DESTINATION ${XEUS_OCTAVE_SCRIPTS_BASEDIR}
+            PATTERN "*.in" EXCLUDE)
+
+    # Extra path for installing Jupyter kernelspec
+    if (XEXTRA_JUPYTER_DATA_DIR)
+        install(DIRECTORY ${KERNELSPEC_DIR}
+                DESTINATION ${XEXTRA_JUPYTER_DATA_DIR}
+                PATTERN "*.in" EXCLUDE)
+    endif ()
+endif ()
+
+# Configure 'xeus-octaveConfig.cmake' for a build tree
+set(XEUS_OCTAVE_CONFIG_CODE "####### Expanded from \@XEUS_OCTAVE_CONFIG_CODE\@ #######\n")
+set(XEUS_OCTAVE_CONFIG_CODE "${XEUS_OCTAVE_CONFIG_CODE}set(CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/cmake;\${CMAKE_MODULE_PATH}\")\n")
+set(XEUS_OCTAVE_CONFIG_CODE "${XEUS_OCTAVE_CONFIG_CODE}##################################################")
+configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+                              "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                              INSTALL_DESTINATION ${PROJECT_BINARY_DIR})
+
+# Configure 'xeus-octaveConfig.cmake.in for an install tree
+set(XEUS_OCTAVE_CONFIG_CODE "")
+configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+                              "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake"
+                              INSTALL_DESTINATION ${XEUS_OCTAVE_CMAKECONFIG_INSTALL_DIR})
+
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+                                 VERSION ${${PROJECT_NAME}_VERSION}
+                                 COMPATIBILITY AnyNewerVersion)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}Config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+              DESTINATION ${XEUS_OCTAVE_CMAKECONFIG_INSTALL_DIR})
+
+if (XEUS_OCTAVE_BUILD_SHARED)
+    install(EXPORT ${PROJECT_NAME}-targets
+            FILE ${PROJECT_NAME}Targets.cmake
+            DESTINATION ${XEUS_OCTAVE_CMAKECONFIG_INSTALL_DIR})
+endif ()

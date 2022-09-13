@@ -30,7 +30,7 @@
 
 using namespace octave;
 
-namespace xoctave {
+namespace xeus_octave {
 
 class tex_to_html : public text_processor {
 public:
@@ -166,6 +166,6 @@ private:
 	std::stringstream html;
 };
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif

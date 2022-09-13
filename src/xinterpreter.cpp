@@ -17,7 +17,16 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xoctave_interpreter.hpp"
+#include <cmath>
+#include <cstddef>
+#include <cstring>
+#include <exception>
+#include <iostream>
+#include <ostream>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <octave/defun-dld.h>
 #include <octave/error.h>
@@ -36,31 +45,21 @@
 #include <octave/sighandlers.h>
 #include <octave/utils.h>
 #include <octave/version.h>
-
-#include <cmath>
-#include <cstddef>
-#include <cstring>
-#include <exception>
-#include <iostream>
 #include <nlohmann/json.hpp>
-#include <ostream>
-#include <regex>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <xeus/xinterpreter.hpp>
 
-#include "config.h"
-#include "io.hpp"
+#include "xeus-octave/config.hpp"
+#include "xeus-octave/io.hpp"
+#include "xeus-octave/xinterpreter.hpp"
 #include "toolkits/notebook.hpp"
 #include "toolkits/plotly.hpp"
-#include "xeus/xinterpreter.hpp"
 #include "xoctave/display.hpp"
 
 namespace nl = nlohmann;
 
 using namespace octave;
 
-namespace xoctave {
+namespace xeus_octave {
 
 void xoctave_interpreter::publish_stream(const std::string& name, const std::string& text) {
 	if (!m_silent)
@@ -93,6 +92,7 @@ std::string xoctave_interpreter::blocking_input_request(const std::string& promp
 	if (m_allow_stdin) {
 		// Register the input handler
 		std::string value;
+
 		register_input_handler([&value](const std::string& v) { value = v; });
 
 		// Send the input request
@@ -212,17 +212,17 @@ void xoctave_interpreter::configure_impl() {
 	interpreter.get_symbol_table().install_built_in_function("display", octave_value());
 
 	// Prepend our override path to have precedence over default m-files
-	interpreter.get_load_path().prepend(XOCTAVE_OVERRIDE_PATH);
+	interpreter.get_load_path().prepend(XEUS_OCTAVE_OVERRIDE_PATH);
 
 	interpreter.get_output_system().page_screen_output(true);
 
 	// Register the graphics toolkits
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
 	interpreter.get_gtk_manager().register_toolkit("notebook");
-	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::notebook_graphics_toolkit(interpreter)));
+	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::notebook_graphics_toolkit(interpreter)));
 #endif
 	interpreter.get_gtk_manager().register_toolkit("plotly");
-	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::plotly_graphics_toolkit(interpreter)));
+	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::plotly_graphics_toolkit(interpreter)));
 
 	// For unknown resons, setting a graphical toolkit does not work, unless another "magic" toolkit
 	// such as gnuplot or fltk is loaded first.
@@ -242,10 +242,10 @@ void xoctave_interpreter::configure_impl() {
 #endif
 
 	// Register embedded functions
-	xoctave::display::register_all(interpreter);
+	xeus_octave::display::register_all(interpreter);
 
 	// Install version variable
-	interpreter.get_symbol_table().install_built_in_function("XOCTAVE", new octave_builtin([](const octave_value_list&, int) { return ovl(XOCTAVE_VERSION); }, "XOCTAVE"));
+	interpreter.get_symbol_table().install_built_in_function("XOCTAVE", new octave_builtin([](const octave_value_list&, int) { return ovl(XEUS_OCTAVE_VERSION); }, "XOCTAVE"));
 }
 
 nl::json xoctave_interpreter::complete_request_impl(const std::string& code,
@@ -398,4 +398,4 @@ json xoctave_interpreter::get_help_for_symbol(const std::string& symbol) {
 	return result;
 }
 
-}  // namespace xoctave
+}  // namespace xeus_octave

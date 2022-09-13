@@ -20,6 +20,12 @@
 #ifndef PLOTLY_TOOLKIT_H
 #define PLOTLY_TOOLKIT_H
 
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+
 #include <octave/graphics-handle.h>
 #include <octave/graphics-toolkit.h>
 #include <octave/graphics.h>
@@ -27,20 +33,14 @@
 #include <octave/ovl.h>
 #include <octave/parse.h>
 #include <octave/str-vec.h>
-
-#include <algorithm>
-#include <iostream>
-#include <map>
 #include <nlohmann/json.hpp>
-#include <string>
-#include <vector>
 
-#include "xoctave_interpreter.hpp"
+#include "xeus-octave/xinterpreter.hpp"
 
 using namespace nlohmann;
 using namespace octave;
 
-namespace xoctave {
+namespace xeus_octave {
 
 class plotly_graphics_toolkit : public octave::base_graphics_toolkit {
 public:
@@ -218,6 +218,6 @@ private:
 	octave::interpreter& m_interpreter;
 };
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif

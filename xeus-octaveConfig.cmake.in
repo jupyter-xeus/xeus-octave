@@ -1,0 +1,45 @@
+############################################################################
+# Copyright (c) 2022, Giulio Girardi          
+#                                                     
+#                                                                          
+# Distributed under the terms of the GNU General Public License v3.               
+#                                                                          
+# The full license is in the file LICENSE, distributed with this software. 
+############################################################################
+
+# xeus-octave cmake module
+# This module sets the following variables in your project::
+#
+#   xeus-octave_FOUND - true if xeus-octave was found on the system
+#   xeus-octave_INCLUDE_DIRS - the directory containing xeus-octave headers
+#   xeus-octave_LIBRARY - the library for dynamic linking
+#   xeus-octave_STATIC_LIBRARY - the library for static linking
+
+@PACKAGE_INIT@
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR};${CMAKE_MODULE_PATH}")
+
+@XEUS_CONFIG_CODE@
+
+include(CMakeFindDependencyMacro)
+find_dependency(xtl @xtl_REQUIRED_VERSION@)
+find_dependency(xeus @xeus_REQUIRED_VERSION@)
+find_dependency(cppzmq @cppzmq_REQUIRED_VERSION@)
+
+
+if (NOT TARGET xeus-octave AND NOT TARGET xeus-octave-static)
+    include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+    if (TARGET xeus-octave AND TARGET xeus-octave-static)
+        get_target_property(@PROJECT_NAME@_INCLUDE_DIR xeus-octave INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(@PROJECT_NAME@_LIBRARY xeus-octave LOCATION)
+        get_target_property(@PROJECT_NAME@_STATIC_LIBRARY xeus-octave-static LOCATION)
+    elseif (TARGET xeus-octave)
+        get_target_property(@PROJECT_NAME@_INCLUDE_DIR xeus-octave INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(@PROJECT_NAME@_LIBRARY xeus-octave LOCATION)
+    elseif (TARGET xeus-octave-static)
+        get_target_property(@PROJECT_NAME@_INCLUDE_DIR xeus-octave-static INTERFACE_INCLUDE_DIRECTORIES)
+        get_target_property(@PROJECT_NAME@_STATIC_LIBRARY xeus-octave-static LOCATION)
+        set(@PROJECT_NAME@_LIBRARY ${@PROJECT_NAME@_STATIC_LIBRARY})
+    endif ()
+endif ()

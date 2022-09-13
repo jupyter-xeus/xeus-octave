@@ -17,8 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XOCTAVE_INTERPRETER_H
-#define XOCTAVE_INTERPRETER_H
+#ifndef XEUS_OCTAVE_INTERPRETER_H
+#define XEUS_OCTAVE_INTERPRETER_H
 
 #include <octave/interpreter.h>
 #include <octave/oct-stream.h>
@@ -28,12 +28,12 @@
 #include <sstream>
 #include <xeus/xinterpreter.hpp>
 
-#include "io.hpp"
+#include "xeus-octave/io.hpp"
 
 using nlohmann::json;
 using xeus::xinterpreter;
 
-namespace xoctave {
+namespace xeus_octave {
 
 class xoctave_interpreter : public xinterpreter {
 private:
@@ -83,6 +83,6 @@ private:
 	bool m_silent, m_allow_stdin;
 };
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif

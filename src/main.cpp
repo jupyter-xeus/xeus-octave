@@ -19,10 +19,11 @@
 
 #include <memory>
 
-#include "xeus/xinterpreter.hpp"
-#include "xeus/xkernel.hpp"
-#include "xeus/xkernel_configuration.hpp"
-#include "xoctave_interpreter.hpp"
+#include <xeus/xinterpreter.hpp>
+#include <xeus/xkernel.hpp>
+#include <xeus/xkernel_configuration.hpp>
+
+#include "xeus-octave/xinterpreter.hpp"
 
 int main(int argc, char* argv[]) {
 	// Load configuration file
@@ -30,7 +31,7 @@ int main(int argc, char* argv[]) {
 	xeus::xconfiguration config = xeus::load_configuration(file_name);
 
 	// Create interpreter instance
-	xeus::xkernel::interpreter_ptr interpreter = xeus::xkernel::interpreter_ptr(new xoctave::xoctave_interpreter());
+	xeus::xkernel::interpreter_ptr interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
 	xeus::register_interpreter(interpreter.get());
 
 	// Create kernel instance and start it
