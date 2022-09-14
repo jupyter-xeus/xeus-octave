@@ -19,23 +19,25 @@
 
 #include <memory>
 
-#include <xeus/xinterpreter.hpp>
 #include <xeus/xkernel.hpp>
 #include <xeus/xkernel_configuration.hpp>
+#include <xeus/xserver_zmq.hpp>
 
 #include "xeus-octave/xinterpreter.hpp"
 
 int main(int argc, char* argv[]) {
-	// Load configuration file
-	std::string file_name = (argc == 1) ? "connection.json" : argv[2];
-	xeus::xconfiguration config = xeus::load_configuration(file_name);
-
-	// Create interpreter instance
-	xeus::xkernel::interpreter_ptr interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
+	// Configuration file
+	auto const* const file_name = (argc == 1) ? "connection.json" : argv[2];
+	auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
 	xeus::register_interpreter(interpreter.get());
 
-	// Create kernel instance and start it
-	xeus::xkernel kernel(config, xeus::get_user_name(), std::move(interpreter));
+	auto kernel = xeus::xkernel(
+		xeus::load_configuration(file_name),
+		xeus::get_user_name(),
+		xeus::make_context<zmq::context_t>(),
+		std::move(interpreter),
+		xeus::make_xserver_zmq
+	);
 	kernel.start();
 
 	return 0;

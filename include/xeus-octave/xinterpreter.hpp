@@ -31,11 +31,10 @@
 #include "xeus-octave/io.hpp"
 
 using nlohmann::json;
-using xeus::xinterpreter;
 
 namespace xeus_octave {
 
-class xoctave_interpreter : public xinterpreter {
+class xoctave_interpreter : public xeus::xinterpreter {
 private:
 	octave::interpreter interpreter;
 
