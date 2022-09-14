@@ -1,6 +1,6 @@
-# `xeus-octave`: A native Octave kernel for jupyter with advanced visualization
+# ![xeus-octave](docs/source/xeus-octave-logo.svg)
 
-`xeus-octave` is an Octave kernel for Jupyter built with Xeus, a C++ framework
+Xeus-Octave is an Octave kernel for Jupyter built with Xeus, a C++ framework
 for building Jupyter kernels, which means that it is completely native, and does
 not run a virtual Octave session in a forked process.
 
@@ -40,9 +40,9 @@ $ jupyter labextension install jupyterlab-plotly
 ### Building for headless systems
 
 Octave uses OpenGL for rendering, which means that it needs a display server to render figures.
-In order to work on headless systems (e.g. servers) `xeus-octave` supports linking against glfw
+In order to work on headless systems (e.g. servers) Xeus-Octave supports linking against glfw
 with osmesa backend (a software based OpenGL implementation).
-For this set the `XEUS_OCTAVE_GLFW3_OSMESA_BACKEND` CMake variable to `TRUE`.
+For this set the ``XEUS_OCTAVE_GLFW3_OSMESA_BACKEND`` CMake variable to ``TRUE``.
 
 Usually distributions do not provide glfw with the osmesa backend, so it's probably best to build
 glfw in-tree.
