@@ -1,0 +1,28 @@
+channels:
+  - conda-forge
+dependencies:
+  # Build dependencies
+  - cxx-compiler
+  - c-compiler
+  - cmake
+  - make
+  - pkg-config
+  # Host dependencies
+  - xtl
+  - xeus >=2.4
+  - nlohmann_json
+  - cppzmq
+  - octave =7.*
+  - glfw
+  - mesalib
+  - libpng
+  # Test dependencies
+  - jupyter_kernel_test >=0.4.3
+  - nbval
+  - pytest
+  - pytest-rerunfailures
+  # Dev dependencies
+  - jupyterlab
+  - clang-tools
+  - clang
+  - ccache
