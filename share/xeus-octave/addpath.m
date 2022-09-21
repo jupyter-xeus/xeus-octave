@@ -26,7 +26,7 @@ function r = addpath(varargin)
 	r = builtin("addpath", varargin{:});
 
 	# Any time we change the path we put back our patch path in the first place
-	builtin("addpath", XOCTAVE_OVERRIDE_PATH, "-begin");
+	builtin("addpath", XEUS_OCTAVE_OVERRIDE_PATH, "-begin");
 end
 
 ##

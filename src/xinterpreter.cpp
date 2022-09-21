@@ -17,7 +17,16 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xoctave_interpreter.hpp"
+#include <cmath>
+#include <cstddef>
+#include <cstring>
+#include <exception>
+#include <iostream>
+#include <ostream>
+#include <regex>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <octave/defun-dld.h>
 #include <octave/error.h>
@@ -36,31 +45,23 @@
 #include <octave/sighandlers.h>
 #include <octave/utils.h>
 #include <octave/version.h>
-
-#include <cmath>
-#include <cstddef>
-#include <cstring>
-#include <exception>
-#include <iostream>
 #include <nlohmann/json.hpp>
-#include <ostream>
-#include <regex>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <xeus/xhelper.hpp>
+#include <xeus/xinterpreter.hpp>
 
-#include "config.h"
-#include "io.hpp"
+#include "xeus-octave/config.hpp"
+#include "xeus-octave/io.hpp"
+#include "xeus-octave/xinterpreter.hpp"
+
 #include "toolkits/notebook.hpp"
 #include "toolkits/plotly.hpp"
-#include "xeus/xinterpreter.hpp"
 #include "xoctave/display.hpp"
 
 namespace nl = nlohmann;
 
 using namespace octave;
 
-namespace xoctave {
+namespace xeus_octave {
 
 void xoctave_interpreter::publish_stream(const std::string& name, const std::string& text) {
 	if (!m_silent)
@@ -93,6 +94,7 @@ std::string xoctave_interpreter::blocking_input_request(const std::string& promp
 	if (m_allow_stdin) {
 		// Register the input handler
 		std::string value;
+
 		register_input_handler([&value](const std::string& v) { value = v; });
 
 		// Send the input request
@@ -113,9 +115,9 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 												   bool /*store_history*/,
 												   nl::json /*user_expressions*/,
 												   bool allow_stdin) {
-	int exit_status = 0;
-	std::string line;
-	std::string error;
+#ifndef NDEBUG
+	std::clog << "Executing: " << code << std::endl;
+#endif
 	nl::json result;
 
 	m_silent = silent;
@@ -126,7 +128,7 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 	output::override(std::cout, m_stdout);
 	output::override(std::cerr, m_stderr);
 
-	result["status"] = "ok";
+	result = xeus::create_successful_reply();
 
 	// Extract magic ?
 	std::string trim = code;
@@ -137,10 +139,12 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 		auto data = get_help_for_symbol(trim);
 
 		if (data.is_null()) {
-			result["status"] = "error";
-
-			publish_execution_error("Execution exception", "help: '" + trim + "' not found\n", std::vector<std::string>());
+			auto ename = "Execution exception";
+			auto evalue = "help: '" + trim + "' not found\n";
+			result = xeus::create_error_reply(ename, evalue, {});
+			publish_execution_error(ename, evalue, {});
 		} else {
+			result = xeus::create_successful_reply();
 			publish_execution_result(execution_counter, data, json::object());
 		}
 	} else {
@@ -150,6 +154,7 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 		auto& root_figure = dynamic_cast<octave::root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
 		root_figure.set_currentfigure(octave_value(NAN));
 
+		int exit_status = 0;
 		do {
 			try {
 				str_parser.reset();
@@ -166,26 +171,33 @@ nl::json xoctave_interpreter::execute_request_impl(int execution_counter,
 					}
 				}
 			} catch (const interrupt_exception&) {
+				auto const ename = "Interrupt exception";
+				auto const evalue = "Kernel was interrupted";
 				interpreter.recover_from_exception();
-				publish_execution_error("Interrupt exception", "Kernel was interrupted", std::vector<std::string>());
-				result["status"] = "error";
+				publish_execution_error(ename, evalue, {});
+				result = xeus::create_error_reply(ename, evalue, {});
 			} catch (const index_exception& e) {
-				error = e.message();
-				error += "\n" + e.stack_trace();
+				auto const ename = "Index exception";
+				auto evalue = e.message();
+				// TODO shoud the stack trace be added as last argument?
+				evalue += "\n" + e.stack_trace();
 				interpreter.recover_from_exception();
-				publish_execution_error("Index exception", error, std::vector<std::string>());
-				result["status"] = "error";
-			} catch (const execution_exception& ee) {
-				error = ee.message();
-				error += "\n" + ee.stack_trace();
-				interpreter.get_error_system().save_exception(ee);
+				publish_execution_error(ename, evalue, {});
+				result = xeus::create_error_reply(ename, evalue, {});
+			} catch (const execution_exception& e) {
+				auto const ename = "Execution exception";
+				auto evalue = e.message();
+				evalue += "\n" + e.stack_trace();
+				interpreter.get_error_system().save_exception(e);
 				interpreter.recover_from_exception();
-				publish_execution_error("Execution exception", error, std::vector<std::string>());
-				result["status"] = "error";
+				publish_execution_error(ename, evalue, {});
+				result = xeus::create_error_reply(ename, evalue, {});
 			} catch (const std::bad_alloc&) {
+				auto const ename = "Memory exception";
+				auto const evalue = "Could not allocate the memory required for the computation";
 				interpreter.recover_from_exception();
-				publish_execution_error("Out of memory", "Trying to return to prompt", std::vector<std::string>());
-				result["status"] = "error";
+				publish_execution_error(ename, evalue, {});
+				result = xeus::create_error_reply(ename, evalue, {});
 			}
 		} while (exit_status == 0);
 	}
@@ -212,17 +224,17 @@ void xoctave_interpreter::configure_impl() {
 	interpreter.get_symbol_table().install_built_in_function("display", octave_value());
 
 	// Prepend our override path to have precedence over default m-files
-	interpreter.get_load_path().prepend(XOCTAVE_OVERRIDE_PATH);
+	interpreter.get_load_path().prepend(XEUS_OCTAVE_OVERRIDE_PATH);
 
 	interpreter.get_output_system().page_screen_output(true);
 
 	// Register the graphics toolkits
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
 	interpreter.get_gtk_manager().register_toolkit("notebook");
-	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::notebook_graphics_toolkit(interpreter)));
+	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::notebook_graphics_toolkit(interpreter)));
 #endif
 	interpreter.get_gtk_manager().register_toolkit("plotly");
-	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xoctave::plotly_graphics_toolkit(interpreter)));
+	interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::plotly_graphics_toolkit(interpreter)));
 
 	// For unknown resons, setting a graphical toolkit does not work, unless another "magic" toolkit
 	// such as gnuplot or fltk is loaded first.
@@ -230,7 +242,7 @@ void xoctave_interpreter::configure_impl() {
 	// them all.
 	{
 		auto const a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
-		for (auto i = octave_idx_type{0}; i< a.numel(); ++i) {
+		for (auto i = octave_idx_type{0}; i < a.numel(); ++i) {
 			octave::feval("graphics_toolkit", ovl(a.elem(i)));
 		}
 	}
@@ -242,31 +254,25 @@ void xoctave_interpreter::configure_impl() {
 #endif
 
 	// Register embedded functions
-	xoctave::display::register_all(interpreter);
+	xeus_octave::display::register_all(interpreter);
 
 	// Install version variable
-	interpreter.get_symbol_table().install_built_in_function("XOCTAVE", new octave_builtin([](const octave_value_list&, int) { return ovl(XOCTAVE_VERSION); }, "XOCTAVE"));
+	interpreter.get_symbol_table().install_built_in_function("XOCTAVE", new octave_builtin([](const octave_value_list&, int) { return ovl(XEUS_OCTAVE_VERSION); }, "XOCTAVE"));
 }
 
 nl::json xoctave_interpreter::complete_request_impl(const std::string& code,
 													int cursor_pos) {
-	nl::json result;
-
 	// We are interested only in the code before the cursor
 	std::string realcode = code.substr(0, cursor_pos);
 	std::string symbol = get_symbol(realcode, cursor_pos);
+	auto matches = nl::json::array();
 
 #ifndef NDEBUG
 	std::clog << "Completing: " << symbol << std::endl;
 #endif
 
-	octave_value_list completions = octave::feval("completion_matches", octave_value(symbol), 1);
-
-	result["status"] = "ok";
-
+	auto const completions = octave::feval("completion_matches", octave_value(symbol), 1);
 	if (completions.length()) {
-		int prefix = 1;
-
 		for (auto completion : completions(0).string_vector_value().std_list()) {
 			std::string c = completion.substr(0, strlen(completion.c_str()));
 
@@ -274,24 +280,24 @@ nl::json xoctave_interpreter::complete_request_impl(const std::string& code,
 #ifndef NDEBUG
 			std::clog << c << std::endl;
 #endif
-			result["matches"].push_back(c);
+			matches.push_back(c);
 		}
 
 #ifndef NDEBUG
-		std::clog << result["matches"] << std::endl;
+		std::clog << matches << std::endl;
 #endif
-
-		result["cursor_start"] = cursor_pos - symbol.length();
-		result["cursor_end"] = cursor_pos;
 	}
 
-	return result;
+	return xeus::create_complete_reply(
+		/* matches= */ std::move(matches),
+		/* cursor_start= */ cursor_pos - symbol.length(),
+		/* cursor_end= */ cursor_pos
+	);
 }
 
 nl::json xoctave_interpreter::inspect_request_impl(const std::string& code,
 												   int cursor_pos,
 												   int /*detail_level*/) {
-	nl::json result;
 	std::string function = get_symbol(code, cursor_pos);
 
 #ifndef NDEBUG
@@ -300,37 +306,30 @@ nl::json xoctave_interpreter::inspect_request_impl(const std::string& code,
 
 	auto data = get_help_for_symbol(function);
 
-	if (data.is_null())
-		result["found"] = false;
-	else {
-		result["found"] = true;
-		result["data"] = data;
+	if (data.is_null()) {
+		xeus::create_inspect_reply(false);
 	}
-
-	result["status"] = "ok";
-
-	return result;
+	return xeus::create_inspect_reply(true, data);
 }
 
 nl::json xoctave_interpreter::is_complete_request_impl(const std::string& /*code*/) {
 	nl::json result;
-
 	result["status"] = "complete";
-
 	return result;
 }
 
 nl::json xoctave_interpreter::kernel_info_request_impl() {
-	nl::json result;
+	auto result = nl::json::object();
 	result["implementation"] = "xeus-octave";
-	result["implementation_version"] = "0.1.0";
-	result["language_info"]["name"] = "octave";
+	result["implementation_version"] = XEUS_OCTAVE_VERSION;
+	result["language_info"]["name"] = "Octave";
 	result["language_info"]["version"] = OCTAVE_VERSION;
 	result["language_info"]["mimetype"] = "text/x-octave";
 	result["language_info"]["file_extension"] = ".m";
 	result["language_info"]["codemirror_mode"] = "octave";
 	result["language_info"]["pygments_lexer"] = "octave";
 	result["banner"] = octave_startup_message();
+	result["status"] = "ok";
 	return result;
 }
 
@@ -364,8 +363,6 @@ std::string xoctave_interpreter::get_symbol(const std::string& code, int cursor_
 }
 
 json xoctave_interpreter::get_help_for_symbol(const std::string& symbol) {
-	json result;
-
 	try {
 		std::string htext;
 		std::string format;
@@ -381,21 +378,24 @@ json xoctave_interpreter::get_help_for_symbol(const std::string& symbol) {
 			// Jupyter style fixes
 			text = std::regex_replace(text, std::regex("<dd(.*?)>"), "<dd $1 style='float:unset;width:unset;font-weight:unset;margin-left:40px'>");
 			text = std::regex_replace(text, std::regex("<dt(.*?)>"), "<dt $1 style='float:unset;width:unset;margin-left:0px;'>");
+			auto result = nl::json::object();
 			result["text/html"] = text;
 			result["application/x-texinfo"] = htext;
+			return result;
 		} else if (format == "plain text") {
+			auto result = nl::json::object();
 			result["text/plain"] = htext;
+			return result;
 		} else if (format == "html") {
+			auto result = nl::json::object();
 			result["text/html"] = htext;
-		} else {
-			result = nullptr;
+			return result;
 		}
 	} catch (...) {
 		std::clog << "Cannot get help for symbol " << symbol << std::endl;
-		result = nullptr;
+		return nullptr;
 	}
-
-	return result;
+	return nullptr;
 }
 
-}  // namespace xoctave
+}  // namespace xeus_octave

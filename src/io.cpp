@@ -17,14 +17,17 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "io.hpp"
+#include <ostream>
+#include <ostream>
+#include <mutex>
 
-#include <iostream>
+#include <xeus/xinput.hpp>
 
-#include "xeus/xinput.hpp"
-#include "xoctave_interpreter.hpp"
+#include "xeus-octave/xinterpreter.hpp"
+#include "xeus-octave/io.hpp"
 
-namespace xoctave {
+
+namespace xeus_octave {
 
 namespace {
 
@@ -110,4 +113,4 @@ output::int_type output::sync() {
 	return 0;
 }
 
-}  // namespace xoctave
+}  // namespace xeus_octave

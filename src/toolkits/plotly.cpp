@@ -17,7 +17,12 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "plotly.hpp"
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <iostream>
+#include <iterator>
+#include <string>
 
 #include <octave/graphics-handle.h>
 #include <octave/graphics-toolkit.h>
@@ -30,19 +35,14 @@
 #include <octave/text-engine.h>
 #include <octave/utils.h>
 #include <octave/version.h>
-
-#include <algorithm>
-#include <cmath>
-#include <complex>
-#include <iostream>
-#include <iterator>
 #include <nlohmann/json.hpp>
-#include <string>
 
 #include "plotstream.hpp"
 #include "tex2html.hpp"
+#include "plotly.hpp"
 
-namespace xoctave {
+
+namespace xeus_octave {
 
 bool plotly_graphics_toolkit::initialize(const octave::graphics_object& go) {
 	if (go.isa("figure")) {
@@ -828,4 +828,4 @@ void plotly_graphics_toolkit::setLegendVisibility(json& data,
 	}
 };
 
-}  // namespace xoctave
+}  // namespace xeus_octave

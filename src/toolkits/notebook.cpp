@@ -17,25 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "notebook.hpp"
-
-#include "config.h"
 
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
-
-#include <GLFW/glfw3.h>
-
-#ifdef NOTEBOOK_TOOLKIT_CPU
-#define GLFW_EXPOSE_NATIVE_OSMESA
-#include <GLFW/glfw3native.h>
-#endif
-
-#include <octave/gl-render.h>
-#include <octave/graphics-toolkit.h>
-#include <octave/graphics.h>
-#include <octave/interpreter.h>
-#include <octave/ov.h>
-#include <png.h>
 
 #include <algorithm>
 #include <chrono>
@@ -45,18 +28,31 @@
 #include <cstring>
 #include <iostream>
 #include <mutex>
-#include <nlohmann/json_fwd.hpp>
 #include <ostream>
 #include <string>
 
+#include <octave/gl-render.h>
+#include <octave/graphics-toolkit.h>
+#include <octave/graphics.h>
+#include <octave/interpreter.h>
+#include <octave/ov.h>
+#include <png.h>
+#include <nlohmann/json_fwd.hpp>
+#include <GLFW/glfw3.h>
+#ifdef NOTEBOOK_TOOLKIT_CPU
+#define GLFW_EXPOSE_NATIVE_OSMESA
+#include <GLFW/glfw3native.h>
+#endif
+#include <xtl/xbase64.hpp>
+
+#include "xeus-octave/xinterpreter.hpp"
 #include "plotstream.hpp"
-#include "xoctave_interpreter.hpp"
-#include "xtl/xbase64.hpp"
+#include "notebook.hpp"
 
 using namespace std::chrono;
 using namespace nlohmann;
 
-namespace xoctave {
+namespace xeus_octave {
 
 notebook_graphics_toolkit::notebook_graphics_toolkit(octave::interpreter& interpreter) : base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
 	glfwSetErrorCallback([](int error, const char* description) {
@@ -249,6 +245,6 @@ void notebook_graphics_toolkit::redraw_figure(const octave::graphics_object& go)
 void notebook_graphics_toolkit::update(const octave::graphics_object&, int) {
 }
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif

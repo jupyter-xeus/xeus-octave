@@ -22,7 +22,7 @@
 
 #include <octave/graphics.h>
 
-namespace xoctave {
+namespace xeus_octave {
 
 inline int getPlotStream(const octave::graphics_object& o) {
 	return dynamic_cast<const figure::properties&>(o.get_ancestor("figure").get_properties())
@@ -41,6 +41,6 @@ inline void setPlotStream(const octave::graphics_object& o, int p) {
 	setPlotStream(_go, p);
 }
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif

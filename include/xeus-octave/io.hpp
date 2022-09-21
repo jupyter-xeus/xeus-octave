@@ -17,8 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef IO_H
-#define IO_H
+#ifndef XEUS_OCTAVE_IO_H
+#define XEUS_OCTAVE_IO_H
 
 #include <mutex>
 #include <ostream>
@@ -26,7 +26,7 @@
 
 #include "octave/cmd-edit.h"
 
-namespace xoctave {
+namespace xeus_octave {
 
 class input : public octave::command_editor {
 public:
@@ -73,6 +73,6 @@ protected:
 	std::streambuf *p_oldbuf;
 };
 
-}  // namespace xoctave
+}  // namespace xeus_octave
 
 #endif
