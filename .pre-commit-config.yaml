@@ -1,5 +1,5 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0
     hooks:
     - id: check-added-large-files
@@ -7,10 +7,17 @@ repos:
     - id: end-of-file-fixer
     - id: trailing-whitespace
     - id: mixed-line-ending
-      args: ["--fix=lf"]
+      args: ['--fix=lf']
     - id: check-json
     - id: pretty-format-json
-      args: ["--autofix", "--top-keys=version"]
+      args: ['--autofix', '--top-keys=version']
     - id: check-yaml
     - id: detect-private-key
     - id: check-merge-conflict
+  # Externally provided executables (so we can use them with editors as well).
+  - repo: https://github.com/pocc/pre-commit-hooks
+    rev: v1.3.5
+    hooks:
+      - id: clang-format
+        args: [--style=file, -i]
+        exclude: '\.m$'
