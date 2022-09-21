@@ -27,3 +27,4 @@ dependencies:
   - clang-tools
   - clang
   - ccache
+  - cmake-format
