@@ -17,6 +17,7 @@ dependencies:
   - mesalib
   - libpng
   # Test dependencies
+  - pre-commit
   - jupyter_kernel_test >=0.4.3
   - nbval
   - pytest
