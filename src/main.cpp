@@ -26,19 +26,19 @@
 #include "xeus-octave/xinterpreter.hpp"
 
 int main(int argc, char* argv[]) {
-	// Configuration file
-	auto const* const file_name = (argc == 1) ? "connection.json" : argv[2];
-	auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
-	xeus::register_interpreter(interpreter.get());
+  // Configuration file
+  auto const* const file_name = (argc == 1) ? "connection.json" : argv[2];
+  auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
+  xeus::register_interpreter(interpreter.get());
 
-	auto kernel = xeus::xkernel(
-		xeus::load_configuration(file_name),
-		xeus::get_user_name(),
-		xeus::make_context<zmq::context_t>(),
-		std::move(interpreter),
-		xeus::make_xserver_zmq
-	);
-	kernel.start();
+  auto kernel = xeus::xkernel(
+    xeus::load_configuration(file_name),
+    xeus::get_user_name(),
+    xeus::make_context<zmq::context_t>(),
+    std::move(interpreter),
+    xeus::make_xserver_zmq
+  );
+  kernel.start();
 
-	return 0;
+  return 0;
 }

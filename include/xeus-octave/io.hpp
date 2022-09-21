@@ -30,47 +30,60 @@ namespace xeus_octave {
 
 class input : public octave::command_editor {
 public:
-	input(std::function<std::string(const std::string &)> callback);
+  input(std::function<std::string(std::string const&)> callback);
 
-	static void override(input &n);
-	static void restore();
+  static void override(input& n);
+  static void restore();
 
-	std::string do_readline(const std::string &prompt, bool &) override;
-	void do_set_input_stream(FILE *) override {}
-	FILE *do_get_input_stream(void) override { return nullptr; }
-	void do_set_output_stream(FILE *) override {}
-	FILE *do_get_output_stream(void) override { return nullptr; }
-	string_vector do_generate_filename_completions(const std::string &) override { return {}; }
-	std::string do_get_line_buffer(void) const override { return ""; }
-	std::string do_get_current_line(void) const override { return ""; }
-	char do_get_prev_char(int) const override { return '\0'; }
-	void do_replace_line(const std::string &, bool) override {}
-	void do_kill_full_line(void) override {}
-	void do_insert_text(const std::string &) override {}
-	void do_newline(void) override {}
-	void do_accept_line(void) override {}
+  std::string do_readline(std::string const& prompt, bool&) override;
+
+  void do_set_input_stream(FILE*) override {}
+
+  FILE* do_get_input_stream(void) override { return nullptr; }
+
+  void do_set_output_stream(FILE*) override {}
+
+  FILE* do_get_output_stream(void) override { return nullptr; }
+
+  string_vector do_generate_filename_completions(std::string const&) override { return {}; }
+
+  std::string do_get_line_buffer(void) const override { return ""; }
+
+  std::string do_get_current_line(void) const override { return ""; }
+
+  char do_get_prev_char(int) const override { return '\0'; }
+
+  void do_replace_line(std::string const&, bool) override {}
+
+  void do_kill_full_line(void) override {}
+
+  void do_insert_text(std::string const&) override {}
+
+  void do_newline(void) override {}
+
+  void do_accept_line(void) override {}
 
 private:
-	std::function<std::string(const std::string &)> m_callback;
+  std::function<std::string(std::string const&)> m_callback;
 };
 
 class output : public std::streambuf {
 public:
-	output(std::function<void(const std::string &)> callback);
+  output(std::function<void(std::string const&)> callback);
 
-	static void override(std::ostream &, output &);
-	static void restore(std::ostream &, output &);
+  static void override(std::ostream&, output&);
+  static void restore(std::ostream&, output&);
 
 protected:
-	int_type overflow(int_type c) override;
-	std::streamsize xsputn(const char *s, std::streamsize count) override;
-	int_type sync() override;
+  int_type overflow(int_type c) override;
+  std::streamsize xsputn(char const* s, std::streamsize count) override;
+  int_type sync() override;
 
-	std::function<void(const std::string &)> m_callback;
-	std::string m_output;
-	std::mutex m_mutex;
+  std::function<void(std::string const&)> m_callback;
+  std::string m_output;
+  std::mutex m_mutex;
 
-	std::streambuf *p_oldbuf;
+  std::streambuf* p_oldbuf;
 };
 
 }  // namespace xeus_octave
