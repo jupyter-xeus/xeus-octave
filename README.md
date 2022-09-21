@@ -50,4 +50,3 @@ glfw in-tree.
 ### Arch Linux users
 
 For arch linux users a PKGBUILD has been provided (you still need to install jupyterlab plotly extension)
-

@@ -181,7 +181,7 @@ macro(xeus_octave_set_kernel_options target_name)
         target_link_libraries(${target_name} PRIVATE xeus-octave-static)
     endif()
 
-    find_package(Threads) 
+    find_package(Threads)
     target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 
 endmacro()
