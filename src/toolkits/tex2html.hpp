@@ -155,7 +155,7 @@ public:
   }
 
 private:
-  typedef struct {
+  typedef struct status_t {
     bool bold = false;
     bool italic = false;
   } status_t;

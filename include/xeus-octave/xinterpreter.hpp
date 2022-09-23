@@ -30,7 +30,7 @@
 
 #include "xeus-octave/io.hpp"
 
-using nlohmann::json;
+namespace nl = nlohmann;
 
 namespace xeus_octave {
 
@@ -41,29 +41,30 @@ private:
 private:
   void configure_impl() override;
 
-  json execute_request_impl(
+  nl::json execute_request_impl(
     int execution_counter,
     std::string const& code,
     bool silent,
     bool store_history,
-    json user_expressions,
+    nl::json user_expressions,
     bool allow_stdin
   ) override;
 
-  json complete_request_impl(std::string const& code, int cursor_pos) override;
+  nl::json complete_request_impl(std::string const& code, int cursor_pos) override;
 
-  json inspect_request_impl(std::string const& code, int cursor_pos, int detail_level) override;
+  nl::json inspect_request_impl(std::string const& code, int cursor_pos, int detail_level) override;
 
-  json is_complete_request_impl(std::string const& code) override;
+  nl::json is_complete_request_impl(std::string const& code) override;
 
-  json kernel_info_request_impl() override;
+  nl::json kernel_info_request_impl() override;
 
   void shutdown_request_impl() override;
 
 public:
   void publish_stream(std::string const& name, std::string const& text);
-  void display_data(json data, json metadata = json::object(), json transient = json::object());
-  void update_display_data(json data, json metadata = json::object(), json transient = json::object());
+  void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
+  void
+  update_display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
   void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
   void publish_execution_error(
     std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
@@ -71,8 +72,8 @@ public:
   std::string blocking_input_request(std::string const& prompt, bool password);
 
 private:
-  std::string get_symbol(std::string const& code, int cursor_pos) const;
-  json get_help_for_symbol(std::string const& symbol);
+  static std::string get_symbol(std::string const& code, std::size_t cursor_pos);
+  nl::json get_help_for_symbol(std::string const& symbol);
 
   output m_stdout{std::bind(&xoctave_interpreter::publish_stream, this, "stdout", std::placeholders::_1)};
   output m_stderr{std::bind(&xoctave_interpreter::publish_stream, this, "stderr", std::placeholders::_1)};

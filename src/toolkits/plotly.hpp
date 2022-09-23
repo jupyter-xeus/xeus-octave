@@ -37,8 +37,7 @@
 
 #include "xeus-octave/xinterpreter.hpp"
 
-using namespace nlohmann;
-using namespace octave;
+namespace nl = nlohmann;
 
 namespace xeus_octave {
 
@@ -58,44 +57,8 @@ private:
    * polar), when more than one is present. The suffix for the first one is
    * always "" (empty), then 1,2,3...
    */
-  inline std::string
-  getObjectNumber(octave::graphics_object const& o, std::map<std::string, std::vector<unsigned long>>& ids) const {
-    double h = o.get_handle().value();
-    unsigned long id = *(unsigned long*)&h;
-    std::string type;
-
-    if (o.type() == "axes") {
-      axes::properties const& axisProperties = dynamic_cast<axes::properties const&>(o.get_properties());
-
-      if (axisProperties.get_tag() == "polaraxes")
-        type = "polar";
-      else if (!axisProperties.get_is2D())
-        type = "scene";
-      else
-        type = "axis";
-    }
-
-    auto& idlist = ids[type];
-
-    if (idlist.size() == 0) {
-      idlist.push_back(id);
-      return "";
-    } else {
-      auto it = std::find(idlist.begin(), idlist.end(), id);
-
-      if (it == idlist.end()) {
-        idlist.push_back(id);
-        return std::to_string(idlist.size());
-      } else {
-        int d = std::distance(idlist.begin(), it);
-
-        if (d == 0)
-          return "";
-        else
-          return std::to_string(d + 1);
-      }
-    }
-  }
+  std::string
+  getObjectNumber(octave::graphics_object const& o, std::map<std::string, std::vector<unsigned long>>& ids) const;
 
   /**
    * Get a vector of all the children of the @go octave::graphics_object
@@ -103,46 +66,15 @@ private:
   std::vector<octave::graphics_object> children(octave::graphics_object const& go, bool all = false) const;
 
   /**
-   * Convert an octave color matrix to a css rgb string
-   */
-  inline std::string matrix2rgb(const Matrix color) const {
-    return "rgb(" + std::to_string((int)(color(0) * 255)) + "," + std::to_string((int)(color(1) * 255)) + "," +
-           std::to_string((int)(color(2) * 255)) + ")";
-  }
-
-  inline std::string matrix2rgba(const Matrix color, double const alpha) const {
-    return "rgba(" + std::to_string((int)(color(0) * 255)) + "," + std::to_string((int)(color(1) * 255)) + "," +
-           std::to_string((int)(color(2) * 255)) + "," + std::to_string(alpha) + ")";
-  }
-
-  /**
-   * Convert an octave column matrix to a std::vector
-   */
-  inline std::vector<double> matrixcol2vec(const Matrix m) const {
-    std::vector<double> d;
-
-    for (int i = 0; i < m.cols(); i++) {
-      d.push_back(m(i));
-    }
-
-    return d;
-  }
-
-  /**
-   * Convert a string according to its format
-   */
-  std::string convertText(std::string text, std::string format = "none") const;
-
-  /**
    * Fill the text properties
    */
-  void text(json& obj, std::string text, std::string interpreter, Matrix color, double fontSize) const;
+  void text(nl::json& obj, std::string text, std::string interpreter, Matrix color, double fontSize) const;
 
   /**
    * Fill the axis properties
    */
   void axis(
-    json& axis,
+    nl::json& axis,
     bool visible,
     std::string scale,
     std::string location,
@@ -167,18 +99,18 @@ private:
   /**
    * Fill the polar axis properties
    */
-  void polarAxis(json& axis, Matrix _ticks, double fontSize) const;
+  void polarAxis(nl::json& axis, Matrix _ticks, double fontSize) const;
 
   /**
    * Fill the legend properties
    */
-  void legend(json& legend, Matrix position, bool box, double lineWidth, Matrix backgroundColor) const;
+  void legend(nl::json& legend, Matrix position, bool box, double lineWidth, Matrix backgroundColor) const;
 
   /**
    * Fill the line properties
    */
   void line(
-    json& line,
+    nl::json& line,
     bool visible,
     std::string type,
     Matrix xdata,
@@ -195,13 +127,13 @@ private:
    * Fill the (3d) surface properties
    */
   void surface(
-    json& surf, bool visible, Matrix xdata, Matrix ydata, Matrix zdata, Matrix cdata, Matrix colorMap, Matrix clim
+    nl::json& surf, bool visible, Matrix xdata, Matrix ydata, Matrix zdata, Matrix cdata, Matrix colorMap, Matrix clim
   ) const;
 
   /**
    * Add a legend entry if needed
    */
-  void setLegendVisibility(json& data, std::string name) const;
+  void setLegendVisibility(nl::json& data, std::string name) const;
 
 private:
   octave::interpreter& m_interpreter;

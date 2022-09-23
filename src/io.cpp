@@ -92,7 +92,8 @@ output::int_type output::overflow(output::int_type c) {
 std::streamsize output::xsputn(char const* s, std::streamsize count) {
   std::lock_guard<std::mutex> lock(m_mutex);
   // Called for a string of characters.
-  m_output.append(s, count);
+  assert(count >= 0);
+  m_output.append(s, static_cast<std::size_t>(count));
   return count;
 }
 

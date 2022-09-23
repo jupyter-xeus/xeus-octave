@@ -58,8 +58,7 @@
 #include "xoctave/display.hpp"
 
 namespace nl = nlohmann;
-
-using namespace octave;
+namespace oc = octave;
 
 namespace xeus_octave {
 
@@ -68,12 +67,12 @@ void xoctave_interpreter::publish_stream(std::string const& name, std::string co
     xinterpreter::publish_stream(name, text);
 }
 
-void xoctave_interpreter::display_data(json data, json metadata, json transient) {
+void xoctave_interpreter::display_data(nl::json data, nl::json metadata, nl::json transient) {
   if (!m_silent)
     xinterpreter::display_data(data, metadata, transient);
 }
 
-void xoctave_interpreter::update_display_data(json data, json metadata, json transient) {
+void xoctave_interpreter::update_display_data(nl::json data, nl::json metadata, nl::json transient) {
   if (!m_silent)
     xinterpreter::update_display_data(data, metadata, transient);
 }
@@ -147,10 +146,10 @@ nl::json xoctave_interpreter::execute_request_impl(
       publish_execution_error(ename, evalue, {});
     } else {
       result = xeus::create_successful_reply();
-      publish_execution_result(execution_counter, data, json::object());
+      publish_execution_result(execution_counter, data, nl::json::object());
     }
   } else {
-    parser str_parser(new lexer(code, interpreter));
+    auto str_parser = oc::parser(code, interpreter);
 
     // Clear current figure
     auto& root_figure =
@@ -173,13 +172,13 @@ nl::json xoctave_interpreter::execute_request_impl(
             break;
           }
         }
-      } catch (interrupt_exception const&) {
+      } catch (oc::interrupt_exception const&) {
         auto const ename = "Interrupt exception";
         auto const evalue = "Kernel was interrupted";
         interpreter.recover_from_exception();
         publish_execution_error(ename, evalue, {});
         result = xeus::create_error_reply(ename, evalue, {});
-      } catch (index_exception const& e) {
+      } catch (oc::index_exception const& e) {
         auto const ename = "Index exception";
         auto evalue = e.message();
         // TODO shoud the stack trace be added as last argument?
@@ -187,7 +186,7 @@ nl::json xoctave_interpreter::execute_request_impl(
         interpreter.recover_from_exception();
         publish_execution_error(ename, evalue, {});
         result = xeus::create_error_reply(ename, evalue, {});
-      } catch (execution_exception const& e) {
+      } catch (oc::execution_exception const& e) {
         auto const ename = "Execution exception";
         auto evalue = e.message();
         evalue += "\n" + e.stack_trace();
@@ -248,7 +247,7 @@ void xoctave_interpreter::configure_impl() {
   // do not know which are magic and which are available at compile-time, we go
   // though them all.
   {
-    auto const a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
+    auto const& a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
     for (auto i = octave_idx_type{0}; i < a.numel(); ++i) {
       octave::feval("graphics_toolkit", ovl(a.elem(i)));
     }
@@ -270,9 +269,11 @@ void xoctave_interpreter::configure_impl() {
 }
 
 nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int cursor_pos) {
+  assert(cursor_pos >= 0);
   // We are interested only in the code before the cursor
-  std::string realcode = code.substr(0, cursor_pos);
-  std::string symbol = get_symbol(realcode, cursor_pos);
+  assert(cursor_pos >= 0);
+  std::string realcode = code.substr(0, static_cast<std::size_t>(cursor_pos));
+  std::string symbol = get_symbol(realcode, static_cast<std::size_t>(cursor_pos));
   auto matches = nl::json::array();
 
 #ifndef NDEBUG
@@ -298,13 +299,14 @@ nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int
 
   return xeus::create_complete_reply(
     /* matches= */ std::move(matches),
-    /* cursor_start= */ cursor_pos - symbol.length(),
+    /* cursor_start= */ cursor_pos - static_cast<int>(symbol.length()),
     /* cursor_end= */ cursor_pos
   );
 }
 
 nl::json xoctave_interpreter::inspect_request_impl(std::string const& code, int cursor_pos, int /*detail_level*/) {
-  std::string function = get_symbol(code, cursor_pos);
+  assert(cursor_pos >= 0);
+  std::string function = get_symbol(code, static_cast<std::size_t>(cursor_pos));
 
 #ifndef NDEBUG
   std::clog << "Inspect: " << function << std::endl;
@@ -345,22 +347,21 @@ void xoctave_interpreter::shutdown_request_impl() {
 #endif
 }
 
-std::string xoctave_interpreter::get_symbol(std::string const& code, int cursor_pos) const {
-  if (cursor_pos == (int)code.size())
-    cursor_pos = (int)code.size() - 1;
+std::string xoctave_interpreter::get_symbol(std::string const& code, std::size_t cursor_pos) {
+  if (cursor_pos == code.size())
+    cursor_pos = code.size() - 1;
 
   while (cursor_pos > 0 && (std::isalnum(code.at(cursor_pos)) || code.at(cursor_pos) == '_')) {
 #ifndef NDEBUG
-    std::clog << "Cursor pos: " << cursor_pos << " - " << code.at(cursor_pos) << std::endl;
+    std::clog << "Cursor pos: " << cursor_pos << " - " << code.at(cursor_pos) << '\n';
 #endif
     cursor_pos--;
   }
 
-  int end_pos = cursor_pos ? ++cursor_pos : 0;
-
-  while (end_pos < (int)code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_')) {
+  auto end_pos = cursor_pos ? ++cursor_pos : 0;
+  while (end_pos < code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_')) {
 #ifndef NDEBUG
-    std::clog << "End pos: " << end_pos << " - " << code.at(end_pos) << std::endl;
+    std::clog << "End pos: " << end_pos << " - " << code.at(end_pos) << '\n';
 #endif
     end_pos++;
   }
@@ -368,7 +369,7 @@ std::string xoctave_interpreter::get_symbol(std::string const& code, int cursor_
   return code.substr(cursor_pos, end_pos - cursor_pos);
 }
 
-json xoctave_interpreter::get_help_for_symbol(std::string const& symbol) {
+nl::json xoctave_interpreter::get_help_for_symbol(std::string const& symbol) {
   try {
     std::string htext;
     std::string format;
