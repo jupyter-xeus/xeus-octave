@@ -95,18 +95,11 @@ endif()
 # Flags =====
 include(CheckCXXCompilerFlag)
 
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251 /wd4141")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4018 /wd4267 /wd4715 /wd4146 /wd4129")
-endif()
-
 if(
     CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
     OR CMAKE_CXX_COMPILER_ID MATCHES "Intel"
 )
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wunused-parameter -Wextra -Wreorder")
-
     if(XEUS_OCTAVE_DISABLE_ARCH_NATIVE AND NOT XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=generic")
     elseif(XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
@@ -147,6 +140,7 @@ set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
 # =========================
 
 include(CheckCXXCompilerFlag)
+include(cmake/CompilerWarnings.cmake)
 
 set(
     CMAKE_INSTALL_RPATH
@@ -154,19 +148,13 @@ set(
 )
 
 macro(xeus_octave_set_common_options target_name)
-    if(MSVC)
-        target_compile_options(${target_name} PUBLIC /wd4251 /wd4141)
-        target_compile_options(${target_name} PUBLIC /wd4018 /wd4267 /wd4715 /wd4146 /wd4129)
-    endif()
+    xeus_octave_target_add_compile_warnings(${target_name})
 
     if(
         CMAKE_CXX_COMPILER_ID MATCHES "Clang"
         OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
         OR CMAKE_CXX_COMPILER_ID MATCHES "Intel"
     )
-
-        target_compile_options(${target_name} PUBLIC -Wunused-parameter -Wextra -Wreorder)
-
         # Mtune generic/native
         if(XEUS_OCTAVE_DISABLE_ARCH_NATIVE AND NOT XEUS_OCTAVE_DISABLE_TUNE_GENERIC)
             target_compile_options(${target_name} PUBLIC -mtune=generic)
