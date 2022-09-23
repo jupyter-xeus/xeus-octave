@@ -1,37 +1,40 @@
-{
-    "version": 2,
-    "configurePresets": [
-        {
-            "name": "base",
-            "displayName": "Base",
-            "description": "Base profile containing common settings",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "generator": "Unix Makefiles",
-            "hidden": true
+  {
+      "version": 2,
+      "configurePresets": [
+          {
+              "name": "conda-dev",
+              "displayName": "Conda Dev",
+              "description": "Dev base profile using conda libraries",
+              "binaryDir": "${sourceDir}/build/cmake/${presetName}",
+              "generator": "Unix Makefiles",
+              "hidden": true,
+              "warnings": {
+                  "dev": true,
+                  "uninitialized": true,
+                  "unusedCli": true
+              },
+              "cacheVariables": {
+                  "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                  "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+                  "CMAKE_PREFIX_PATH": "$env{CONDA_PREFIX}",
+                  "CMAKE_INSTALL_PREFIX": "$env{CONDA_PREFIX}"
+            }
         },
         {
-            "name": "debug",
-            "description": "Debug",
-            "displayName": "Debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            },
-            "inherits": [
-                "base"
-            ]
-        },
-        {
-            "name": "debug_osmesa",
-            "description": "Debug with software rendering",
-            "displayName": "Debug+Osmesa",
+            "name": "conda-debug-osmesa",
+            "description": "A debug build using conda librarie and OSMesa",
+            "displayName": "Conda Debug OSMesa",
+            "inherits": ["conda-dev"],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "GLFW3_FETCH": "TRUE",
-                "GLFW3_OSMESA_BACKEND": "TRUE"
-            },
-            "inherits": [
-                "base"
-            ]
+                "XEUS_OCTAVE_GLFW3_OSMESA_BACKEND": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "conda-debug-osmesa",
+            "configurePreset": "conda-debug-osmesa"
         }
     ]
 }
