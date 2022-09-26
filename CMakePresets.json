@@ -1,40 +1,42 @@
-  {
-      "version": 2,
-      "configurePresets": [
-          {
-              "name": "conda-dev",
-              "displayName": "Conda Dev",
-              "description": "Dev base profile using conda libraries",
-              "binaryDir": "${sourceDir}/build/cmake/${presetName}",
-              "generator": "Unix Makefiles",
-              "hidden": true,
-              "warnings": {
-                  "dev": true,
-                  "uninitialized": true,
-                  "unusedCli": true
-              },
-              "cacheVariables": {
-                  "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                  "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
-                  "CMAKE_PREFIX_PATH": "$env{CONDA_PREFIX}",
-                  "CMAKE_INSTALL_PREFIX": "$env{CONDA_PREFIX}"
-            }
-        },
-        {
-            "name": "conda-debug-osmesa",
-            "description": "A debug build using conda librarie and OSMesa",
-            "displayName": "Conda Debug OSMesa",
-            "inherits": ["conda-dev"],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "XEUS_OCTAVE_GLFW3_OSMESA_BACKEND": "ON"
-            }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "conda-debug-osmesa",
-            "configurePreset": "conda-debug-osmesa"
-        }
-    ]
+{
+  "version": 2,
+  "buildPresets": [
+    {
+      "configurePreset": "conda-debug-osmesa",
+      "name": "conda-debug-osmesa"
+    }
+  ],
+  "configurePresets": [
+    {
+      "binaryDir": "${sourceDir}/build/cmake/${presetName}",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_INSTALL_PREFIX": "$env{CONDA_PREFIX}",
+        "CMAKE_PREFIX_PATH": "$env{CONDA_PREFIX}"
+      },
+      "description": "Dev base profile using conda libraries",
+      "displayName": "Conda Dev",
+      "generator": "Unix Makefiles",
+      "hidden": true,
+      "name": "conda-dev",
+      "warnings": {
+        "dev": true,
+        "uninitialized": true,
+        "unusedCli": true
+      }
+    },
+    {
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "XEUS_OCTAVE_GLFW3_OSMESA_BACKEND": "ON"
+      },
+      "description": "A debug build using conda librarie and OSMesa",
+      "displayName": "Conda Debug OSMesa",
+      "inherits": [
+        "conda-dev"
+      ],
+      "name": "conda-debug-osmesa"
+    }
+  ]
 }

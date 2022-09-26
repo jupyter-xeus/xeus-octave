@@ -25,6 +25,7 @@ jobs:
         with:
           environment-file: environment-dev.yml
           environment-name: xeus-octave
+          cache-downloads: true
       - name: Configure
         run: cmake --preset conda-debug-osmesa
       - name: Build
@@ -33,3 +34,21 @@ jobs:
         run: cmake --install build/cmake/conda-debug-osmesa
       - name: Test
         run: python -m pytest ./test
+
+  static-analysis:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - name: install mamba
+        uses: mamba-org/provision-with-micromamba@v13
+        with:
+          environment-file: environment-dev.yml
+          environment-name: xeus-octave
+      - name: set PYTHON_HASH
+        run: echo "PYTHON_HASH=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/pre-commit
+          key: precommit-v1-${{ env.PYTHON_HASH }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Pre-commit hooks
+        run: python -m pre_commit run --all-files --show-diff-on-failure

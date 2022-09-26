@@ -26,34 +26,38 @@
 #include <mutex>
 
 #include <GLFW/glfw3.h>
+#include <nlohmann/json.hpp>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
-#include <nlohmann/json.hpp>
 
-#include "xeus-octave/config.hpp"
 #include "opengl.hpp"
+#include "xeus-octave/config.hpp"
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-class notebook_graphics_toolkit : public octave::base_graphics_toolkit {
+class notebook_graphics_toolkit : public octave::base_graphics_toolkit
+{
 public:
-	notebook_graphics_toolkit(octave::interpreter &);
-	~notebook_graphics_toolkit();
 
-	bool is_valid() const override { return true; }
+  notebook_graphics_toolkit(octave::interpreter&);
+  ~notebook_graphics_toolkit();
 
-	bool initialize(const octave::graphics_object &) override;
-	void redraw_figure(const octave::graphics_object &) const override;
-	void show_figure(const octave::graphics_object &) const override;
-	void update(const octave::graphics_object &, int) override;
+  bool is_valid() const override { return true; }
 
-	void finalize(const octave::graphics_object &) override;
+  bool initialize(octave::graphics_object const&) override;
+  void redraw_figure(octave::graphics_object const&) const override;
+  void show_figure(octave::graphics_object const&) const override;
+  void update(octave::graphics_object const&, int) override;
+
+  void finalize(octave::graphics_object const&) override;
 
 private:
+
 #ifndef NOTEBOOK_TOOLKIT_CPU
-	GLFWwindow *window = nullptr;
+  GLFWwindow* window = nullptr;
 #endif
-	octave::interpreter &m_interpreter;
+  octave::interpreter& m_interpreter;
 };
 
 }  // namespace xeus_octave

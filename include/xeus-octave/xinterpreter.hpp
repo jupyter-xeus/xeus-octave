@@ -20,66 +20,72 @@
 #ifndef XEUS_OCTAVE_INTERPRETER_H
 #define XEUS_OCTAVE_INTERPRETER_H
 
+#include <functional>
+#include <sstream>
+
+#include <nlohmann/json.hpp>
 #include <octave/interpreter.h>
 #include <octave/oct-stream.h>
-
-#include <functional>
-#include <nlohmann/json.hpp>
-#include <sstream>
 #include <xeus/xinterpreter.hpp>
 
 #include "xeus-octave/io.hpp"
 
-using nlohmann::json;
+namespace nl = nlohmann;
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-class xoctave_interpreter : public xeus::xinterpreter {
+class xoctave_interpreter : public xeus::xinterpreter
+{
 private:
-	octave::interpreter interpreter;
+
+  octave::interpreter interpreter;
 
 private:
-	void configure_impl() override;
 
-	json execute_request_impl(int execution_counter,
-							  const std::string& code,
-							  bool silent,
-							  bool store_history,
-							  json user_expressions,
-							  bool allow_stdin) override;
+  void configure_impl() override;
 
-	json complete_request_impl(const std::string& code,
-							   int cursor_pos) override;
+  nl::json execute_request_impl(
+    int execution_counter,
+    std::string const& code,
+    bool silent,
+    bool store_history,
+    nl::json user_expressions,
+    bool allow_stdin
+  ) override;
 
-	json inspect_request_impl(const std::string& code,
-							  int cursor_pos,
-							  int detail_level) override;
+  nl::json complete_request_impl(std::string const& code, int cursor_pos) override;
 
-	json is_complete_request_impl(const std::string& code) override;
+  nl::json inspect_request_impl(std::string const& code, int cursor_pos, int detail_level) override;
 
-	json kernel_info_request_impl() override;
+  nl::json is_complete_request_impl(std::string const& code) override;
 
-	void shutdown_request_impl() override;
+  nl::json kernel_info_request_impl() override;
+
+  void shutdown_request_impl() override;
 
 public:
-	void publish_stream(const std::string& name, const std::string& text);
-	void display_data(json data, json metadata = json::object(), json transient = json::object());
-	void update_display_data(json data, json metadata = json::object(), json transient = json::object());
-	void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
-	void publish_execution_error(const std::string& ename,
-								 const std::string& evalue,
-								 const std::vector<std::string>& trace_back);
-	std::string blocking_input_request(const std::string& prompt, bool password);
+
+  void publish_stream(std::string const& name, std::string const& text);
+  void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
+  void
+  update_display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
+  void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
+  void publish_execution_error(
+    std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
+  );
+  std::string blocking_input_request(std::string const& prompt, bool password);
 
 private:
-	std::string get_symbol(const std::string& code, int cursor_pos) const;
-	json get_help_for_symbol(const std::string& symbol);
 
-	output m_stdout{std::bind(&xoctave_interpreter::publish_stream, this, "stdout", std::placeholders::_1)};
-	output m_stderr{std::bind(&xoctave_interpreter::publish_stream, this, "stderr", std::placeholders::_1)};
-	input m_stdin{std::bind(&xoctave_interpreter::blocking_input_request, this, std::placeholders::_1, false)};
+  static std::string get_symbol(std::string const& code, std::size_t cursor_pos);
+  nl::json get_help_for_symbol(std::string const& symbol);
 
-	bool m_silent, m_allow_stdin;
+  output m_stdout{std::bind(&xoctave_interpreter::publish_stream, this, "stdout", std::placeholders::_1)};
+  output m_stderr{std::bind(&xoctave_interpreter::publish_stream, this, "stderr", std::placeholders::_1)};
+  input m_stdin{std::bind(&xoctave_interpreter::blocking_input_request, this, std::placeholders::_1, false)};
+
+  bool m_silent, m_allow_stdin;
 };
 
 }  // namespace xeus_octave
