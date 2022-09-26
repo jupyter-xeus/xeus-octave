@@ -34,9 +34,12 @@
 
 #include <iostream>
 
-namespace octave {
-class opengl_functions {
+namespace octave
+{
+class opengl_functions
+{
 public:
+
   opengl_functions(void) {}
 
   opengl_functions(opengl_functions const&) = default;
@@ -57,7 +60,8 @@ public:
 
   virtual void glBitmap(
     GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, GLubyte const* bitmap
-  ) {
+  )
+  {
     ::glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap);
   }
 
@@ -65,7 +69,8 @@ public:
 
   virtual void glCallList(GLuint list) { ::glCallList(list); }
 
-  virtual void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha) {
+  virtual void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+  {
     ::glClearColor(red, green, blue, alpha);
   }
 
@@ -79,11 +84,13 @@ public:
 
   virtual void glColor3fv(GLfloat const* v) { ::glColor3fv(v); }
 
-  virtual void glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha) {
+  virtual void glColor4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha)
+  {
     ::glColor4d(red, green, blue, alpha);
   }
 
-  virtual void glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
+  virtual void glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+  {
     ::glColor4f(red, green, blue, alpha);
   }
 
@@ -97,7 +104,8 @@ public:
 
   virtual void glDisable(GLenum cap) { ::glDisable(cap); }
 
-  virtual void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels) {
+  virtual void glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid const* pixels)
+  {
     ::glDrawPixels(width, height, format, type, pixels);
   }
 
@@ -156,7 +164,8 @@ public:
   virtual void glNormal3dv(GLdouble const* v) { ::glNormal3dv(v); }
 
   virtual void
-  glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val) {
+  glOrtho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
+  {
     ::glOrtho(left, right, bottom, top, near_val, far_val);
   }
 
@@ -182,8 +191,8 @@ public:
 
   virtual void glRasterPos3d(GLdouble x, GLdouble y, GLdouble z) { ::glRasterPos3d(x, y, z); }
 
-  virtual void
-  glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) {
+  virtual void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
+  {
     ::glReadPixels(x, y, width, height, format, type, pixels);
   }
 
@@ -211,7 +220,8 @@ public:
     GLenum format,
     GLenum type,
     GLvoid const* pixels
-  ) {
+  )
+  {
     ::glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
   }
 

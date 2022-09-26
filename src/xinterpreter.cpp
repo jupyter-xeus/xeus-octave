@@ -60,37 +60,45 @@
 namespace nl = nlohmann;
 namespace oc = octave;
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text) {
+void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
+{
   if (!m_silent)
     xinterpreter::publish_stream(name, text);
 }
 
-void xoctave_interpreter::display_data(nl::json data, nl::json metadata, nl::json transient) {
+void xoctave_interpreter::display_data(nl::json data, nl::json metadata, nl::json transient)
+{
   if (!m_silent)
     xinterpreter::display_data(data, metadata, transient);
 }
 
-void xoctave_interpreter::update_display_data(nl::json data, nl::json metadata, nl::json transient) {
+void xoctave_interpreter::update_display_data(nl::json data, nl::json metadata, nl::json transient)
+{
   if (!m_silent)
     xinterpreter::update_display_data(data, metadata, transient);
 }
 
-void xoctave_interpreter::publish_execution_result(int execution_count, nl::json data, nl::json metadata) {
+void xoctave_interpreter::publish_execution_result(int execution_count, nl::json data, nl::json metadata)
+{
   if (!m_silent)
     xinterpreter::publish_execution_result(execution_count, data, metadata);
 }
 
 void xoctave_interpreter::publish_execution_error(
   std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
-) {
+)
+{
   if (!m_silent)
     xinterpreter::publish_execution_error(ename, evalue, trace_back);
 }
 
-std::string xoctave_interpreter::blocking_input_request(std::string const& prompt, bool password) {
-  if (m_allow_stdin) {
+std::string xoctave_interpreter::blocking_input_request(std::string const& prompt, bool password)
+{
+  if (m_allow_stdin)
+  {
     // Register the input handler
     std::string value;
 
@@ -115,7 +123,8 @@ nl::json xoctave_interpreter::execute_request_impl(
   bool /*store_history*/,
   nl::json /*user_expressions*/,
   bool allow_stdin
-) {
+)
+{
 #ifndef NDEBUG
   std::clog << "Executing: " << code << std::endl;
 #endif
@@ -134,21 +143,27 @@ nl::json xoctave_interpreter::execute_request_impl(
   // Extract magic ?
   std::string trim = code;
   trim.erase(trim.find_last_not_of(" \n\r\t") + 1);
-  if (trim.length() && trim[trim.length() - 1] == '?') {
+  if (trim.length() && trim[trim.length() - 1] == '?')
+  {
     // User asked for function help
     trim.pop_back();
     auto data = get_help_for_symbol(trim);
 
-    if (data.is_null()) {
+    if (data.is_null())
+    {
       auto ename = "Execution exception";
       auto evalue = "help: '" + trim + "' not found\n";
       result = xeus::create_error_reply(ename, evalue, {});
       publish_execution_error(ename, evalue, {});
-    } else {
+    }
+    else
+    {
       result = xeus::create_successful_reply();
       publish_execution_result(execution_counter, data, nl::json::object());
     }
-  } else {
+  }
+  else
+  {
     auto str_parser = oc::parser(code, interpreter);
 
     // Clear current figure
@@ -157,28 +172,38 @@ nl::json xoctave_interpreter::execute_request_impl(
     root_figure.set_currentfigure(octave_value(NAN));
 
     int exit_status = 0;
-    do {
-      try {
+    do
+    {
+      try
+      {
         str_parser.reset();
         exit_status = str_parser.run();
 
-        if (exit_status == 0) {
+        if (exit_status == 0)
+        {
           auto stmt_list = str_parser.statement_list();
 
-          if (stmt_list) {
+          if (stmt_list)
+          {
             interpreter.get_evaluator().eval(stmt_list, false);
-          } else if (str_parser.at_end_of_input()) {
+          }
+          else if (str_parser.at_end_of_input())
+          {
             exit_status = EOF;
             break;
           }
         }
-      } catch (oc::interrupt_exception const&) {
+      }
+      catch (oc::interrupt_exception const&)
+      {
         auto const ename = "Interrupt exception";
         auto const evalue = "Kernel was interrupted";
         interpreter.recover_from_exception();
         publish_execution_error(ename, evalue, {});
         result = xeus::create_error_reply(ename, evalue, {});
-      } catch (oc::index_exception const& e) {
+      }
+      catch (oc::index_exception const& e)
+      {
         auto const ename = "Index exception";
         auto evalue = e.message();
         // TODO shoud the stack trace be added as last argument?
@@ -186,7 +211,9 @@ nl::json xoctave_interpreter::execute_request_impl(
         interpreter.recover_from_exception();
         publish_execution_error(ename, evalue, {});
         result = xeus::create_error_reply(ename, evalue, {});
-      } catch (oc::execution_exception const& e) {
+      }
+      catch (oc::execution_exception const& e)
+      {
         auto const ename = "Execution exception";
         auto evalue = e.message();
         evalue += "\n" + e.stack_trace();
@@ -194,7 +221,9 @@ nl::json xoctave_interpreter::execute_request_impl(
         interpreter.recover_from_exception();
         publish_execution_error(ename, evalue, {});
         result = xeus::create_error_reply(ename, evalue, {});
-      } catch (std::bad_alloc const&) {
+      }
+      catch (std::bad_alloc const&)
+      {
         auto const ename = "Memory exception";
         auto const evalue = "Could not allocate the memory required for the computation";
         interpreter.recover_from_exception();
@@ -215,7 +244,8 @@ nl::json xoctave_interpreter::execute_request_impl(
   return result;
 }
 
-void xoctave_interpreter::configure_impl() {
+void xoctave_interpreter::configure_impl()
+{
   octave::install_signal_handlers();
 
   interpreter.read_init_files(true);
@@ -248,7 +278,8 @@ void xoctave_interpreter::configure_impl() {
   // though them all.
   {
     auto const& a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
-    for (auto i = octave_idx_type{0}; i < a.numel(); ++i) {
+    for (auto i = octave_idx_type{0}; i < a.numel(); ++i)
+    {
       octave::feval("graphics_toolkit", ovl(a.elem(i)));
     }
   }
@@ -268,7 +299,8 @@ void xoctave_interpreter::configure_impl() {
   );
 }
 
-nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int cursor_pos) {
+nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int cursor_pos)
+{
   assert(cursor_pos >= 0);
   // We are interested only in the code before the cursor
   assert(cursor_pos >= 0);
@@ -281,8 +313,10 @@ nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int
 #endif
 
   auto const completions = octave::feval("completion_matches", octave_value(symbol), 1);
-  if (completions.length()) {
-    for (auto completion : completions(0).string_vector_value().std_list()) {
+  if (completions.length())
+  {
+    for (auto completion : completions(0).string_vector_value().std_list())
+    {
       std::string c = completion.substr(0, strlen(completion.c_str()));
 
       // Trim leading '\0'
@@ -304,7 +338,8 @@ nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int
   );
 }
 
-nl::json xoctave_interpreter::inspect_request_impl(std::string const& code, int cursor_pos, int /*detail_level*/) {
+nl::json xoctave_interpreter::inspect_request_impl(std::string const& code, int cursor_pos, int /*detail_level*/)
+{
   assert(cursor_pos >= 0);
   std::string function = get_symbol(code, static_cast<std::size_t>(cursor_pos));
 
@@ -314,19 +349,22 @@ nl::json xoctave_interpreter::inspect_request_impl(std::string const& code, int 
 
   auto data = get_help_for_symbol(function);
 
-  if (data.is_null()) {
+  if (data.is_null())
+  {
     xeus::create_inspect_reply(false);
   }
   return xeus::create_inspect_reply(true, data);
 }
 
-nl::json xoctave_interpreter::is_complete_request_impl(std::string const& /*code*/) {
+nl::json xoctave_interpreter::is_complete_request_impl(std::string const& /*code*/)
+{
   nl::json result;
   result["status"] = "complete";
   return result;
 }
 
-nl::json xoctave_interpreter::kernel_info_request_impl() {
+nl::json xoctave_interpreter::kernel_info_request_impl()
+{
   auto result = nl::json::object();
   result["implementation"] = "xeus-octave";
   result["implementation_version"] = XEUS_OCTAVE_VERSION;
@@ -341,17 +379,20 @@ nl::json xoctave_interpreter::kernel_info_request_impl() {
   return result;
 }
 
-void xoctave_interpreter::shutdown_request_impl() {
+void xoctave_interpreter::shutdown_request_impl()
+{
 #ifndef NDEBUG
   std::clog << "Bye!!" << std::endl;
 #endif
 }
 
-std::string xoctave_interpreter::get_symbol(std::string const& code, std::size_t cursor_pos) {
+std::string xoctave_interpreter::get_symbol(std::string const& code, std::size_t cursor_pos)
+{
   if (cursor_pos == code.size())
     cursor_pos = code.size() - 1;
 
-  while (cursor_pos > 0 && (std::isalnum(code.at(cursor_pos)) || code.at(cursor_pos) == '_')) {
+  while (cursor_pos > 0 && (std::isalnum(code.at(cursor_pos)) || code.at(cursor_pos) == '_'))
+  {
 #ifndef NDEBUG
     std::clog << "Cursor pos: " << cursor_pos << " - " << code.at(cursor_pos) << '\n';
 #endif
@@ -359,7 +400,8 @@ std::string xoctave_interpreter::get_symbol(std::string const& code, std::size_t
   }
 
   auto end_pos = cursor_pos ? ++cursor_pos : 0;
-  while (end_pos < code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_')) {
+  while (end_pos < code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_'))
+  {
 #ifndef NDEBUG
     std::clog << "End pos: " << end_pos << " - " << code.at(end_pos) << '\n';
 #endif
@@ -369,14 +411,17 @@ std::string xoctave_interpreter::get_symbol(std::string const& code, std::size_t
   return code.substr(cursor_pos, end_pos - cursor_pos);
 }
 
-nl::json xoctave_interpreter::get_help_for_symbol(std::string const& symbol) {
-  try {
+nl::json xoctave_interpreter::get_help_for_symbol(std::string const& symbol)
+{
+  try
+  {
     std::string htext;
     std::string format;
 
     interpreter.get_help_system().get_help_text(symbol, htext, format);
 
-    if (format == "texinfo") {
+    if (format == "texinfo")
+    {
       octave_value_list help = octave::feval("__makeinfo__", ovl(htext, "html"), 1);
       std::string value = help(0).string_value();
       std::smatch match;
@@ -396,16 +441,22 @@ nl::json xoctave_interpreter::get_help_for_symbol(std::string const& symbol) {
       result["text/html"] = text;
       result["application/x-texinfo"] = htext;
       return result;
-    } else if (format == "plain text") {
+    }
+    else if (format == "plain text")
+    {
       auto result = nl::json::object();
       result["text/plain"] = htext;
       return result;
-    } else if (format == "html") {
+    }
+    else if (format == "html")
+    {
       auto result = nl::json::object();
       result["text/html"] = htext;
       return result;
     }
-  } catch (...) {
+  }
+  catch (...)
+  {
     std::clog << "Cannot get help for symbol " << symbol << std::endl;
     return nullptr;
   }

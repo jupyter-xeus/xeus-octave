@@ -39,10 +39,13 @@
 
 namespace nl = nlohmann;
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-class plotly_graphics_toolkit : public octave::base_graphics_toolkit {
+class plotly_graphics_toolkit : public octave::base_graphics_toolkit
+{
 public:
+
   plotly_graphics_toolkit(octave::interpreter& interp) : base_graphics_toolkit("plotly"), m_interpreter(interp) {}
 
   bool is_valid() const override { return true; }
@@ -52,6 +55,7 @@ public:
   void show_figure(octave::graphics_object const& go) const override;
 
 private:
+
   /**
    * Get the string suffix to append to plotly objects (eg xaxis, yaxis, scene
    * polar), when more than one is present. The suffix for the first one is
@@ -136,6 +140,7 @@ private:
   void setLegendVisibility(nl::json& data, std::string name) const;
 
 private:
+
   octave::interpreter& m_interpreter;
 };
 

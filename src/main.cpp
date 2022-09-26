@@ -25,7 +25,8 @@
 
 #include "xeus-octave/xinterpreter.hpp"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
   // Configuration file
   auto const* const file_name = (argc == 1) ? "connection.json" : argv[2];
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());

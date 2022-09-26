@@ -55,17 +55,19 @@ namespace nl = nlohmann;
 namespace oc = octave;
 using namespace std::chrono;
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
 notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interpreter) :
-  base_graphics_toolkit("notebook"), m_interpreter(interpreter) {
-  glfwSetErrorCallback([](int error, char const* description) {
-    std::clog << "GLFW Error: " << description << " (" << error << ")" << '\n';
-  });
+  base_graphics_toolkit("notebook"), m_interpreter(interpreter)
+{
+  glfwSetErrorCallback([](int error, char const* description)
+                       { std::clog << "GLFW Error: " << description << " (" << error << ")" << '\n'; });
 
   glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
-  if (!glfwInit()) {
+  if (!glfwInit())
+  {
     std::clog << "Cannot initialize GLFW" << '\n';
     return;
   }
@@ -74,7 +76,8 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interprete
 
 #ifndef NOTEBOOK_TOOLKIT_CPU
   window = glfwCreateWindow(100, 100, "", NULL, NULL);
-  if (!window) {
+  if (!window)
+  {
     glfwTerminate();
     return;
   }
@@ -88,7 +91,8 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interprete
 #endif
 }
 
-notebook_graphics_toolkit::~notebook_graphics_toolkit() {
+notebook_graphics_toolkit::~notebook_graphics_toolkit()
+{
 #ifndef NOTEBOOK_TOOLKIT_CPU
   if (window)
     glfwDestroyWindow(window);
@@ -97,8 +101,10 @@ notebook_graphics_toolkit::~notebook_graphics_toolkit() {
   glfwTerminate();
 }
 
-bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go) {
-  if (go.isa("figure")) {
+bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
+{
+  if (go.isa("figure"))
+  {
     // Set the pixel ratio
     auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
     float xscale, yscale;
@@ -127,7 +133,8 @@ bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go) {
 
 void notebook_graphics_toolkit::finalize(oc::graphics_object const&) {}
 
-void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const {
+void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
+{
   int id = getPlotStream(go);
 
   auto tran = nl::json::object();
@@ -136,7 +143,8 @@ void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
     .display_data(nl::json::object(), nl::json::object(), tran);
 }
 
-void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const {
+void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
+{
 #ifndef NDEBUG
   std::clog << "------------" << '\n';
   auto start = high_resolution_clock::now();
@@ -147,7 +155,8 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   Matrix figurePosition = figureProperties.get_position().matrix_value();
 
   auto const dpr = figureProperties.get___device_pixel_ratio__();
-  auto const int_cast = [](double x) -> int {
+  auto const int_cast = [](double x) -> int
+  {
     using limits = std::numeric_limits<int>;
     assert((limits::min() <= x) && (x <= limits::max()));
     return static_cast<int>(std::lround(x));
@@ -212,12 +221,14 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
     rows[uheight - 1 - y] = screen.data() + y * uwidth * 3;
   png_set_rows(p, i, &rows[0]);
 
-  auto const img = [](auto& png) {
+  auto const img = [](auto& png)
+  {
     auto out = std::string();
     png_set_write_fn(
       png,
       &out,
-      [](png_structp png_, png_bytep d, png_size_t l) {
+      [](png_structp png_, png_bytep d, png_size_t l)
+      {
         std::string* out_ = static_cast<std::string*>(png_get_io_ptr(png_));
         out_->insert(out_->end(), d, d + l);
       },

@@ -26,10 +26,13 @@
 
 #include "octave/cmd-edit.h"
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-class input : public octave::command_editor {
+class input : public octave::command_editor
+{
 public:
+
   input(std::function<std::string(std::string const&)> callback);
 
   static void override(input& n);
@@ -64,17 +67,21 @@ public:
   void do_accept_line(void) override {}
 
 private:
+
   std::function<std::string(std::string const&)> m_callback;
 };
 
-class output : public std::streambuf {
+class output : public std::streambuf
+{
 public:
+
   output(std::function<void(std::string const&)> callback);
 
   static void override(std::ostream&, output&);
   static void restore(std::ostream&, output&);
 
 protected:
+
   int_type overflow(int_type c) override;
   std::streamsize xsputn(char const* s, std::streamsize count) override;
   int_type sync() override;

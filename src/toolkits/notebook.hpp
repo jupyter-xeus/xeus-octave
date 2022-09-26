@@ -33,10 +33,13 @@
 #include "opengl.hpp"
 #include "xeus-octave/config.hpp"
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-class notebook_graphics_toolkit : public octave::base_graphics_toolkit {
+class notebook_graphics_toolkit : public octave::base_graphics_toolkit
+{
 public:
+
   notebook_graphics_toolkit(octave::interpreter&);
   ~notebook_graphics_toolkit();
 
@@ -50,6 +53,7 @@ public:
   void finalize(octave::graphics_object const&) override;
 
 private:
+
 #ifndef NOTEBOOK_TOOLKIT_CPU
   GLFWwindow* window = nullptr;
 #endif

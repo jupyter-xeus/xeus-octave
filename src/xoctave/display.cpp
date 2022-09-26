@@ -31,18 +31,22 @@
 #include "display.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
-namespace xeus_octave::display {
+namespace xeus_octave::display
+{
 
-namespace {
+namespace
+{
 
-octave_value_list display_data(octave_value_list const& args, int /*nargout*/) {
+octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
+{
   if (args.length() < 1 || args.length() > 2)
     print_usage();
 
   nlohmann::json data;
   octave_map d = args(0).xmap_value("DATA must be a map");
 
-  for (auto value : d) {
+  for (auto value : d)
+  {
     auto v = d.contents(value.second);
     if (value.first == "application/json")
       data[value.first] = nlohmann::json::parse(v(0).xstring_value("DATA contents must be strings"));
@@ -52,10 +56,12 @@ octave_value_list display_data(octave_value_list const& args, int /*nargout*/) {
 
   nlohmann::json metadata;
 
-  if (args.length() > 1) {
+  if (args.length() > 1)
+  {
     octave_map m = args(0).xmap_value("METADATA must be a map");
 
-    for (auto value : m) {
+    for (auto value : m)
+    {
       auto v = m.contents(value.second);
       data[value.first] = v(0).xstring_value("METADATA contents must be strings");
     }
@@ -66,7 +72,8 @@ octave_value_list display_data(octave_value_list const& args, int /*nargout*/) {
   return ovl();
 }
 
-octave_value_list override_path(octave_value_list const& args, int /*nargout*/) {
+octave_value_list override_path(octave_value_list const& args, int /*nargout*/)
+{
   if (args.length() != 0)
     print_usage();
 
@@ -78,7 +85,8 @@ octave_value_list override_path(octave_value_list const& args, int /*nargout*/) 
  * a 5000 elements matrix takes 9 ms to render with this function, while 4 s (!)
  * with the native octave function
  */
-octave_value_list matrix_to_html(octave_value_list const& args, int /*nargout*/) {
+octave_value_list matrix_to_html(octave_value_list const& args, int /*nargout*/)
+{
   std::ostringstream t;
 
   if (args.length() != 3)
@@ -94,17 +102,20 @@ octave_value_list matrix_to_html(octave_value_list const& args, int /*nargout*/)
     << "<tr>";
   t << "<th><i>" << name << "<i></th>";
 
-  for (int c = 0; c < m.cols(); c++) {
+  for (int c = 0; c < m.cols(); c++)
+  {
     t << "<th>" << c + 1 << "</th>";
   }
 
   t << "</tr>";
 
-  for (int r = 0; r < m.rows(); r++) {
+  for (int r = 0; r < m.rows(); r++)
+  {
     t << "<tr>";
     t << "<th>" << r + 1 << "</th>";
 
-    for (int c = 0; c < m.cols(); c++) {
+    for (int c = 0; c < m.cols(); c++)
+    {
       t << "<td>";
       if (type == "bool matrix")
         t << (m(r, c) > 0 ? "<span style='color: green;'>T</span>" : "<span style='color: red;'>F</span>");
@@ -123,14 +134,16 @@ octave_value_list matrix_to_html(octave_value_list const& args, int /*nargout*/)
   return ovl(t.str());
 }
 
-std::string latex_fix_sci_not(std::string text) {
+std::string latex_fix_sci_not(std::string text)
+{
   text = std::regex_replace(text, std::regex("e\\+[0]*([0-9]+)"), "\\mathrm{ᴇ}{$1}");
   text = std::regex_replace(text, std::regex("e\\-[0]*([0-9]+)"), "\\mathrm{ᴇ\\text{-}}{$1}");
 
   return text;
 }
 
-octave_value_list latex_fix_sci_not(octave_value_list const& args, int /*nargout*/) {
+octave_value_list latex_fix_sci_not(octave_value_list const& args, int /*nargout*/)
+{
   if (args.length() != 1)
     print_usage();
 
@@ -139,7 +152,8 @@ octave_value_list latex_fix_sci_not(octave_value_list const& args, int /*nargout
   return ovl(latex_fix_sci_not(text));
 }
 
-octave_value_list matrix_to_latex(octave_value_list const& args, int /*nargout*/) {
+octave_value_list matrix_to_latex(octave_value_list const& args, int /*nargout*/)
+{
   std::ostringstream l;
 
   if (args.length() != 3)
@@ -152,13 +166,18 @@ octave_value_list matrix_to_latex(octave_value_list const& args, int /*nargout*/
 
   l << "$$ " << name << " = ";
 
-  if (type == "range") {
+  if (type == "range")
+  {
     l << m(0) << "," << m(1) << ",\\dots," << m(m.cols() - 1);
-  } else {
+  }
+  else
+  {
     l << "\\begin{bmatrix}";
 
-    for (int r = 0; r < m.rows(); r++) {
-      for (int c = 0; c < m.cols(); c++) {
+    for (int r = 0; r < m.rows(); r++)
+    {
+      for (int c = 0; c < m.cols(); c++)
+      {
         l << " " << m(r, c) << " ";
 
         if (c < m.cols() - 1)
@@ -179,7 +198,8 @@ octave_value_list matrix_to_latex(octave_value_list const& args, int /*nargout*/
 
 }  // namespace
 
-void register_all(octave::interpreter& i) {
+void register_all(octave::interpreter& i)
+{
   auto& s = i.get_symbol_table();
 
   auto display_data_func = new octave_builtin(display_data, "display_data", __FILE__, "");

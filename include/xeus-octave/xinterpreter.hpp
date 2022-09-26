@@ -32,13 +32,17 @@
 
 namespace nl = nlohmann;
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-class xoctave_interpreter : public xeus::xinterpreter {
+class xoctave_interpreter : public xeus::xinterpreter
+{
 private:
+
   octave::interpreter interpreter;
 
 private:
+
   void configure_impl() override;
 
   nl::json execute_request_impl(
@@ -61,6 +65,7 @@ private:
   void shutdown_request_impl() override;
 
 public:
+
   void publish_stream(std::string const& name, std::string const& text);
   void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
   void
@@ -72,6 +77,7 @@ public:
   std::string blocking_input_request(std::string const& prompt, bool password);
 
 private:
+
   static std::string get_symbol(std::string const& code, std::size_t cursor_pos);
   nl::json get_help_for_symbol(std::string const& symbol);
 

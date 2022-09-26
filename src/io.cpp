@@ -25,17 +25,21 @@
 #include "xeus-octave/io.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-namespace {
+namespace
+{
 
 static octave::command_editor* old;
 
 /**
  * Crazy hack to access the private member
  */
-template <octave::command_editor** M> struct AccessInstance {
-  friend void _set_command_editor(octave::command_editor& n) {
+template <octave::command_editor** M> struct AccessInstance
+{
+  friend void _set_command_editor(octave::command_editor& n)
+  {
     // Backup old instance
     old = *M;
 
@@ -53,43 +57,51 @@ void _reset_command_editor();
 
 }  // namespace
 
-void input::override(input& n) {
+void input::override(input& n)
+{
   _set_command_editor(n);
 }
 
-void input::restore() {
+void input::restore()
+{
   _reset_command_editor();
 }
 
 input::input(std::function<std::string(std::string const&)> callback) : m_callback(std::move(callback)) {}
 
-std::string input::do_readline(std::string const& prompt, bool&) {
+std::string input::do_readline(std::string const& prompt, bool&)
+{
   return m_callback(prompt);
 }
 
-void output::override(std::ostream& stream, output& buf) {
+void output::override(std::ostream& stream, output& buf)
+{
   // Backup previous buffer
   buf.p_oldbuf = stream.rdbuf();
 
   stream.rdbuf(&buf);
 }
 
-void output::restore(std::ostream& stream, output& buf) {
+void output::restore(std::ostream& stream, output& buf)
+{
   stream.rdbuf(buf.p_oldbuf);
 }
 
 output::output(std::function<void(std::string const&)> callback) : m_callback(std::move(callback)) {}
 
-output::int_type output::overflow(output::int_type c) {
+output::int_type output::overflow(output::int_type c)
+{
   std::lock_guard<std::mutex> lock(m_mutex);
   // Called for each output character.
-  if (!traits_type::eq_int_type(c, traits_type::eof())) {
+  if (!traits_type::eq_int_type(c, traits_type::eof()))
+  {
     m_output.push_back(traits_type::to_char_type(c));
   }
   return c;
 }
 
-std::streamsize output::xsputn(char const* s, std::streamsize count) {
+std::streamsize output::xsputn(char const* s, std::streamsize count)
+{
   std::lock_guard<std::mutex> lock(m_mutex);
   // Called for a string of characters.
   assert(count >= 0);
@@ -97,10 +109,12 @@ std::streamsize output::xsputn(char const* s, std::streamsize count) {
   return count;
 }
 
-output::int_type output::sync() {
+output::int_type output::sync()
+{
   std::lock_guard<std::mutex> lock(m_mutex);
   // Called in case of flush.
-  if (!m_output.empty()) {
+  if (!m_output.empty())
+  {
     m_callback(m_output);
     m_output.clear();
   }

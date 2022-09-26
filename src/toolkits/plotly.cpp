@@ -45,10 +45,13 @@
 namespace oc = octave;
 namespace nl = nlohmann;
 
-namespace xeus_octave {
+namespace xeus_octave
+{
 
-bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go) {
-  if (go.isa("figure")) {
+bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
+{
+  if (go.isa("figure"))
+  {
     setPlotStream(go, rand());
     show_figure(go);
 
@@ -58,10 +61,12 @@ bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go) {
   return false;
 }
 
-void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const {
+void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
+{
   int id = getPlotStream(go);
 
-  if (go.isa("figure")) {
+  if (go.isa("figure"))
+  {
     std::map<std::string, std::vector<unsigned long>> ids;
     auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
     Matrix figurePosition = figureProperties.get_position().matrix_value();
@@ -89,7 +94,8 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 
     // Figures contain axes and hggroups (not implemented for now) as children
     for (auto ax : children(go))
-      if (ax.isa("axes")) {
+      if (ax.isa("axes"))
+      {
         auto& axisProperties = dynamic_cast<oc::axes::properties&>(ax.get_properties());
 #if OCTAVE_MAJOR_VERSION >= 6
         auto xlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_xlabel());
@@ -109,7 +115,8 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 
         bool isLegend = !ax.get("tag").isempty() && ax.get("tag").string_value() == "legend";
 
-        if (!ax.get("tag").isempty() && ax.get("tag").string_value() == "polaraxes") {
+        if (!ax.get("tag").isempty() && ax.get("tag").string_value() == "polaraxes")
+        {
           std::string p = "polar" + axNumber;
 
           // Setting domain, which is the position of the axis of the figure
@@ -124,8 +131,9 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           polarAxis(
             plot["layout"][p]["angularaxis"], axisProperties.get("ttick").matrix_value(), axisProperties.get_fontsize()
           );
-
-        } else if (axisProperties.get_is2D()) {
+        }
+        else if (axisProperties.get_is2D())
+        {
           std::string x = "xaxis" + axNumber;
           std::string y = "yaxis" + axNumber;
 
@@ -202,13 +210,16 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           plot["layout"][x]["anchor"] = "y" + axNumber;
           plot["layout"][y]["anchor"] = "x" + axNumber;
 
-          if (isLegend) {
+          if (isLegend)
+          {
             plot["layout"][x]["showspikes"] = false;
             plot["layout"][y]["showspikes"] = false;
             plot["layout"][x]["fixedrange"] = true;
             plot["layout"][y]["fixedrange"] = true;
           }
-        } else {
+        }
+        else
+        {
           std::string s = "scene" + axNumber;
 
           // Setting domain, which is the position of the axis of the figure
@@ -312,24 +323,31 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
         }
 
         // Axes contain line, text, patch, surface, image, and light objects.
-        for (auto d : children(ax)) {
+        for (auto d : children(ax))
+        {
           unsigned long dNumber = plot["data"].size();
 
-          if (d.isa("line")) {
+          if (d.isa("line"))
+          {
             auto& lineProperties = dynamic_cast<oc::line::properties&>(d.get_properties());
             std::string type;
 
             // Set corresponding type and axes/scene
-            if (!ax.get("tag").isempty() && ax.get("tag").string_value() == "polaraxes") {
+            if (!ax.get("tag").isempty() && ax.get("tag").string_value() == "polaraxes")
+            {
               type = "scatterpolar";
 
               plot["data"][dNumber]["subplot"] = "polar" + axNumber;
-            } else if (axisProperties.get_is2D()) {
+            }
+            else if (axisProperties.get_is2D())
+            {
               type = "scatter";
 
               plot["data"][dNumber]["xaxis"] = "x" + axNumber;
               plot["data"][dNumber]["yaxis"] = "y" + axNumber;
-            } else {
+            }
+            else
+            {
               type = "scatter3d";
 
               plot["data"][dNumber]["scene"] = "scene" + axNumber;
@@ -353,14 +371,19 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
               plot["data"][dNumber]["hoverinfo"] = "none";
 
             setLegendVisibility(plot["data"][dNumber], lineProperties.get_displayname());
-          } else if (d.isa("surface")) {
+          }
+          else if (d.isa("surface"))
+          {
             auto& surfaceProperties = dynamic_cast<oc::surface::properties&>(d.get_properties());
 
-            if (axisProperties.get_is2D()) {
+            if (axisProperties.get_is2D())
+            {
 #ifndef NDEBUG
               std::clog << "2d surface not implemented" << std::endl;
 #endif
-            } else {
+            }
+            else
+            {
               plot["data"][dNumber]["scene"] = "scene" + axNumber;
 
               surface(
@@ -376,7 +399,9 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 
               setLegendVisibility(plot["data"][dNumber], surfaceProperties.get_displayname());
             }
-          } else if (d.isa("text")) {
+          }
+          else if (d.isa("text"))
+          {
             auto& textProperties = dynamic_cast<oc::text::properties&>(d.get_properties());
 
             Matrix textPosition = textProperties.get_position().matrix_value();
@@ -413,23 +438,30 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 #ifndef NDEBUG
             std::clog << textProperties.get_extent().matrix_value() << std::endl;
 #endif
-          } else if (d.isa("hggroup")) {
+          }
+          else if (d.isa("hggroup"))
+          {
             auto components = children(d);
             auto& hggroupProperties = dynamic_cast<oc::hggroup::properties&>(d.get_properties());
 
-            switch (components.size()) {
+            switch (components.size())
+            {
             case 2:
               // We suppose that a line+line hggroup is a stem
-              if (components[0].isa("line") && components[1].isa("line")) {
+              if (components[0].isa("line") && components[1].isa("line"))
+              {
                 auto& lineProperties = dynamic_cast<oc::line::properties&>(components[0].get_properties());
                 std::string type;
 
-                if (axisProperties.get_is2D()) {
+                if (axisProperties.get_is2D())
+                {
                   type = "scatter";
 
                   plot["data"][dNumber]["xaxis"] = "x" + axNumber;
                   plot["data"][dNumber]["yaxis"] = "y" + axNumber;
-                } else {
+                }
+                else
+                {
                   type = "scatter3d";
 
                   plot["data"][dNumber]["scene"] = "scene" + axNumber;
@@ -458,7 +490,8 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
                 plot["data"][dNumber]["marker"]["line"]["color"] = {};
                 plot["data"][dNumber]["marker"]["color"] = {};
 
-                for (size_t i = 0; i < plot["data"][dNumber]["x"].size(); i += 3) {
+                for (size_t i = 0; i < plot["data"][dNumber]["x"].size(); i += 3)
+                {
                   plot["data"][dNumber]["marker"]["line"]["color"][i] = "rgba(0,0,0,0)";
                   plot["data"][dNumber]["marker"]["line"]["color"][i + 1] = tempColor;
                   plot["data"][dNumber]["marker"]["line"]["color"][i + 2] = "rgba(0,0,0,0)";
@@ -488,7 +521,8 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
   }
 }
 
-void plotly_graphics_toolkit::show_figure(oc::graphics_object const& go) const {
+void plotly_graphics_toolkit::show_figure(oc::graphics_object const& go) const
+{
   int id = getPlotStream(go);
 
   nl::json tran;
@@ -499,12 +533,14 @@ void plotly_graphics_toolkit::show_figure(oc::graphics_object const& go) const {
 
 std::string plotly_graphics_toolkit::getObjectNumber(
   octave::graphics_object const& o, std::map<std::string, std::vector<unsigned long>>& ids
-) const {
+) const
+{
   double h = o.get_handle().value();
   unsigned long id = *reinterpret_cast<unsigned long*>(&h);
   std::string type;
 
-  if (o.type() == "axes") {
+  if (o.type() == "axes")
+  {
     auto const& axisProperties = dynamic_cast<octave::axes::properties const&>(o.get_properties());
 
     if (axisProperties.get_tag() == "polaraxes")
@@ -517,16 +553,22 @@ std::string plotly_graphics_toolkit::getObjectNumber(
 
   auto& idlist = ids[type];
 
-  if (idlist.size() == 0) {
+  if (idlist.size() == 0)
+  {
     idlist.push_back(id);
     return "";
-  } else {
+  }
+  else
+  {
     auto it = std::find(idlist.begin(), idlist.end(), id);
 
-    if (it == idlist.end()) {
+    if (it == idlist.end())
+    {
       idlist.push_back(id);
       return std::to_string(idlist.size());
-    } else {
+    }
+    else
+    {
       auto const dist = std::distance(idlist.begin(), it);
       if (dist == 0)
         return "";
@@ -536,30 +578,35 @@ std::string plotly_graphics_toolkit::getObjectNumber(
   }
 }
 
-std::vector<oc::graphics_object> plotly_graphics_toolkit::children(oc::graphics_object const& go, bool all) const {
+std::vector<oc::graphics_object> plotly_graphics_toolkit::children(oc::graphics_object const& go, bool all) const
+{
   Matrix c = all ? go.get_properties().get_all_children() : go.get_properties().get_children();
   auto len = c.numel();
   std::vector<oc::graphics_object> ret;
 
-  for (auto i = len - 1; i >= 0; i--) {
+  for (auto i = len - 1; i >= 0; i--)
+  {
     ret.push_back(m_interpreter.get_gh_manager().get_object(c(i)));
   }
 
   return ret;
 }
 
-namespace {
+namespace
+{
 /**
  * Convert an octave color matrix to a css rgb string
  */
-std::string matrix2rgb(Matrix const& color) {
+std::string matrix2rgb(Matrix const& color)
+{
   auto result = std::stringstream();
   result << "rgb(" << static_cast<int>(color(0) * 255) << "," << static_cast<int>(color(1) * 255) << ","
          << static_cast<int>(color(2) * 255) << ")";
   return std::move(result).str();
 }
 
-std::string matrix2rgba(Matrix const& color, double const alpha) {
+std::string matrix2rgba(Matrix const& color, double const alpha)
+{
   auto result = std::stringstream();
   result << "rgba(" << static_cast<int>(color(0) * 255) << "," << static_cast<int>(color(1) * 255) << ","
          << static_cast<int>(color(2) * 255) << "," << alpha << ")";
@@ -569,25 +616,32 @@ std::string matrix2rgba(Matrix const& color, double const alpha) {
 /**
  * Convert a string according to its format
  */
-std::string convertText(std::string text, std::string format = "none") {
-  if (format == "latex") {
+std::string convertText(std::string text, std::string format = "none")
+{
+  if (format == "latex")
+  {
     return "$ " + text + " $";
-  } else if (format == "tex") {
+  }
+  else if (format == "tex")
+  {
     oc::text_parser_tex tex = oc::text_parser_tex();
     tex_to_html html;
     tex.parse(text)->accept(html);
     return html;
-  } else
+  }
+  else
     return text;
 }
 
 /**
  * Convert an octave column matrix to a std::vector
  */
-std::vector<double> matrixcol2vec(Matrix const& m) {
+std::vector<double> matrixcol2vec(Matrix const& m)
+{
   assert(m.cols() >= 0);
   auto out = std::vector<double>(static_cast<std::size_t>(m.cols()));
-  for (octave_idx_type i = 0; i < m.cols(); i++) {
+  for (octave_idx_type i = 0; i < m.cols(); i++)
+  {
     out[static_cast<std::size_t>(i)] = m(i);
   }
   return out;
@@ -597,7 +651,8 @@ std::vector<double> matrixcol2vec(Matrix const& m) {
 
 void plotly_graphics_toolkit::text(
   nl::json& obj, std::string text, std::string interpreter, Matrix color, double fontSize
-) const {
+) const
+{
   obj["text"] = convertText(text, interpreter);
 
   // Set color and size
@@ -626,7 +681,8 @@ void plotly_graphics_toolkit::axis(
   bool showGrid,
   Matrix _gridColor,
   double gridAlpha
-) const {
+) const
+{
   std::string color = matrix2rgb(_color);
   std::string gridColor = _gridColor.isempty() ? "" : matrix2rgba(_gridColor, gridAlpha);
   std::vector<double> ticks = matrixcol2vec(_ticks);
@@ -654,11 +710,14 @@ void plotly_graphics_toolkit::axis(
   // TODO: When axis location is set to origin, the line passing
   // through the origin is shown, however the axis is still to
   // the side. This is due to a limitation in plotly.
-  if (location == "origin") {
+  if (location == "origin")
+  {
     axis["zeroline"] = true;
     axis["zerolinewidth"] = lineWidth;
     axis["zerolinecolor"] = color;
-  } else {
+  }
+  else
+  {
     axis["side"] = location;
     axis["zeroline"] = false;
   }
@@ -671,7 +730,8 @@ void plotly_graphics_toolkit::axis(
   // Configuring ticks
   axis["ticks"] = ticks.size() ? (tickDir == "in" ? "inside" : "outside") : "";
 
-  if (showMinorTicks) {
+  if (showMinorTicks)
+  {
     std::vector<double> minorTicks = matrixcol2vec(_minorTicks);
     std::vector<double> allTicks;
 
@@ -680,17 +740,23 @@ void plotly_graphics_toolkit::axis(
 
     std::sort(allTicks.begin(), allTicks.end());
 
-    for (size_t i = 0; i < allTicks.size(); i++) {
-      if (std::count(ticks.begin(), ticks.end(), allTicks[i])) {
+    for (size_t i = 0; i < allTicks.size(); i++)
+    {
+      if (std::count(ticks.begin(), ticks.end(), allTicks[i]))
+      {
         auto index = std::distance(ticks.begin(), std::find(ticks.begin(), ticks.end(), allTicks[i]));
         tickLabels.push_back(convertText(_tickLabels(index), tickInterpreter));
-      } else
+      }
+      else
         tickLabels.push_back("");
     }
 
     axis["tickvals"] = allTicks;
-  } else {
-    for (int i = 0; i < _tickLabels.numel(); i++) {
+  }
+  else
+  {
+    for (int i = 0; i < _tickLabels.numel(); i++)
+    {
       tickLabels.push_back(convertText(_tickLabels(i), tickInterpreter));
     }
 
@@ -706,12 +772,15 @@ void plotly_graphics_toolkit::axis(
   axis["tickfont"]["color"] = color;
 
   // Configuring box
-  if (box) {
+  if (box)
+  {
     if (ticks.size())
       axis["mirror"] = "ticks";
     else
       axis["mirror"] = true;
-  } else {
+  }
+  else
+  {
     axis["mirror"] = false;
     axis["mirror"] = false;
   }
@@ -734,7 +803,8 @@ void plotly_graphics_toolkit::axis(
   axis["spikesides"] = false;
 }
 
-void plotly_graphics_toolkit::polarAxis(nl::json& axis, Matrix _ticks, double fontSize) const {
+void plotly_graphics_toolkit::polarAxis(nl::json& axis, Matrix _ticks, double fontSize) const
+{
   std::vector<double> tick = matrixcol2vec(_ticks);
 
   axis["tickmode"] = "array";
@@ -744,7 +814,8 @@ void plotly_graphics_toolkit::polarAxis(nl::json& axis, Matrix _ticks, double fo
 
 void plotly_graphics_toolkit::legend(
   nl::json& legend, Matrix position, bool box, double lineWidth, Matrix backgroundColor
-) const {
+) const
+{
   // See https://github.com/plotly/plotly.js/issues/1668
   // Position the legend in the right place
   legend["x"] = position(0);
@@ -757,10 +828,13 @@ void plotly_graphics_toolkit::legend(
   legend["yref"] = "paper";
 
   // Add border to the legend
-  if (box) {
+  if (box)
+  {
     legend["bordercolor"] = "rgb(0,0,0)";
     legend["borderwidth"] = lineWidth;
-  } else {
+  }
+  else
+  {
     legend["borderwidth"] = 0;
   }
 
@@ -780,16 +854,20 @@ void plotly_graphics_toolkit::line(
   Matrix lineColor,
   double lineWidth,
   double markerSize
-) const {
+) const
+{
   line["type"] = type;
   line["visibility"] = visible;
   // TODO: marker color
   line["marker"]["line"]["color"] = line["marker"]["color"] = line["line"]["color"] = matrix2rgb(lineColor);
 
-  if (type == "scatter3d") {
+  if (type == "scatter3d")
+  {
     line["line"]["width"] = std::max(1.5, lineWidth);
     line["marker"]["size"] = markerSize / 3;
-  } else {
+  }
+  else
+  {
     line["line"]["width"] = lineWidth;
     line["marker"]["size"] = markerSize;
   }
@@ -843,27 +921,34 @@ void plotly_graphics_toolkit::line(
     line["marker"]["symbol"] = marker;
 
   // Filling data
-  if (type == "scatterpolar") {
+  if (type == "scatterpolar")
+  {
     // In polar charts the points are in XY coordinates
     // so we need to convert them in polar coordinates
     // by ourselves
-    for (octave_idx_type i = 0; i < xdata.cols(); i++) {
+    for (octave_idx_type i = 0; i < xdata.cols(); i++)
+    {
       auto const vector = std::complex<double>(xdata(i), ydata(i));
       auto const ui = static_cast<std::size_t>(i);
       line["r"][ui] = std::abs(vector);
       line["theta"][ui] = std::arg(vector);
     }
     line["thetaunit"] = "radians";
-  } else {
-    for (octave_idx_type i = 0; i < xdata.cols(); i++) {
+  }
+  else
+  {
+    for (octave_idx_type i = 0; i < xdata.cols(); i++)
+    {
       auto const ui = static_cast<std::size_t>(i);
       line["x"][ui] = xdata(i);
     }
-    for (octave_idx_type i = 0; i < ydata.cols(); i++) {
+    for (octave_idx_type i = 0; i < ydata.cols(); i++)
+    {
       auto const ui = static_cast<std::size_t>(i);
       line["y"][ui] = ydata(i);
     }
-    for (octave_idx_type i = 0; i < zdata.cols(); i++) {
+    for (octave_idx_type i = 0; i < zdata.cols(); i++)
+    {
       auto const ui = static_cast<std::size_t>(i);
       line["z"][ui] = zdata(i);
     }
@@ -872,37 +957,45 @@ void plotly_graphics_toolkit::line(
 
 void plotly_graphics_toolkit::surface(
   nl::json& surf, bool visible, Matrix xdata, Matrix ydata, Matrix zdata, Matrix cdata, Matrix colorMap, Matrix clim
-) const {
+) const
+{
   surf["type"] = "surface";
   surf["visibility"] = visible;
 
-  for (octave_idx_type i = 0; i < xdata.cols(); i++) {
+  for (octave_idx_type i = 0; i < xdata.cols(); i++)
+  {
     auto const ui = static_cast<std::size_t>(i);
     surf["x"][ui] = xdata(0, i);
   }
 
-  for (octave_idx_type j = 0; j < ydata.rows(); j++) {
+  for (octave_idx_type j = 0; j < ydata.rows(); j++)
+  {
     auto const uj = static_cast<std::size_t>(j);
     surf["y"][uj] = ydata(j, 0);
   }
 
-  for (octave_idx_type i = 0; i < zdata.rows(); i++) {
+  for (octave_idx_type i = 0; i < zdata.rows(); i++)
+  {
     auto const ui = static_cast<std::size_t>(i);
-    for (octave_idx_type j = 0; j < zdata.cols(); j++) {
+    for (octave_idx_type j = 0; j < zdata.cols(); j++)
+    {
       auto const uj = static_cast<std::size_t>(j);
       surf["z"][ui][uj] = zdata(i, j);
     }
   }
 
-  for (octave_idx_type i = 0; i < cdata.rows(); i++) {
+  for (octave_idx_type i = 0; i < cdata.rows(); i++)
+  {
     auto const ui = static_cast<std::size_t>(i);
-    for (octave_idx_type j = 0; j < cdata.cols(); j++) {
+    for (octave_idx_type j = 0; j < cdata.cols(); j++)
+    {
       auto const uj = static_cast<std::size_t>(j);
       surf["surfacecolor"][ui][uj] = cdata(i, j);
     }
   }
 
-  for (octave_idx_type i = 0; i < colorMap.rows(); i++) {
+  for (octave_idx_type i = 0; i < colorMap.rows(); i++)
+  {
     auto const ui = static_cast<std::size_t>(i);
     surf["colorscale"][ui][0] = static_cast<double>(i) / static_cast<double>(colorMap.rows() - 1);
     surf["colorscale"][ui][1] = matrix2rgb(colorMap.row(i));
@@ -930,12 +1023,16 @@ void plotly_graphics_toolkit::surface(
   surf["contours"]["z"]["highlightwidth"] = 1;
 }
 
-void plotly_graphics_toolkit::setLegendVisibility(nl::json& data, std::string name) const {
+void plotly_graphics_toolkit::setLegendVisibility(nl::json& data, std::string name) const
+{
   // Configuring name and visibility in the legend
-  if (name != "") {
+  if (name != "")
+  {
     data["name"] = name;
     data["showlegend"] = true;
-  } else {
+  }
+  else
+  {
     data["name"] = "";
     data["showlegend"] = false;
   }

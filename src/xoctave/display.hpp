@@ -23,7 +23,8 @@
 #include <octave/cdef-package.h>
 #include <octave/interpreter.h>
 
-namespace xeus_octave::display {
+namespace xeus_octave::display
+{
 
 void register_all(octave::interpreter&);
 
