@@ -2,4 +2,4 @@ name: xeus-octave
 channels:
   - conda-forge
 dependencies:
-  - xeus-octave
+  - xeus-octave >=0.0.4
