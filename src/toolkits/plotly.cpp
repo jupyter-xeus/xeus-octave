@@ -840,7 +840,7 @@ void plotly_graphics_toolkit::legend(
 
   // Set legend background color
   legend["bgcolor"] = matrix2rgb(backgroundColor);
-};
+}
 
 void plotly_graphics_toolkit::line(
   nl::json& line,
@@ -1036,6 +1036,6 @@ void plotly_graphics_toolkit::setLegendVisibility(nl::json& data, std::string na
     data["name"] = "";
     data["showlegend"] = false;
   }
-};
+}
 
 }  // namespace xeus_octave

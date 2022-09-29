@@ -17,27 +17,81 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
 #include <memory>
+#include <string_view>
 
 #include <xeus/xkernel.hpp>
 #include <xeus/xkernel_configuration.hpp>
+#include <xeus/xlogger.hpp>
 #include <xeus/xserver_zmq.hpp>
 
+#include "xeus-octave/config.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+
+namespace
+{
+
+/**
+ * Whether Xoctave should print version and exit.
+ */
+bool should_print_version(int argc, char* argv[])
+{
+  for (int i = 0; i < argc; ++i)
+  {
+    if (std::string_view(argv[i]) == "--version")
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Get the name of the connection file from the CLI arguments
+ */
+std::string config_filename(int argc, char const* const* argv)
+{
+  for (int i = 1; i < argc - 1; ++i)
+  {
+    if ((std::string_view(argv[i]) == "-f"))
+    {
+      return argv[i + 1];
+    }
+  }
+  return "connection.json";
+}
+
+}  // namespace
 
 int main(int argc, char* argv[])
 {
-  // Configuration file
-  auto const* const file_name = (argc == 1) ? "connection.json" : argv[2];
+
+  if (should_print_version(argc, argv))
+  {
+    std::cout << "xoctave " << XEUS_OCTAVE_VERSION << '\n';
+    return 0;
+  }
+
+  // If we are called from the Jupyter launcher, silence all logging. This
+  // is important for a JupyterHub configured with cleanup_servers = False:
+  // Upon restart, spawned single-user servers keep running but without the
+  // std* streams. When a user then tries to start a new kernel, xoctave
+  // will get a SIGPIPE and exit.
+  if (std::getenv("JPY_PARENT_PID") != NULL)
+  {
+    std::clog.setstate(std::ios_base::failbit);
+  }
+
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
   xeus::register_interpreter(interpreter.get());
 
   auto kernel = xeus::xkernel(
-    xeus::load_configuration(file_name),
-    xeus::get_user_name(),
-    xeus::make_context<zmq::context_t>(),
-    std::move(interpreter),
-    xeus::make_xserver_zmq
+    /* config= */ xeus::load_configuration(config_filename(argc, argv)),
+    /* user_name= */ xeus::get_user_name(),
+    /* context= */ xeus::make_context<zmq::context_t>(),
+    /* interpreter= */ std::move(interpreter),
+    /* sbuilder= */ xeus::make_xserver_zmq
   );
   kernel.start();
 
