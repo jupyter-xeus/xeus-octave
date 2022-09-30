@@ -17,7 +17,7 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef NOTEBOOK_TOOLKIT_ENABLED
+#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
 
 #include <algorithm>
 #include <chrono>
@@ -41,7 +41,7 @@
 #include <octave/interpreter.h>
 #include <octave/ov.h>
 #include <png.h>
-#ifdef NOTEBOOK_TOOLKIT_CPU
+#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
 #define GLFW_EXPOSE_NATIVE_OSMESA
 #include <GLFW/glfw3native.h>
 #endif
@@ -74,7 +74,7 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interprete
 
   glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-#ifndef NOTEBOOK_TOOLKIT_CPU
+#ifndef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
   window = glfwCreateWindow(100, 100, "", NULL, NULL);
   if (!window)
   {
@@ -93,7 +93,7 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interprete
 
 notebook_graphics_toolkit::~notebook_graphics_toolkit()
 {
-#ifndef NOTEBOOK_TOOLKIT_CPU
+#ifndef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
   if (window)
     glfwDestroyWindow(window);
 #endif
@@ -171,7 +171,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   oc::opengl_functions m_glfcns;
   oc::opengl_renderer m_renderer(m_glfcns);
 
-#ifdef NOTEBOOK_TOOLKIT_CPU
+#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
   auto window = glfwCreateWindow(width, height, "", NULL, NULL);
   glfwMakeContextCurrent(window);
 #else
@@ -267,7 +267,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   std::clog << "Draw time: " << duration.count() << '\n';
 #endif
 
-#ifdef NOTEBOOK_TOOLKIT_CPU
+#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
   glfwDestroyWindow(window);
 #endif
 }

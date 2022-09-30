@@ -38,4 +38,4 @@
 #define XEUS_OCTAVE_API
 #endif
 
-#endif
+#endif  // XEUS_OCTAVE_CONFIG_HPP

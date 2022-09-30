@@ -22,6 +22,10 @@
 // <https://www.gnu.org/licenses/>.
 //
 ////////////////////////////////////////////////////////////////////////
+
+#ifndef XEUS_OCTAVE_OPENGL_H
+#define XEUS_OCTAVE_OPENGL_H
+
 #if defined(__APPLE__)
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
@@ -240,3 +244,5 @@ public:
   virtual void glViewport(GLint x, GLint y, GLsizei width, GLsizei height) { ::glViewport(x, y, width, height); }
 };
 }  // namespace octave
+
+#endif  // XEUS_OCTAVE_OPENGL_H

@@ -90,4 +90,4 @@ private:
 
 }  // namespace xeus_octave
 
-#endif
+#endif  // XEUS_OCTAVE_INTERPRETER_H

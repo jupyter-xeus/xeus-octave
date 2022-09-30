@@ -17,10 +17,10 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NOTEBOOK_TOOLKIT_H
-#define NOTEBOOK_TOOLKIT_H
+#ifndef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
+#define XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 
-#ifdef NOTEBOOK_TOOLKIT_ENABLED
+#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
 
 #include <memory>
 #include <mutex>
@@ -54,7 +54,7 @@ public:
 
 private:
 
-#ifndef NOTEBOOK_TOOLKIT_CPU
+#ifndef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
   GLFWwindow* window = nullptr;
 #endif
   octave::interpreter& m_interpreter;
@@ -64,4 +64,4 @@ private:
 
 #endif
 
-#endif
+#endif  // XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H

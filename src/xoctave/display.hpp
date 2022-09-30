@@ -17,8 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef XEUS_OCTAVE_DISPLAY_H
+#define XEUS_OCTAVE_DISPLAY_H
 
 #include <octave/cdef-package.h>
 #include <octave/interpreter.h>
@@ -30,4 +30,4 @@ void register_all(octave::interpreter&);
 
 }
 
-#endif
+#endif  // XEUS_OCTAVE_DISPLAY_H
