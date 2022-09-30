@@ -17,8 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NOTEBOOK_TOOLKIT_H
-#define NOTEBOOK_TOOLKIT_H
+#ifndef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
+#define XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 
 #ifdef NOTEBOOK_TOOLKIT_ENABLED
 
@@ -64,4 +64,4 @@ private:
 
 #endif
 
-#endif
+#endif  // XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H

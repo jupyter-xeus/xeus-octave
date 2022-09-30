@@ -17,8 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PLOTSTREAM_H
-#define PLOTSTREAM_H
+#ifndef XEUS_OCTAVE_PLOTSTREAM_H
+#define XEUS_OCTAVE_PLOTSTREAM_H
 
 #include <octave/graphics.h>
 
@@ -47,4 +47,4 @@ inline void setPlotStream(octave::graphics_object const& o, int p)
 
 }  // namespace xeus_octave
 
-#endif
+#endif  // XEUS_OCTAVE_PLOTSTREAM_H

@@ -17,8 +17,8 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TEX2HTML_H
-#define TEX2HTML_H
+#ifndef XEUS_OCTAVE_TEX2HTML_H
+#define XEUS_OCTAVE_TEX2HTML_H
 
 #include <octave/octave-config.h>
 #include <octave/text-engine.h>
@@ -183,4 +183,4 @@ private:
 
 }  // namespace xeus_octave
 
-#endif
+#endif  // XEUS_OCTAVE_TEX2HTML_H

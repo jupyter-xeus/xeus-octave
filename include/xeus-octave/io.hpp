@@ -95,4 +95,4 @@ protected:
 
 }  // namespace xeus_octave
 
-#endif
+#endif  // XEUS_OCTAVE_IO_H
