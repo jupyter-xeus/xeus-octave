@@ -9,29 +9,38 @@
 
 
 Introduction
-------------
+============
 
-``xeus-octave`` is a Jupyter kernel for Octave based on the native implementation of
+*Xeus Octave* is a Jupyter kernel for Octave based on the native implementation of
 the Jupyter protocol xeus_.
 
 Licensing
----------
+=========
 
 Distributed under the terms of the GNU General Public License v3.
 
 The full license is in the file LICENSE, distributed with this software.
 
+.. toctree::
+   :caption: Getting Started
+   :maxdepth: 2
+   :hidden:
+
+   self
+   installation.rst
 
 .. toctree::
-   :caption: USAGE
+   :caption: Usage
    :maxdepth: 2
+   :hidden:
 
-   usage
+   usage.rst
 
 .. toctree::
-   :caption: DEVELOPER ZONE
+   :caption: Developer Zone
    :maxdepth: 2
+   :hidden:
 
-   dev-build-options
+   dev-build-options.rst
 
 .. _xeus: https://github.com/jupyter-xeus/xeus-octave
