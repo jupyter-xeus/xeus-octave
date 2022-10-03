@@ -20,7 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - name: install mamba
+      - name: Install mamba
         uses: mamba-org/provision-with-micromamba@v13
         with:
           environment-file: environment-dev.yml
@@ -39,12 +39,13 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
-      - name: install mamba
+      - name: Install mamba
         uses: mamba-org/provision-with-micromamba@v13
         with:
           environment-file: environment-dev.yml
           environment-name: xeus-octave
-      - name: set PYTHON_HASH
+          cache-downloads: true
+      - name: Set PYTHON_HASH
         run: echo "PYTHON_HASH=$(python -VV | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
       - uses: actions/cache@v3
         with:
@@ -52,3 +53,18 @@ jobs:
           key: precommit-v1-${{ env.PYTHON_HASH }}-${{ hashFiles('.pre-commit-config.yaml') }}
       - name: Pre-commit hooks
         run: python -m pre_commit run --all-files --show-diff-on-failure
+
+  test-doc:
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install mamba
+        uses: mamba-org/provision-with-micromamba@v13
+        with:
+          environment-file: environment-dev.yml
+          environment-name: xeus-octave
+          cache-downloads: true
+      - name: Build documentation
+        run: make -C docs html
+      - name: Test documentation links
+        run: make -C docs linkcheck

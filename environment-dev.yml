@@ -22,6 +22,11 @@ dependencies:
   - nbval
   - pytest
   - pytest-rerunfailures
+  # Doc dependencies
+  - doxygen
+  - sphinx
+  - breathe
+  - sphinx_rtd_theme
   # Dev dependencies
   - jupyterlab
   - clang-tools

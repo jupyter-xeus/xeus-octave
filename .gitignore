@@ -83,6 +83,9 @@ bld
 # Octave specific
 octave-workspace
 
+# Documentation
+docs/xml
+
 # C++ dev-tools
 compile_commands.json
 .cache
