@@ -10,14 +10,11 @@
 
 Introduction
 ============
-*Xeus Octave* is a Jupyter kernel for Octave based on the native implementation of
-the C++ Jupyter protocol xeus_.
-This means that it is completely native, and does not run a virtual Octave session
-in a forked process.
 
-Thanks to its being native, *Xeus Octave* has access to the internal representation
-of all Octave objects, and thus it is able to provide advanced visualisation of
-many types with ease.
+.. include:: ../../README.rst
+   :start-after: [[INTRODUCTION CONTENT START]]
+   :end-before:  [[INTRODUCTION CONTENT END]]
+
 See the :ref:`usage <usage>` section for available features.
 
 Licensing
@@ -47,5 +44,3 @@ The full license is in the file LICENSE, distributed with this software.
 
    contributing.rst
    dev-build-options.rst
-
-.. _xeus: https://github.com/jupyter-xeus/xeus-octave
