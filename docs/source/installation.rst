@@ -78,7 +78,8 @@ The xeus-octave can be registered with the following command:
 For more information on the ``jupyter kernelspec`` command, please consult the
 ``jupyter_client`` documentation.
 
-.. _miniforge: https://github.com/conda-forge/miniforge#mambaforge
+.. Sphink linkcheck fails on this anchor https://github.com/conda-forge/miniforge#mambaforge
+.. _miniforge: https://github.com/conda-forge/miniforge
 .. _miniconda: https://conda.io/miniconda.html
 .. _anaconda: https://www.anaconda.com
 .. _JupyterLab: https://jupyterlab.readthedocs.io
