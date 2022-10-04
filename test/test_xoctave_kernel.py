@@ -37,3 +37,21 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertEqual(output_msgs[0]["msg_type"], "stream")
         self.assertEqual(output_msgs[0]["content"]["name"], "stdout")
         self.assertEqual(output_msgs[0]["content"]["text"], "hello, world")
+
+    def test_plot_notebook(self):
+        self.flush_channels()
+        reply, output_msgs = self.execute_helper(code="graphics_toolkit notebook; plot([])")
+
+        content0 = output_msgs[0]["content"]
+        self.assertEqual(output_msgs[0]["msg_type"], "display_data")
+
+        content1 = output_msgs[1]["content"]
+        self.assertEqual(output_msgs[1]["msg_type"], "update_display_data")
+        self.assertTrue(len(content1["data"]["image/png"]) > 0)
+        self.assertTrue(content1["metadata"]["image/png"]["height"] > 0)
+        self.assertTrue(content1["metadata"]["image/png"]["width"] > 0)
+
+        self.assertEqual(
+            content0["transient"]["display_id"],
+            content1["transient"]["display_id"]
+        )
