@@ -22,6 +22,14 @@ Xeus-octave must link with xeus dynamically or statically.
 - ``XEUS_OCTAVE_USE_SHARED_XEUS``: Link with the xeus shared library (instead of the static library).
   **Enabled by default**.
 
+Octave uses OpenGL for rendering, which means that it needs a display server to render figures.
+In order to work on headless systems (e.g. servers) Xeus-Octave supports linking against glfw
+with osmesa backend (a software based OpenGL implementation).
+For this set the ``XEUS_OCTAVE_GLFW3_OSMESA_BACKEND`` CMake variable to ``ON``.
+
+Usually distributions do not provide glfw with the osmesa backend, so it's probably best to build
+glfw in-tree.
+
 Running the Tests
 ~~~~~~~~~~~~~~~~~
 The kernels tests can be run with
