@@ -8,6 +8,7 @@ dependencies:
   - make
   - pkg-config
   # Host dependencies
+  - libuuid
   - xtl
   - xeus >=2.4
   - nlohmann_json
