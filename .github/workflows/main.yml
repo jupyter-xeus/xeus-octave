@@ -65,6 +65,6 @@ jobs:
           environment-name: xeus-octave
           cache-downloads: true
       - name: Build documentation
-        run: make -C docs html
+        run: SPHINXOPTS="-W" make -C docs html
       - name: Test documentation links
-        run: make -C docs linkcheck
+        run: SPHINXOPTS="-W" make -C docs linkcheck
