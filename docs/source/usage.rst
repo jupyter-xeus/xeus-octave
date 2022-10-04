@@ -7,5 +7,5 @@
 Usage
 =====
 
-Launch the Jupyter notebook with `jupyter notebook` or Jupyter lab with `jupyter lab` and launch
+Launch the Jupyter notebook with ``jupyter notebook`` or Jupyter lab with ``jupyter lab`` and launch
 a new Python notebook by selecting the **xoctave** kernel.

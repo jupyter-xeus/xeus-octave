@@ -26,7 +26,7 @@ With mamba (or conda)
 To ensure that the installation works, it is preferable to install ``xeus-octave`` in a fresh
 environment.
 It is also needed to use a miniforge_ or miniconda_ installation because with the full anaconda_
-you may have a conflict with the `zeromq` library which is already installed in the anaconda
+you may have a conflict with the ``zeromq`` library which is already installed in the anaconda
 distribution.
 
 The safest usage is to create an environment named ``xeus-octave``
