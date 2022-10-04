@@ -41,6 +41,7 @@ The full license is in the file LICENSE, distributed with this software.
    :maxdepth: 2
    :hidden:
 
+   contributing.rst
    dev-build-options.rst
 
 .. _xeus: https://github.com/jupyter-xeus/xeus-octave
