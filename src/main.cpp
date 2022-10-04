@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
     return 0;
   }
 
+#ifdef NDEBUG
   // If we are called from the Jupyter launcher, silence all logging. This
   // is important for a JupyterHub configured with cleanup_servers = False:
   // Upon restart, spawned single-user servers keep running but without the
@@ -48,6 +49,7 @@ int main(int argc, char* argv[])
   {
     std::clog.setstate(std::ios_base::failbit);
   }
+#endif
 
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
   xeus::register_interpreter(interpreter.get());
