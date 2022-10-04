@@ -1,4 +1,4 @@
-name: xeus-python-docs
+name: xeus-octave-docs
 
 channels:
   - conda-forge
