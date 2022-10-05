@@ -28,12 +28,16 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
-#include <mutex>
 #include <ostream>
 #include <string>
 #include <vector>
 
 #include <GLFW/glfw3.h>
+#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
+#define GLFW_EXPOSE_NATIVE_OSMESA
+#include <GLFW/glfw3native.h>
+#endif
+#include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <octave/gl-render.h>
 #include <octave/graphics-toolkit.h>
@@ -41,15 +45,13 @@
 #include <octave/interpreter.h>
 #include <octave/ov.h>
 #include <png.h>
-#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
-#define GLFW_EXPOSE_NATIVE_OSMESA
-#include <GLFW/glfw3native.h>
-#endif
 #include <xtl/xbase64.hpp>
 
-#include "notebook.hpp"
-#include "plotstream.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+
+#include "notebook.hpp"
+#include "opengl.hpp"
+#include "plotstream.hpp"
 
 namespace nl = nlohmann;
 namespace oc = octave;
