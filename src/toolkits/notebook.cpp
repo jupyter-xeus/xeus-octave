@@ -17,7 +17,7 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
+#if defined(XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED)
 
 #include <algorithm>
 #include <chrono>
@@ -32,8 +32,14 @@
 #include <string>
 #include <vector>
 
+#if defined(XEUS_OCTAVE_GLFW3_OSMESA_BACKEND) && defined(__APPLE__)
+// On MacOS, <GLFW/glfw3.h> will include the system header <OpenGL/gl.h> which fails to define GLAPI
+// leading to errors when including <GLFW/glfw3native.h>
+// Unsure whether we should include Mesa's <GL/gl.h> or stick with <OpenGL/gl.h> and define GLAPI.
+#include <GL/gl.h>
+#endif
 #include <GLFW/glfw3.h>
-#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
+#if defined(XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
 #define GLFW_EXPOSE_NATIVE_OSMESA
 #include <GLFW/glfw3native.h>
 #endif
