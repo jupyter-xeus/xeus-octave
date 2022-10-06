@@ -21,6 +21,7 @@
 #include <memory>
 #include <string_view>
 
+#include <xeus/xhelper.hpp>
 #include <xeus/xkernel.hpp>
 #include <xeus/xkernel_configuration.hpp>
 #include <xeus/xlogger.hpp>
@@ -29,45 +30,10 @@
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
-namespace
-{
-
-/**
- * Whether Xoctave should print version and exit.
- */
-bool should_print_version(int argc, char* argv[])
-{
-  for (int i = 0; i < argc; ++i)
-  {
-    if (std::string_view(argv[i]) == "--version")
-    {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Get the name of the connection file from the CLI arguments
- */
-std::string config_filename(int argc, char const* const* argv)
-{
-  for (int i = 1; i < argc - 1; ++i)
-  {
-    if ((std::string_view(argv[i]) == "-f"))
-    {
-      return argv[i + 1];
-    }
-  }
-  return "connection.json";
-}
-
-}  // namespace
-
 int main(int argc, char* argv[])
 {
 
-  if (should_print_version(argc, argv))
+  if (xeus::should_print_version(argc, argv))
   {
     std::cout << "xoctave " << XEUS_OCTAVE_VERSION << '\n';
     return 0;
@@ -85,9 +51,11 @@ int main(int argc, char* argv[])
 
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
   xeus::register_interpreter(interpreter.get());
+  auto config = xeus::load_configuration(xeus::extract_filename(argc, argv));
+  std::cout << xeus::print_starting_message(config);
 
   auto kernel = xeus::xkernel(
-    /* config= */ xeus::load_configuration(config_filename(argc, argv)),
+    /* config= */ std::move(config),
     /* user_name= */ xeus::get_user_name(),
     /* context= */ xeus::make_context<zmq::context_t>(),
     /* interpreter= */ std::move(interpreter),

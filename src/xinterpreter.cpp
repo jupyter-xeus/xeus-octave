@@ -277,11 +277,13 @@ void xoctave_interpreter::configure_impl()
   // do not know which are magic and which are available at compile-time, we go
   // though them all.
   {
+    output::override(std::cerr, m_stderr);
     auto const& a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
     for (auto i = octave_idx_type{0}; i < a.numel(); ++i)
     {
       octave::feval("graphics_toolkit", ovl(a.elem(i)));
     }
+    output::restore(std::cerr, m_stderr);
   }
 
 #ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
