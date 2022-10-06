@@ -22,16 +22,12 @@
 
 #ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
 
-#include <memory>
-#include <mutex>
-
-#include <GLFW/glfw3.h>
-#include <nlohmann/json.hpp>
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 
-#include "opengl.hpp"
 #include "xeus-octave/config.hpp"
+
+typedef struct GLFWwindow GLFWwindow;
 
 namespace xeus_octave
 {
