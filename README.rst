@@ -9,9 +9,9 @@
    :target: https://xeus-octave.readthedocs.io/en/latest/
    :alt: Documentation status on Readthedocs
 
-.. .. image:: https://mybinder.org/badge_logo.svg
-..    :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
-..    :alt: Run on Binder
+.. image:: https://mybinder.org/badge_logo.svg
+   :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
+   :alt: Run on Binder
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :target: https://gitter.im/QuantStack/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
@@ -85,6 +85,14 @@ Then you can install in the same Conda environment with
 .. _xeus-octave-wheel: https://github.com/jupyter-xeus/xeus-octave-wheel
 
 .. [[INSTALLATION CONTENT END]]
+
+Trying it online
+----------------
+To try out ``xeus-octave`` interactively in your web browser, just click on the binder link:
+
+.. image:: docs/source/binder-logo.svg
+   :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
+   :alt: Run on Binder
 
 Documentation
 -------------
