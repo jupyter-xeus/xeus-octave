@@ -1,0 +1,5 @@
+name: xeus-octave
+channels:
+  - conda-forge
+dependencies:
+  - xeus-octave >=0.0.6
