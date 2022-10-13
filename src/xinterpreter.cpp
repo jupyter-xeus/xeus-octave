@@ -147,7 +147,7 @@ nl::json xoctave_interpreter::execute_request_impl(
   {
     // User asked for function help
     trim.pop_back();
-    auto data = get_help_for_symbol(trim);
+    nl::json data = get_help_for_symbol(trim);
 
     if (data.is_null())
     {
@@ -158,8 +158,9 @@ nl::json xoctave_interpreter::execute_request_impl(
     }
     else
     {
-      result = xeus::create_successful_reply();
-      publish_execution_result(execution_counter, data, nl::json::object());
+      auto payload = nl::json::array({{{"source", "page"}, {"start", 0}}});
+      payload[0]["data"] = std::move(data);
+      result = xeus::create_successful_reply(std::move(payload));
     }
   }
   else
@@ -368,7 +369,7 @@ nl::json xoctave_interpreter::is_complete_request_impl(std::string const& /*code
 nl::json xoctave_interpreter::kernel_info_request_impl()
 {
   auto result = nl::json::object();
-  result["implementation"] = "xeus-octave";
+  result["implementation"] = "xoctave";
   result["implementation_version"] = XEUS_OCTAVE_VERSION;
   result["language_info"]["name"] = "Octave";
   result["language_info"]["version"] = OCTAVE_VERSION;
@@ -427,42 +428,44 @@ nl::json xoctave_interpreter::get_help_for_symbol(std::string const& symbol)
       octave_value_list help = octave::feval("__makeinfo__", ovl(htext, "html"), 1);
       std::string value = help(0).string_value();
       std::smatch match;
-      std::regex_search(value, match, std::regex("<body.*>([^]*)</body>"));
+      static auto const body_regex = std::regex("<body.*>([^]*)</body>");
+      std::regex_search(value, match, body_regex);
       std::string text = match[1];
       // Jupyter style fixes
+      static auto const dd_regex = std::regex("<dd(.*?)>");
       text = std::regex_replace(
         text,
-        std::regex("<dd(.*?)>"),
+        dd_regex,
         "<dd $1 "
         "style='float:unset;width:unset;font-weight:"
         "unset;margin-left:40px'>"
       );
-      text =
-        std::regex_replace(text, std::regex("<dt(.*?)>"), "<dt $1 style='float:unset;width:unset;margin-left:0px;'>");
+      static auto const dt_regex = std::regex("<dt(.*?)>");
+      text = std::regex_replace(text, dt_regex, "<dt $1 style='float:unset;width:unset;margin-left:0px;'>");
       auto result = nl::json::object();
-      result["text/html"] = text;
-      result["application/x-texinfo"] = htext;
+      result["text/html"] = std::move(text);
+      result["application/x-texinfo"] = std::move(htext);
       return result;
     }
     else if (format == "plain text")
     {
       auto result = nl::json::object();
-      result["text/plain"] = htext;
+      result["text/plain"] = std::move(htext);
       return result;
     }
     else if (format == "html")
     {
       auto result = nl::json::object();
-      result["text/html"] = htext;
+      result["text/html"] = std::move(htext);
       return result;
     }
   }
   catch (...)
   {
     std::clog << "Cannot get help for symbol " << symbol << std::endl;
-    return nullptr;
+    return {};
   }
-  return nullptr;
+  return {};
 }
 
 }  // namespace xeus_octave

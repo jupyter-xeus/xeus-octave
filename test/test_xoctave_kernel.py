@@ -31,12 +31,29 @@ class KernelTests(jupyter_kernel_test.KernelTests):
     ]
     code_inspect_sample = "plot"
 
+
+    def test_pager(self):
+        """Reimplementation of KernelTests.code_page_something.
+
+        The test assume the help would be in "text/plain" but the XOctave help is in HTML.
+        """
+        reply, output_msgs = self.execute_helper("disp?")
+        self.assertEqual(reply["content"]["status"], "ok")
+        payloads = reply["content"]["payload"]
+        self.assertEqual(len(payloads), 1)
+        self.assertEqual(payloads[0]["source"], "page")
+        mimebundle = payloads[0]["data"]
+        self.assertIn("text/html", mimebundle)
+        self.assertIn("disp", mimebundle["text/html"])
+
+
     def test_stdout(self):
         self.flush_channels()
         reply, output_msgs = self.execute_helper(code=self.code_hello_world)
         self.assertEqual(output_msgs[0]["msg_type"], "stream")
         self.assertEqual(output_msgs[0]["content"]["name"], "stdout")
         self.assertEqual(output_msgs[0]["content"]["text"], "hello, world")
+
 
     def test_plot_notebook(self):
         self.flush_channels()
@@ -55,6 +72,7 @@ class KernelTests(jupyter_kernel_test.KernelTests):
             content0["transient"]["display_id"],
             content1["transient"]["display_id"]
         )
+
 
     def test_plot_plotly(self):
         self.flush_channels()
