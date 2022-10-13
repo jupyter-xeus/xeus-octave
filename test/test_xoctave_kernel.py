@@ -55,3 +55,23 @@ class KernelTests(jupyter_kernel_test.KernelTests):
             content0["transient"]["display_id"],
             content1["transient"]["display_id"]
         )
+
+    def test_plot_plotly(self):
+        self.flush_channels()
+        reply, output_msgs = self.execute_helper(code="graphics_toolkit plotly; plot([])")
+
+        content0 = output_msgs[0]["content"]
+        self.assertEqual(output_msgs[0]["msg_type"], "display_data")
+
+        content1 = output_msgs[1]["content"]
+        self.assertEqual(output_msgs[1]["msg_type"], "update_display_data")
+        app1 = content1["data"]["application/vnd.plotly.v1+json"]
+        self.assertTrue(len(app1) > 0)
+        self.assertTrue(len(app1["layout"]) > 0)
+        self.assertTrue(app1["layout"]["height"] > 0)
+        self.assertTrue(app1["layout"]["width"] > 0)
+
+        self.assertEqual(
+            content0["transient"]["display_id"],
+            content1["transient"]["display_id"]
+        )
