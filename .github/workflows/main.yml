@@ -33,7 +33,12 @@ jobs:
       - name: Install
         run: cmake --install build/cmake/conda-debug-osmesa
       - name: Test
-        run: python -m pytest ./test
+        run: python -m pytest ./test -k 'not plot'
+      - name: Graphical Test
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install libgl1-mesa-dev xvfb
+          xvfb-run python -m pytest ./test -k 'plot'
 
   static-analysis:
     runs-on: "ubuntu-latest"
