@@ -33,7 +33,15 @@ jobs:
       - name: Install
         run: cmake --install build/cmake/conda-debug-osmesa
       - name: Test
-        run: python -m pytest ./test
+        run: python -m pytest ./test -k 'not plot'
+      - name: Plotly toolkit test
+        if: matrix.os == 'ubuntu-latest'
+        run: python -m pytest ./test -k 'plot_plotly'
+      - name: Notebook toolkit test
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get install libgl1-mesa-dev xvfb
+          xvfb-run python -m pytest ./test -k 'plot_notebook'
 
   static-analysis:
     runs-on: "ubuntu-latest"
