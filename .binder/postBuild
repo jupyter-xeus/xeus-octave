@@ -11,3 +11,5 @@ xvfb-run "${PWD}/_xoctave" "\$@"
 EOF
 
 chmod +x xoctave
+
+jupyter labextension install jupyterlab-plotly
