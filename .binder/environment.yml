@@ -3,3 +3,4 @@ channels:
   - conda-forge
 dependencies:
   - xeus-octave >=0.0.6
+  - jupyterlab-plotly-extension
