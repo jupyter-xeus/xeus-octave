@@ -16,7 +16,17 @@ class KernelTests(jupyter_kernel_test.KernelTests):
     language_name = "Octave"
     code_hello_world = "disp('hello, world')"
     completion_samples = [
-        {"text": "bessel", "matches": {"bessel", "besselh", "besseli","besselj","besselk","bessely"}},
+        {
+            "text": "bessel",
+            "matches": {
+                "bessel",
+                "besselh",
+                "besseli",
+                "besselj",
+                "besselk",
+                "bessely",
+            },
+        },
         {"text": "facto", "matches": {"factor", "factorial"}},
         {"text": "nonsense_gsfkls", "matches": set()},
     ]
@@ -30,7 +40,6 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         "end\n",
     ]
     code_inspect_sample = "plot"
-
 
     def test_pager(self):
         """Reimplementation of KernelTests.code_page_something.
@@ -46,7 +55,6 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertIn("text/html", mimebundle)
         self.assertIn("disp", mimebundle["text/html"])
 
-
     def test_stdout(self):
         self.flush_channels()
         reply, output_msgs = self.execute_helper(code=self.code_hello_world)
@@ -54,6 +62,13 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertEqual(output_msgs[0]["content"]["name"], "stdout")
         self.assertEqual(output_msgs[0]["content"]["text"], "hello, world")
 
+    def test_stderr(self):
+        reply, output_msgs = self.execute_helper(code="does_not_exist()")
+        self.assertEqual(output_msgs[0]["msg_type"], "error")
+        self.assertIn("ename", output_msgs[0]["content"])
+        self.assertIn("evalue", output_msgs[0]["content"])
+        self.assertIn("traceback", output_msgs[0]["content"])
+        self.assertIn("does_not_exist", "\n".join(output_msgs[0]["content"]["traceback"]))
 
     def test_plot_notebook(self):
         self.flush_channels()
@@ -68,11 +83,7 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertTrue(content1["metadata"]["image/png"]["height"] > 0)
         self.assertTrue(content1["metadata"]["image/png"]["width"] > 0)
 
-        self.assertEqual(
-            content0["transient"]["display_id"],
-            content1["transient"]["display_id"]
-        )
-
+        self.assertEqual(content0["transient"]["display_id"], content1["transient"]["display_id"])
 
     def test_plot_plotly(self):
         self.flush_channels()
@@ -89,7 +100,4 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertTrue(app1["layout"]["height"] > 0)
         self.assertTrue(app1["layout"]["width"] > 0)
 
-        self.assertEqual(
-            content0["transient"]["display_id"],
-            content1["transient"]["display_id"]
-        )
+        self.assertEqual(content0["transient"]["display_id"], content1["transient"]["display_id"])
