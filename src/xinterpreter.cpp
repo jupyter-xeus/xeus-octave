@@ -17,6 +17,7 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstring>
@@ -26,6 +27,7 @@
 #include <regex>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -116,6 +118,44 @@ std::string xoctave_interpreter::blocking_input_request(std::string const& promp
   throw std::runtime_error("This frontend does not support input requests");
 }
 
+namespace
+{
+
+/**
+ * Concatenate strings.
+ */
+template <typename... Str> std::string concat(Str const&... strs)
+{
+  auto out = std::string();
+  out.reserve((strs.size() + ...));
+  ((out.append(strs)), ...);
+  return out;
+}
+
+/**
+ * Add @p ename and  @p evalue to trace_back.
+ *
+ * Simply setting ``"ename"`` and ``"evalue"`` in IOPub is not always enough to actually
+ * print the error.
+ * https://github.com/jupyter/jupyter_client/issues/363
+ */
+std::vector<std::string>
+fix_traceback(std::string const& ename, std::string const& evalue, std::vector<std::string> trace_back = {})
+{
+  trace_back.push_back(concat(ename, std::string_view(": "), evalue));
+  std::rotate(trace_back.rbegin(), trace_back.rbegin() + 1, trace_back.rend());
+  return trace_back;
+}
+
+std::vector<std::string> fix_traceback(std::string const& ename, std::string const& evalue, std::string&& stack_trace)
+{
+  auto trace_back = std::vector<std::string>();
+  trace_back.push_back(std::move(stack_trace));
+  return fix_traceback(ename, evalue, std::move(trace_back));
+}
+
+}  // namespace
+
 nl::json xoctave_interpreter::execute_request_impl(
   int execution_counter,
   std::string const& code,
@@ -152,9 +192,9 @@ nl::json xoctave_interpreter::execute_request_impl(
     if (data.is_null())
     {
       auto ename = "Execution exception";
-      auto evalue = "help: '" + trim + "' not found\n";
-      result = xeus::create_error_reply(ename, evalue, {});
-      publish_execution_error(ename, evalue, {});
+      auto evalue = concat(std::string_view("help: '"), trim, std::string_view("' not found\n"));
+      result = xeus::create_error_reply(ename, evalue);
+      publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
     }
     else
     {
@@ -200,36 +240,33 @@ nl::json xoctave_interpreter::execute_request_impl(
         auto const ename = "Interrupt exception";
         auto const evalue = "Kernel was interrupted";
         interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, {});
-        result = xeus::create_error_reply(ename, evalue, {});
+        publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
+        result = xeus::create_error_reply(ename, evalue);
       }
       catch (oc::index_exception const& e)
       {
         auto const ename = "Index exception";
         auto evalue = e.message();
-        // TODO shoud the stack trace be added as last argument?
-        evalue += "\n" + e.stack_trace();
         interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, {});
-        result = xeus::create_error_reply(ename, evalue, {});
+        publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
+        result = xeus::create_error_reply(ename, evalue);
       }
       catch (oc::execution_exception const& e)
       {
         auto const ename = "Execution exception";
         auto evalue = e.message();
-        evalue += "\n" + e.stack_trace();
         interpreter.get_error_system().save_exception(e);
         interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, {});
-        result = xeus::create_error_reply(ename, evalue, {});
+        publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
+        result = xeus::create_error_reply(ename, evalue);
       }
       catch (std::bad_alloc const&)
       {
         auto const ename = "Memory exception";
         auto const evalue = "Could not allocate the memory required for the computation";
         interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, {});
-        result = xeus::create_error_reply(ename, evalue, {});
+        publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
+        result = xeus::create_error_reply(ename, evalue);
       }
     } while (exit_status == 0);
   }
