@@ -46,6 +46,7 @@ class KernelTests(jupyter_kernel_test.KernelTests):
 
         The test assume the help would be in "text/plain" but the XOctave help is in HTML.
         """
+        self.flush_channels()
         reply, output_msgs = self.execute_helper("disp?")
         self.assertEqual(reply["content"]["status"], "ok")
         payloads = reply["content"]["payload"]
@@ -63,6 +64,7 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertEqual(output_msgs[0]["content"]["text"], "hello, world")
 
     def test_stderr(self):
+        self.flush_channels()
         reply, output_msgs = self.execute_helper(code="does_not_exist()")
         self.assertEqual(output_msgs[0]["msg_type"], "error")
         self.assertIn("ename", output_msgs[0]["content"])
