@@ -82,15 +82,11 @@ if(NOT TARGET xeus AND NOT TARGET xeus-static)
 endif()
 
 find_package(PNG REQUIRED)
+find_package(glad REQUIRED)
 find_package(glfw3)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
-if(XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
-    pkg_check_modules(osmesa REQUIRED IMPORTED_TARGET osmesa)
-else()
-    find_package(OpenGL REQUIRED)
-endif()
 
 # Flags =====
 include(CheckCXXCompilerFlag)
@@ -238,19 +234,12 @@ macro(xeus_octave_create_target target_name linkage output_name)
     target_link_libraries(
         ${target_name}
         PUBLIC xtl PkgConfig::octinterp
-        PRIVATE glfw PNG::PNG
+        PRIVATE glad::glad glfw PNG::PNG
     )
     if(XEUS_OCTAVE_USE_SHARED_XEUS)
         target_link_libraries(${target_name} PUBLIC xeus)
     else()
         target_link_libraries(${target_name} PUBLIC xeus-static)
-    endif()
-
-    if(XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
-        target_link_libraries(${target_name} PRIVATE PkgConfig::osmesa)
-        target_compile_definitions(${target_name} PRIVATE XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
-    else()
-        target_link_libraries(${target_name} PRIVATE OpenGL::GL)
     endif()
 
     if(WIN32 OR CYGWIN)

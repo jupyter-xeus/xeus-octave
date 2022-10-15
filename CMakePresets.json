@@ -2,8 +2,8 @@
   "version": 2,
   "buildPresets": [
     {
-      "configurePreset": "conda-debug-osmesa",
-      "name": "conda-debug-osmesa"
+      "configurePreset": "conda-debug",
+      "name": "conda-debug"
     }
   ],
   "configurePresets": [
@@ -28,15 +28,14 @@
     },
     {
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "XEUS_OCTAVE_GLFW3_OSMESA_BACKEND": "ON"
+        "CMAKE_BUILD_TYPE": "Debug"
       },
-      "description": "A debug build using conda librarie and OSMesa",
-      "displayName": "Conda Debug OSMesa",
+      "description": "A debug build using conda libraries",
+      "displayName": "Conda Debug",
       "inherits": [
         "conda-dev"
       ],
-      "name": "conda-debug-osmesa"
+      "name": "conda-debug"
     }
   ]
 }

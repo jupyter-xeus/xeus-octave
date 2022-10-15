@@ -27,11 +27,11 @@ jobs:
           environment-name: xeus-octave
           cache-downloads: true
       - name: Configure
-        run: cmake --preset conda-debug-osmesa
+        run: cmake --preset conda-debug
       - name: Build
-        run: cmake --build --preset conda-debug-osmesa
+        run: cmake --build --preset conda-debug
       - name: Install
-        run: cmake --install build/cmake/conda-debug-osmesa
+        run: cmake --install build/cmake/conda-debug
       - name: Test
         run: python -m pytest ./test -k 'not plot'
       - name: Plotly toolkit test

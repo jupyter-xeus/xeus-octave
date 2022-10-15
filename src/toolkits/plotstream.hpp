@@ -25,20 +25,20 @@
 namespace xeus_octave
 {
 
-inline int getPlotStream(octave::graphics_object const& o)
+inline std::string getPlotStream(octave::graphics_object const& o)
 {
   return dynamic_cast<octave::figure::properties const&>(o.get_ancestor("figure").get_properties())
     .get___plot_stream__()
-    .int_value();
+    .string_value();
 }
 
-inline void setPlotStream(octave::graphics_object& o, int p)
+inline void setPlotStream(octave::graphics_object& o, std::string p)
 {
   if (o.isa("figure"))
     dynamic_cast<octave::figure::properties&>(o.get_properties()).set___plot_stream__(p);
 }
 
-inline void setPlotStream(octave::graphics_object const& o, int p)
+inline void setPlotStream(octave::graphics_object const& o, std::string p)
 {
   // deCONSTify the graphics_object
   auto _go = o;

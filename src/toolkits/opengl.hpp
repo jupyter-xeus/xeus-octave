@@ -26,17 +26,7 @@
 #ifndef XEUS_OCTAVE_OPENGL_H
 #define XEUS_OCTAVE_OPENGL_H
 
-#if defined(__APPLE__)
-#include <OpenGL/gl.h>
-#include <OpenGL/glext.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <GL/glu.h>
-#endif
-
-#include <iostream>
+#include <glad/glad.h>
 
 namespace octave
 {

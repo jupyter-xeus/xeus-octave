@@ -32,17 +32,9 @@
 #include <string>
 #include <vector>
 
-#if defined(XEUS_OCTAVE_GLFW3_OSMESA_BACKEND) && defined(__APPLE__)
-// On MacOS, <GLFW/glfw3.h> will include the system header <OpenGL/gl.h> which fails to define GLAPI
-// leading to errors when including <GLFW/glfw3native.h>
-// Unsure whether we should include Mesa's <GL/gl.h> or stick with <OpenGL/gl.h> and define GLAPI.
-#include <GL/gl.h>
-#endif
+#include "opengl.hpp"
+
 #include <GLFW/glfw3.h>
-#if defined(XEUS_OCTAVE_GLFW3_OSMESA_BACKEND)
-#define GLFW_EXPOSE_NATIVE_OSMESA
-#include <GLFW/glfw3native.h>
-#endif
 #include <nlohmann/json.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <octave/gl-render.h>
@@ -56,7 +48,6 @@
 #include "xeus-octave/xinterpreter.hpp"
 
 #include "notebook.hpp"
-#include "opengl.hpp"
 #include "plotstream.hpp"
 
 namespace nl = nlohmann;
@@ -66,8 +57,7 @@ using namespace std::chrono;
 namespace xeus_octave
 {
 
-notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interpreter) :
-  base_graphics_toolkit("notebook"), m_interpreter(interpreter)
+notebook_graphics_toolkit::notebook_graphics_toolkit() : base_graphics_toolkit("notebook")
 {
   glfwSetErrorCallback([](int error, char const* description)
                        { std::clog << "GLFW Error: " << description << " (" << error << ")" << '\n'; });
@@ -82,8 +72,7 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interprete
 
   glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-#ifndef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
-  window = glfwCreateWindow(100, 100, "", NULL, NULL);
+  GLFWwindow* window = glfwCreateWindow(1, 1, "", NULL, NULL);
   if (!window)
   {
     glfwTerminate();
@@ -92,29 +81,29 @@ notebook_graphics_toolkit::notebook_graphics_toolkit(oc::interpreter& interprete
 
   glfwMakeContextCurrent(window);
 
+  gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
 #ifndef NDEBUG
   std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << '\n';
 #endif
 
-#endif
+  glfwDestroyWindow(window);
 }
 
 notebook_graphics_toolkit::~notebook_graphics_toolkit()
 {
-#ifndef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
-  if (window)
-    glfwDestroyWindow(window);
-#endif
-
   glfwTerminate();
 }
 
 bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
 {
+  // We use this call for initializing only the figure
   if (go.isa("figure"))
   {
     // Set the pixel ratio
     auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
+
+    // Get monitor scale
     float xscale, yscale;
 
     if (auto* monitor = glfwGetPrimaryMonitor())
@@ -128,9 +117,15 @@ bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
     std::clog << "Device pixel ratio: " << dpr << '\n';
 #endif
 
+    // Store it in the figure
     figureProperties.set___device_pixel_ratio__(dpr);
 
-    setPlotStream(go, rand());
+    // Create a new object id and store it in the figure
+    setPlotStream(go, xeus::new_xguid());
+
+    // Request to show the empty figure (this serves as a placeholder to
+    // keep the output order, as the figures are drawn after the last line
+    // is executed)
     show_figure(go);
 
     return true;
@@ -139,16 +134,22 @@ bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
   return false;
 }
 
-void notebook_graphics_toolkit::finalize(oc::graphics_object const&) {}
+void notebook_graphics_toolkit::finalize(oc::graphics_object const&)
+{
+  // Unused
+}
 
 void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
 {
-  int id = getPlotStream(go);
+  // Get an unique identifier for this object, to be used as a display id
+  // in the display_data request for subsequent updates of the plot
+  std::string id = getPlotStream(go);
 
-  auto tran = nl::json::object();
-  tran["display_id"] = id;
+  // Display an empty figure (this is equivalent to the action of creating)
+  // a window, and prepares a display with the correct display_id for
+  // future updates
   dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-    .display_data(nl::json::object(), nl::json::object(), tran);
+    .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
 }
 
 void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
@@ -158,7 +159,10 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   auto start = high_resolution_clock::now();
 #endif
 
-  int id = getPlotStream(go);
+  // Retrieve the figure id
+  std::string id = getPlotStream(go);
+
+  // Get width height and scale factor
   auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
   Matrix figurePosition = figureProperties.get_position().matrix_value();
 
@@ -176,16 +180,15 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   assert(width >= 0);
   auto const uheight = static_cast<unsigned int>(height);
 
+  // Use the octave renderer to draw the plot on the EGL context
   oc::opengl_functions m_glfcns;
   oc::opengl_renderer m_renderer(m_glfcns);
 
-#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
+  // Create a hidden GLFW window
   auto window = glfwCreateWindow(width, height, "", NULL, NULL);
   glfwMakeContextCurrent(window);
-#else
-  glfwSetWindowSize(window, width, height);
-#endif
 
+  // Render
   m_renderer.set_viewport(width, height);
   m_renderer.set_device_pixel_ratio(dpr);
 #ifndef NDEBUG
@@ -200,6 +203,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   std::clog << "Render time: " << render_duration.count() << '\n';
 #endif
 
+  // Get pixels
   auto screen = std::vector<unsigned char>(uwidth * uheight * 3);
   glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, screen.data());
 
@@ -207,6 +211,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   auto encode_start = high_resolution_clock::now();
 #endif
 
+  // Encode as PNG
   png_structp p = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
   png_infop i = png_create_info_struct(p);
 
@@ -261,9 +266,15 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   nl::json data, meta, tran;
 
   data["image/png"] = xtl::base64encode(img);
-  meta["image/png"] = {{"width", width / dpr}, {"height", height / dpr}};
+  // Send real width and height through metadata for optimal scaling
+  meta["image/png"] = {
+    {"width", width / dpr},
+    {"height", height / dpr},
+  };
+  // Dislplay id for updating existing display
   tran["display_id"] = id;
 
+  // Update
   dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
 
 #ifndef NDEBUG
@@ -275,12 +286,14 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   std::clog << "Draw time: " << duration.count() << '\n';
 #endif
 
-#ifdef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
+  // Destroy window
   glfwDestroyWindow(window);
-#endif
 }
 
-void notebook_graphics_toolkit::update(oc::graphics_object const&, int) {}
+void notebook_graphics_toolkit::update(oc::graphics_object const&, int)
+{
+  // Unused
+}
 
 }  // namespace xeus_octave
 

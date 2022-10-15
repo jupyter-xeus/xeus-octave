@@ -157,7 +157,7 @@ std::vector<std::string> fix_traceback(std::string const& ename, std::string con
 }  // namespace
 
 nl::json xoctave_interpreter::execute_request_impl(
-  int execution_counter,
+  int /*execution_counter*/,
   std::string const& code,
   bool silent,
   bool /*store_history*/,
@@ -301,9 +301,7 @@ void xoctave_interpreter::configure_impl()
   // Register the graphics toolkits
 #ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
   interpreter.get_gtk_manager().register_toolkit("notebook");
-  interpreter.get_gtk_manager().load_toolkit(
-    octave::graphics_toolkit(new xeus_octave::notebook_graphics_toolkit(interpreter))
-  );
+  interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::notebook_graphics_toolkit()));
 #endif
   interpreter.get_gtk_manager().register_toolkit("plotly");
   interpreter.get_gtk_manager().load_toolkit(
