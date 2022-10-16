@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Giulio Girardi.
+ * Copyright (C) 2022 Giulio Girardi.
  *
  * This file is part of xeus-octave.
  *
@@ -17,44 +17,47 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <iostream>
-#include <regex>
-
-#include <nlohmann/json.hpp>
 #include <octave/cdef-package.h>
 #include <octave/defun-int.h>
 #include <octave/interpreter.h>
 #include <octave/oct-map.h>
 #include <octave/symtab.h>
-#include <xeus/xinterpreter.hpp>
 
-#include "display.hpp"
+#include <nlohmann/json.hpp>
+#include <regex>
+
+#include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+#include "xeus/xinterpreter.hpp"
 
-namespace xeus_octave::display
-{
+namespace nl = nlohmann;
 
 namespace
 {
-
+/**
+ * Native binding to xeus function display_data
+ */
 octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
 {
+  // Agruments check
   if (args.length() < 1 || args.length() > 2)
     print_usage();
 
-  nlohmann::json data;
+  // Get the data object
+  nl::json data(nl::json::value_t::object);
   octave_map d = args(0).xmap_value("DATA must be a map");
 
   for (auto value : d)
   {
     auto v = d.contents(value.second);
     if (value.first == "application/json")
-      data[value.first] = nlohmann::json::parse(v(0).xstring_value("DATA contents must be strings"));
+      data[value.first] = nl::json::parse(v(0).xstring_value("DATA contents must be strings"));
     else
       data[value.first] = v(0).xstring_value("DATA contents must be strings");
   }
 
-  nlohmann::json metadata;
+  // Get the metadata object
+  nl::json metadata(nl::json::value_t::object);
 
   if (args.length() > 1)
   {
@@ -67,20 +70,16 @@ octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
     }
   }
 
-  dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter()).display_data(data, metadata);
+  // Invoke xeus method
+  dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter())
+    .display_data(data, metadata, nl::json(nl::json::value_t::object));
 
   return ovl();
 }
 
-octave_value_list override_path(octave_value_list const& args, int /*nargout*/)
-{
-  if (args.length() != 0)
-    print_usage();
-
-  return ovl(XEUS_OCTAVE_OVERRIDE_PATH);
-}
-
 /**
+ * Native binding to convert an octave matrix to an html table
+ *
  * This function is much faster than its equivalent implementation in octave
  * a 5000 elements matrix takes 9 ms to render with this function, while 4 s (!)
  * with the native octave function
@@ -134,6 +133,10 @@ octave_value_list matrix_to_html(octave_value_list const& args, int /*nargout*/)
   return ovl(t.str());
 }
 
+/**
+ * Fix a latex string by using a custom notation for the exponent part of
+ * numbers displayed in scientific notation
+ */
 std::string latex_fix_sci_not(std::string text)
 {
   text = std::regex_replace(text, std::regex("e\\+[0]*([0-9]+)"), "\\mathrm{ᴇ}{$1}");
@@ -142,8 +145,12 @@ std::string latex_fix_sci_not(std::string text)
   return text;
 }
 
+/**
+ * Native binding for latex_fix_sci_not function
+ */
 octave_value_list latex_fix_sci_not(octave_value_list const& args, int /*nargout*/)
 {
+  // Check args
   if (args.length() != 1)
     print_usage();
 
@@ -152,6 +159,9 @@ octave_value_list latex_fix_sci_not(octave_value_list const& args, int /*nargout
   return ovl(latex_fix_sci_not(text));
 }
 
+/**
+ * Native binding to convert an octave matrix to a latex matrix
+ */
 octave_value_list matrix_to_latex(octave_value_list const& args, int /*nargout*/)
 {
   std::ostringstream l;
@@ -198,21 +208,15 @@ octave_value_list matrix_to_latex(octave_value_list const& args, int /*nargout*/
 
 }  // namespace
 
-void register_all(octave::interpreter& i)
+namespace xeus_octave::display
 {
-  auto& s = i.get_symbol_table();
 
-  auto display_data_func = new octave_builtin(display_data, "display_data", __FILE__, "");
-  auto override_path_func = new octave_builtin(override_path, "XEUS_OCTAVE_OVERRIDE_PATH", __FILE__, "");
-  auto matrix_to_html_func = new octave_builtin(matrix_to_html, "__matrix_to_html__", __FILE__, "");
-  auto matrix_to_latex_func = new octave_builtin(matrix_to_latex, "__matrix_to_latex__", __FILE__, "");
-  auto latex_fix_sci_not_func = new octave_builtin(latex_fix_sci_not, "__latex_fix_sci_not__", __FILE__, "");
-
-  s.install_built_in_function("display_data", display_data_func);
-  s.install_built_in_function("XEUS_OCTAVE_OVERRIDE_PATH", override_path_func);
-  s.install_built_in_function("__matrix_to_html__", matrix_to_html_func);
-  s.install_built_in_function("__matrix_to_latex__", matrix_to_latex_func);
-  s.install_built_in_function("__latex_fix_sci_not__", latex_fix_sci_not_func);
+void register_all(octave::interpreter& interpreter)
+{
+  utils::add_native_binding(interpreter, "display_data", display_data);
+  utils::add_native_binding(interpreter, "__matrix_to_html__", matrix_to_html);
+  utils::add_native_binding(interpreter, "__matrix_to_latex__", matrix_to_latex);
+  utils::add_native_binding(interpreter, "__latex_fix_sci_not__", latex_fix_sci_not);
 }
 
 }  // namespace xeus_octave::display

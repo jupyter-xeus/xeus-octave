@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Giulio Girardi.
+ * Copyright (C) 2022 Giulio Girardi.
  *
  * This file is part of xeus-octave.
  *
@@ -17,17 +17,14 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XEUS_OCTAVE_DISPLAY_H
-#define XEUS_OCTAVE_DISPLAY_H
+#ifndef XEUS_OCTAVE_DISPLAY_HPP
+#define XEUS_OCTAVE_DISPLAY_HPP
 
-#include <octave/cdef-package.h>
 #include <octave/interpreter.h>
 
 namespace xeus_octave::display
 {
-
-void register_all(octave::interpreter&);
-
+void register_all(octave::interpreter& interpreter);
 }
 
-#endif  // XEUS_OCTAVE_DISPLAY_H
+#endif

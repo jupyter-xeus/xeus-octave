@@ -17,33 +17,29 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XEUS_OCTAVE_OUTPUT_HPP
-#define XEUS_OCTAVE_OUTPUT_HPP
+#ifndef XEUS_OCTAVE_UTILS_HPP
+#define XEUS_OCTAVE_UTILS_HPP
 
-#include <mutex>
-#include <streambuf>
-#include <string>
+#include <octave/interpreter.h>
+#include <octave/ov-builtin.h>
+#include <octave/ov-fcn-handle.h>
+#include <octave/ov-null-mat.h>
+#include <octave/ov.h>
 
-namespace xeus_octave::io
+#include <iostream>
+
+#include <xeus/xguid.hpp>
+#include <xtl/xoptional.hpp>
+
+namespace xeus_octave::utils
 {
 
-class xoctave_output : public std::streambuf
+inline void add_native_binding(octave::interpreter& interpreter, std::string const& name, octave_builtin::fcn ff)
 {
-public:
+  octave_builtin* fcn = new octave_builtin(ff, name, __FILE__, "");
+  interpreter.get_symbol_table().install_built_in_function(name, fcn);
+}
 
-  xoctave_output(std::string channel);
-
-protected:
-
-  int_type overflow(int_type c) override;
-  std::streamsize xsputn(char const* s, std::streamsize count) override;
-  int_type sync() override;
-
-  std::string m_channel;
-  std::string m_output;
-  std::mutex m_mutex;
-};
-
-}  // namespace xeus_octave::io
+}  // namespace xeus_octave::utils
 
 #endif
