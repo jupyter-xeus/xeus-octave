@@ -20,15 +20,13 @@
 #ifndef XEUS_OCTAVE_INTERPRETER_H
 #define XEUS_OCTAVE_INTERPRETER_H
 
-#include <functional>
-#include <sstream>
-
 #include <nlohmann/json.hpp>
 #include <octave/interpreter.h>
 #include <octave/oct-stream.h>
 #include <xeus/xinterpreter.hpp>
 
-#include "xeus-octave/io.hpp"
+#include "xeus-octave/input.hpp"
+#include "xeus-octave/output.hpp"
 
 namespace nl = nlohmann;
 
@@ -74,16 +72,15 @@ public:
   void publish_execution_error(
     std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
   );
-  std::string blocking_input_request(std::string const& prompt, bool password);
 
 private:
 
   static std::string get_symbol(std::string const& code, std::size_t cursor_pos);
   nl::json get_help_for_symbol(std::string const& symbol);
 
-  output m_stdout{std::bind(&xoctave_interpreter::publish_stream, this, "stdout", std::placeholders::_1)};
-  output m_stderr{std::bind(&xoctave_interpreter::publish_stream, this, "stderr", std::placeholders::_1)};
-  input m_stdin{std::bind(&xoctave_interpreter::blocking_input_request, this, std::placeholders::_1, false)};
+  io::xoctave_output m_stdout{"stdout"};
+  io::xoctave_output m_stderr{"stderr"};
+  io::xoctave_input m_stdin;
 
   bool m_silent, m_allow_stdin;
 };
