@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Giulio Girardi.
+ * Copyright (C) 2022 Giulio Girardi.
  *
  * This file is part of xeus-octave.
  *
@@ -39,6 +39,11 @@ private:
 
   octave::interpreter interpreter;
 
+public:
+
+  xoctave_interpreter();
+  virtual ~xoctave_interpreter() = default;
+
 private:
 
   void configure_impl() override;
@@ -74,9 +79,6 @@ public:
   );
 
 private:
-
-  static std::string get_symbol(std::string const& code, std::size_t cursor_pos);
-  nl::json get_help_for_symbol(std::string const& symbol);
 
   io::xoctave_output m_stdout{"stdout"};
   io::xoctave_output m_stderr{"stderr"};

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Giulio Girardi.
+ * Copyright (C) 2022 Giulio Girardi.
  *
  * This file is part of xeus-octave.
  *
@@ -52,7 +52,6 @@ int main(int argc, char* argv[])
 #endif
 
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
-  xeus::register_interpreter(interpreter.get());
   auto config = xeus::load_configuration(xeus::extract_filename(argc, argv));
   std::cout << xeus::print_starting_message(config);
 
