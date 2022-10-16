@@ -55,6 +55,7 @@
 #include "xeus-octave/input.hpp"
 #include "xeus-octave/output.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+#include "xeus-octave/utils.hpp"
 
 #include "toolkits/notebook.hpp"
 #include "toolkits/plotly.hpp"
@@ -65,6 +66,32 @@ namespace oc = octave;
 
 namespace xeus_octave
 {
+
+namespace interpreter
+{
+
+namespace
+{
+
+/**
+ * Native binding for getting the xeus-octave override path
+ */
+octave_value_list override_path(octave_value_list const& args, int /*nargout*/)
+{
+  if (args.length() != 0)
+    print_usage();
+
+  return ovl(XEUS_OCTAVE_OVERRIDE_PATH);
+}
+
+}  // namespace
+
+void register_all(octave::interpreter& interpreter)
+{
+  utils::add_native_binding(interpreter, "XOCTAVE_OVERRIDE_PATH", override_path);
+}
+
+}  // namespace interpreter
 
 void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
 {
@@ -297,6 +324,7 @@ void xoctave_interpreter::configure_impl()
 
   // Register embedded functions
   xeus_octave::display::register_all(interpreter);
+  xeus_octave::interpreter::register_all(interpreter);
 
   // Register the input system
   xeus_octave::io::register_input(m_stdin);
