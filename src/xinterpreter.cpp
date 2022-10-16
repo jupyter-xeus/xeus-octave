@@ -52,15 +52,13 @@
 #include <xeus/xinterpreter.hpp>
 
 #include "xeus-octave/config.hpp"
+#include "xeus-octave/display.hpp"
 #include "xeus-octave/input.hpp"
 #include "xeus-octave/output.hpp"
+#include "xeus-octave/tk_notebook.hpp"
+#include "xeus-octave/tk_plotly.hpp"
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
-#include "xeus-octave/utils.hpp"
-
-#include "toolkits/notebook.hpp"
-#include "toolkits/plotly.hpp"
-#include "xoctave/display.hpp"
 
 namespace nl = nlohmann;
 namespace oc = octave;

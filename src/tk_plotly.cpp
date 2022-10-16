@@ -38,9 +38,9 @@
 #include <octave/utils.h>
 #include <octave/version.h>
 
-#include "plotly.hpp"
-#include "plotstream.hpp"
-#include "tex2html.hpp"
+#include "xeus-octave/plotstream.hpp"
+#include "xeus-octave/tex2html.hpp"
+#include "xeus-octave/tk_plotly.hpp"
 
 namespace oc = octave;
 namespace nl = nlohmann;
