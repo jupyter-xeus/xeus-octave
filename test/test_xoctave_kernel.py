@@ -9,13 +9,16 @@
 import platform
 
 import jupyter_kernel_test
-
+import os
+import os.path
 
 class KernelTests(jupyter_kernel_test.KernelTests):
 
     kernel_name = "xoctave"
     language_name = "Octave"
     code_hello_world = "disp('hello, world')"
+    code_stderr = "fprintf(2,'this is stderr')"
+    code_generate_error = "garble"
     completion_samples = [
         {
             "text": "bessel",
@@ -41,6 +44,9 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         "end\n",
     ]
     code_inspect_sample = "plot"
+    code_display_data = [
+        {'code': 'x = [0 1 2]', 'mime': 'text/html'},
+    ]
 
     def test_pager(self):
         """Reimplementation of KernelTests.code_page_something.
@@ -110,3 +116,16 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertTrue(app1["layout"]["width"] > 0)
 
         self.assertEqual(content0["transient"]["display_id"], content1["transient"]["display_id"])
+
+    def test_octave_scripts(self):
+        directory = os.fsencode(os.path.join(os.path.dirname(__file__), 'octave'))
+
+        for file in os.listdir(directory):
+            filename = os.fsdecode(file)
+            if filename.endswith(".m"):
+                self.flush_channels()
+                with open(os.path.join(os.path.dirname(__file__), 'octave', filename)) as script:
+                    code = script.read()
+                    reply, output_msgs = self.execute_helper(code)
+
+                    assert reply['content']['status'] == 'ok', code
