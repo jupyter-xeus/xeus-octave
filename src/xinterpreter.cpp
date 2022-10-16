@@ -299,10 +299,8 @@ void xoctave_interpreter::configure_impl()
   interpreter.get_output_system().page_screen_output(true);
 
   // Register the graphics toolkits
-#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
   interpreter.get_gtk_manager().register_toolkit("notebook");
   interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::notebook_graphics_toolkit()));
-#endif
   interpreter.get_gtk_manager().register_toolkit("plotly");
   interpreter.get_gtk_manager().load_toolkit(
     octave::graphics_toolkit(new xeus_octave::plotly_graphics_toolkit(interpreter))
@@ -322,11 +320,7 @@ void xoctave_interpreter::configure_impl()
     output::restore(std::cerr, m_stderr);
   }
 
-#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
   octave::feval("graphics_toolkit", ovl("notebook"));
-#else
-  octave::feval("graphics_toolkit", ovl("plotly"));
-#endif
 
   // Register embedded functions
   xeus_octave::display::register_all(interpreter);

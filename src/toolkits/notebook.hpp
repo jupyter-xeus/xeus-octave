@@ -20,8 +20,6 @@
 #ifndef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 #define XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 
-#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
-
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 
@@ -48,7 +46,5 @@ public:
 };
 
 }  // namespace xeus_octave
-
-#endif
 
 #endif  // XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H

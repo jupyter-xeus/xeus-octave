@@ -17,8 +17,6 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if defined(XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED)
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -81,7 +79,7 @@ notebook_graphics_toolkit::notebook_graphics_toolkit() : base_graphics_toolkit("
 
   glfwMakeContextCurrent(window);
 
-  gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
 
 #ifndef NDEBUG
   std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << '\n';
@@ -296,5 +294,3 @@ void notebook_graphics_toolkit::update(oc::graphics_object const&, int)
 }
 
 }  // namespace xeus_octave
-
-#endif
