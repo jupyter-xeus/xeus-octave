@@ -1,0 +1,37 @@
+{
+  "build": {
+    "context": "..",
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "twxs.cmake",
+        "ms-vscode.cpptools-extension-pack",
+        "mhutchie.git-graph",
+        "ms-toolsai.vscode-jupyter-powertoys"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/bin/python",
+        "python.formatting.autopep8Path": "/opt/conda/bin/autopep8",
+        "python.formatting.yapfPath": "/opt/conda/bin/yapf",
+        "python.linting.enabled": true,
+        "python.linting.flake8Path": "/opt/conda/bin/flake8",
+        "python.linting.pycodestylePath": "/opt/conda/bin/pycodestyle",
+        "python.linting.pydocstylePath": "/opt/conda/bin/pydocstyle",
+        "python.linting.pylintEnabled": true,
+        "python.linting.pylintPath": "/opt/conda/bin/pylint",
+        "python.terminal.activateEnvironment": false,
+        "python.testing.pytestArgs": [
+          "test"
+        ],
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false
+      }
+    }
+  },
+  "name": "Micromamba",
+  "remoteUser": "mambauser"
+}
