@@ -39,7 +39,7 @@
 
 namespace nl = nlohmann;
 
-namespace xeus_octave
+namespace xeus_octave::tk::plotly
 {
 
 class plotly_graphics_toolkit : public octave::base_graphics_toolkit
@@ -144,6 +144,8 @@ private:
   octave::interpreter& m_interpreter;
 };
 
-}  // namespace xeus_octave
+void register_all(octave::interpreter& interpreter);
+
+}  // namespace xeus_octave::tk::plotly
 
 #endif  // XEUS_OCTAVE_PLOTLY_TOOLKIT_H
