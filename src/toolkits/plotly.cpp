@@ -512,12 +512,12 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           }
         }
       }
-    // Show the newly created plot
 
+    // Show the newly created plot
+    nl::json data = nl::json::object();
+    data["application/vnd.plotly.v1+json"] = std::move(plot);
     dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-      .update_display_data(
-        {{"application/vnd.plotly.v1+json", plot}}, nl::json(nl::json::value_t::object), {{"display_id", id}}
-      );
+      .update_display_data(std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}});
   }
 }
 
