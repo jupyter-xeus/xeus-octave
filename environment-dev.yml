@@ -14,8 +14,8 @@ dependencies:
   - nlohmann_json
   - cppzmq
   - octave =7.*
+  - glad
   - glfw
-  - mesalib
   - libpng
   # Test dependencies
   - pre-commit
@@ -34,3 +34,4 @@ dependencies:
   - clang
   - ccache
   - cmake-format
+  - nodejs

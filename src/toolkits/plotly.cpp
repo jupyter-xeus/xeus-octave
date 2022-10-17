@@ -52,7 +52,8 @@ bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
 {
   if (go.isa("figure"))
   {
-    setPlotStream(go, rand());
+    // Create a new object id and store it in the figure
+    setPlotStream(go, xeus::new_xguid());
     show_figure(go);
 
     return true;
@@ -63,7 +64,8 @@ bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
 
 void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 {
-  int id = getPlotStream(go);
+  // Retrieve the figure id
+  std::string id = getPlotStream(go);
 
   if (go.isa("figure"))
   {
@@ -510,25 +512,26 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           }
         }
       }
+
     // Show the newly created plot
-
-    nl::json data, tran;
-
-    data["application/vnd.plotly.v1+json"] = plot;
-    tran["display_id"] = id;
-
-    dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, nl::json::object(), tran);
+    nl::json data = nl::json::object();
+    data["application/vnd.plotly.v1+json"] = std::move(plot);
+    dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
+      .update_display_data(std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}});
   }
 }
 
 void plotly_graphics_toolkit::show_figure(oc::graphics_object const& go) const
 {
-  int id = getPlotStream(go);
+  // Get an unique identifier for this object, to be used as a display id
+  // in the display_data request for subsequent updates of the plot
+  std::string id = getPlotStream(go);
 
-  nl::json tran;
-  tran["display_id"] = id;
+  // Display an empty figure (this is equivalent to the action of creating)
+  // a window, and prepares a display with the correct display_id for
+  // future updates
   dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-    .display_data(nl::json::object(), nl::json::object(), tran);
+    .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
 }
 
 std::string plotly_graphics_toolkit::getObjectNumber(

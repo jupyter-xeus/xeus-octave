@@ -20,14 +20,10 @@
 #ifndef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 #define XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 
-#ifdef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_ENABLED
-
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 
 #include "xeus-octave/config.hpp"
-
-typedef struct GLFWwindow GLFWwindow;
 
 namespace xeus_octave
 {
@@ -36,7 +32,7 @@ class notebook_graphics_toolkit : public octave::base_graphics_toolkit
 {
 public:
 
-  notebook_graphics_toolkit(octave::interpreter&);
+  notebook_graphics_toolkit();
   ~notebook_graphics_toolkit();
 
   bool is_valid() const override { return true; }
@@ -47,17 +43,8 @@ public:
   void update(octave::graphics_object const&, int) override;
 
   void finalize(octave::graphics_object const&) override;
-
-private:
-
-#ifndef XEUS_OCTAVE_GLFW3_OSMESA_BACKEND
-  GLFWwindow* window = nullptr;
-#endif
-  octave::interpreter& m_interpreter;
 };
 
 }  // namespace xeus_octave
-
-#endif
 
 #endif  // XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
