@@ -83,6 +83,8 @@ notebook_graphics_toolkit::notebook_graphics_toolkit() : base_graphics_toolkit("
 
 #ifndef NDEBUG
   std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << '\n';
+  std::clog << "OpenGL renderer: " << glGetString(GL_RENDERER) << '\n';
+  std::clog << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
 #endif
 
   glfwDestroyWindow(window);
