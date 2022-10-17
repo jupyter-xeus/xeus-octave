@@ -25,7 +25,7 @@
 
 #include "xeus-octave/config.hpp"
 
-namespace xeus_octave
+namespace xeus_octave::tk::notebook
 {
 
 class notebook_graphics_toolkit : public octave::base_graphics_toolkit
@@ -45,6 +45,8 @@ public:
   void finalize(octave::graphics_object const&) override;
 };
 
-}  // namespace xeus_octave
+void register_all(octave::interpreter& interpreter);
+
+}  // namespace xeus_octave::tk::notebook
 
 #endif  // XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H

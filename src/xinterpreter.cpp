@@ -391,12 +391,8 @@ void xoctave_interpreter::configure_impl()
   interpreter.get_output_system().page_screen_output(true);
 
   // Register the graphics toolkits
-  interpreter.get_gtk_manager().register_toolkit("notebook");
-  interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new xeus_octave::notebook_graphics_toolkit()));
-  interpreter.get_gtk_manager().register_toolkit("plotly");
-  interpreter.get_gtk_manager().load_toolkit(
-    octave::graphics_toolkit(new xeus_octave::plotly_graphics_toolkit(interpreter))
-  );
+  xeus_octave::tk::notebook::register_all(interpreter);
+  xeus_octave::tk::plotly::register_all(interpreter);
 
   // For unknown resons, setting a graphical toolkit does not work, unless
   // another "magic" toolkit such as gnuplot or fltk is loaded first. Since we

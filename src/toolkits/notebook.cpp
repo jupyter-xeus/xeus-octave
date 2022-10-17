@@ -52,7 +52,7 @@ namespace nl = nlohmann;
 namespace oc = octave;
 using namespace std::chrono;
 
-namespace xeus_octave
+namespace xeus_octave::tk::notebook
 {
 
 notebook_graphics_toolkit::notebook_graphics_toolkit() : base_graphics_toolkit("notebook")
@@ -311,4 +311,11 @@ void notebook_graphics_toolkit::update(oc::graphics_object const&, int)
   // Unused
 }
 
-}  // namespace xeus_octave
+void register_all(octave::interpreter& interpreter)
+{
+  // Install the toolkit into the interpreter
+  interpreter.get_gtk_manager().register_toolkit("notebook");
+  interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new notebook_graphics_toolkit()));
+}
+
+}  // namespace xeus_octave::tk::notebook
