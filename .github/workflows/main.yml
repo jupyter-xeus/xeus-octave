@@ -35,7 +35,6 @@ jobs:
       - name: Test
         run: python -m pytest ./test -k 'not plot'
       - name: Plotly toolkit test
-        if: matrix.os == 'ubuntu-latest'
         run: python -m pytest ./test -k 'plot_plotly'
       - name: Notebook toolkit test
         if: matrix.os == 'ubuntu-latest'

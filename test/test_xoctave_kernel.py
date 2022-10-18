@@ -6,6 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 #############################################################################
 
+import platform
 
 import jupyter_kernel_test
 
@@ -88,6 +89,12 @@ class KernelTests(jupyter_kernel_test.KernelTests):
         self.assertEqual(content0["transient"]["display_id"], content1["transient"]["display_id"])
 
     def test_plot_plotly(self):
+        # On MacOS with conda-forge Octave, graphic commands show a FreeType warning
+        # the first time
+        if platform.system() == "Darwin":
+            self.flush_channels()
+            self.execute_helper(code="graphics_toolkit plotly; plot([])")
+
         self.flush_channels()
         reply, output_msgs = self.execute_helper(code="graphics_toolkit plotly; plot([])")
 

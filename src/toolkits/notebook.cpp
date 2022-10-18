@@ -152,10 +152,69 @@ void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
     .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
 }
 
+namespace
+{
+
+auto png_encode(std::vector<unsigned char>& data, unsigned int width, unsigned int height) -> std::string
+{
+  // A RAII structure to manage the lifetime of PNG structures
+  struct PngManager
+  {
+    png_structp png;
+    png_infop info;
+
+    PngManager()
+    {
+      png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+      info = png_create_info_struct(png);
+    }
+
+    ~PngManager() { png_destroy_write_struct(&png, &info); }
+  };
+
+  auto m = PngManager();
+
+  setjmp(png_jmpbuf(m.png));
+
+  png_set_IHDR(
+    m.png,
+    m.info,
+    width,
+    height,
+    8,
+    PNG_COLOR_TYPE_RGB,
+    PNG_INTERLACE_NONE,
+    PNG_COMPRESSION_TYPE_DEFAULT,
+    PNG_FILTER_TYPE_DEFAULT
+  );
+
+  std::vector<unsigned char*> rows(height);
+  for (std::size_t y = 0; y < height; y++)
+    rows[height - 1 - y] = data.data() + y * width * 3;
+  png_set_rows(m.png, m.info, &rows[0]);
+
+  auto img = std::string();
+  png_set_write_fn(
+    m.png,
+    &img,
+    [](png_structp png_, png_bytep d, png_size_t l)
+    {
+      std::string* img_ptr = static_cast<std::string*>(png_get_io_ptr(png_));
+      img_ptr->insert(img_ptr->end(), d, d + l);
+    },
+    nullptr
+  );
+
+  png_write_png(m.png, m.info, PNG_TRANSFORM_IDENTITY, NULL);
+
+  return img;
+}
+
+}  // namespace
+
 void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 {
 #ifndef NDEBUG
-  std::clog << "------------" << '\n';
   auto start = high_resolution_clock::now();
 #endif
 
@@ -210,50 +269,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
 #ifndef NDEBUG
   auto encode_start = high_resolution_clock::now();
 #endif
-
-  // Encode as PNG
-  png_structp p = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
-  png_infop i = png_create_info_struct(p);
-
-  setjmp(png_jmpbuf(p));
-
-  png_set_IHDR(
-    p,
-    i,
-    uwidth,
-    uheight,
-    8,
-    PNG_COLOR_TYPE_RGB,
-    PNG_INTERLACE_NONE,
-    PNG_COMPRESSION_TYPE_DEFAULT,
-    PNG_FILTER_TYPE_DEFAULT
-  );
-
-  std::vector<unsigned char*> rows(uheight);
-  for (std::size_t y = 0; y < uheight; y++)
-    rows[uheight - 1 - y] = screen.data() + y * uwidth * 3;
-  png_set_rows(p, i, &rows[0]);
-
-  auto const img = [](auto& png)
-  {
-    auto out = std::string();
-    png_set_write_fn(
-      png,
-      &out,
-      [](png_structp png_, png_bytep d, png_size_t l)
-      {
-        std::string* out_ = static_cast<std::string*>(png_get_io_ptr(png_));
-        out_->insert(out_->end(), d, d + l);
-      },
-      nullptr
-    );
-    return out;
-  }(p);
-
-  png_write_png(p, i, PNG_TRANSFORM_IDENTITY, NULL);
-
-  png_destroy_write_struct(&p, &i);
-
+  std::string img = png_encode(screen, uwidth, uheight);
 #ifndef NDEBUG
   auto encode_stop = high_resolution_clock::now();
   auto encode_duration = duration_cast<microseconds>(encode_stop - encode_start);
