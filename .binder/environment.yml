@@ -7,3 +7,8 @@ dependencies:
   - plotly
   - ipywidgets
   - jupyter-dash
+  # Runtime dependency for Octave ``symbolic`` package.
+  - sympy
+  # For compiling the Octave ``control`` and ``signal`` packages
+  - compilers
+  - make
