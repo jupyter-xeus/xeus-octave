@@ -19,6 +19,8 @@ dependencies:
   - libpng
   # Test dependencies
   - pre-commit
+  - clang-tools
+  - clang
   - jupyter_kernel_test >=0.4.3
   - nbval
   - pytest
@@ -30,8 +32,9 @@ dependencies:
   - sphinx_rtd_theme
   # Dev dependencies
   - jupyterlab
-  - clang-tools
-  - clang
+  - nodejs
   - ccache
   - cmake-format
-  - nodejs
+  - plotly
+  - ipywidgets
+  - jupyter-dash
