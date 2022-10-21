@@ -31,19 +31,16 @@ web API to render plot as interactive HTML elements, with zoom, cursors, and hov
 Select this toolkit using ``graphics_toolkit plotly`` in the notebook.
 
 With Jupyter lab, the plotly extension is also needed.
-It can be installed with ``conda`` or ``mamba``
+It can be installed with ``conda``/``mamba`` (or ``pip``)
 
 .. code:: bash
 
-   mamba install -c conda-forge jupyterlab-plotly-extension
-
-Or with
-
-.. code:: bash
-
-   jupyter labextension install jupyterlab-plotly
+   mamba install -c conda-forge jupyterlab plotly ipywidgets jupyter-dash
 
 The extension is already provided with Nteract.
+
+See `Plotly documentation <https://plotly.com/python/getting-started/>`_
+for detailed instructions and troubleshooting.
 
 Other
 -----

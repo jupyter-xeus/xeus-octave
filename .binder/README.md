@@ -10,4 +10,3 @@ launched through ``xvfb-run``.
   It provides the executable ``xvfb-run`` that must be used to run the executable.
 
 ``postBuild`` is used to create an ``xvfb-run`` wrapper of ``xoctave`` during the image creation.
-It also installs the ``jupyterlab-plotly`` extension.
