@@ -39,7 +39,7 @@ It can be installed with ``conda``/``mamba`` (or ``pip``)
 
 The extension is already provided with Nteract.
 
-See `Plotly documentation <https://plotly.com/python/getting-started/#jupyterlab-support>`_
+See `Plotly documentation <https://plotly.com/python/getting-started/>`_
 for detailed instructions and troubleshooting.
 
 Other
