@@ -1,0 +1,9 @@
+# Fail fast
+set -o errexit
+set -o nounset
+
+# Installation of Octave packages is dependent on current user.
+# This works because postBuild user is the same as user running Binder.
+# https://docs.octave.org/interpreter/Administrating-Packages.html
+# Use micromamba so that the compilers are properly found.
+micromamba run -n notebook octave-cli --eval 'pkg install -forge symbolic control signal'

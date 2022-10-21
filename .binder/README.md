@@ -10,3 +10,4 @@ launched through ``xvfb-run``.
   It provides the executable ``xvfb-run`` that must be used to run the executable.
 
 ``start`` is used to launch Binder entrypoint through ``xvfb-run``.
+``postBuild`` is used to install some Octave packages.
