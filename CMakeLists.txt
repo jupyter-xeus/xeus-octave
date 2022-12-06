@@ -112,7 +112,8 @@ set(
     XEUS_OCTAVE_HEADERS
     include/xeus-octave/config.hpp
     include/xeus-octave/xinterpreter.hpp
-    include/xeus-octave/io.hpp
+    include/xeus-octave/input.hpp
+    include/xeus-octave/output.hpp
     src/toolkits/notebook.hpp
     src/toolkits/opengl.hpp
     src/toolkits/plotly.hpp
@@ -123,11 +124,12 @@ set(
 
 set(
     XEUS_OCTAVE_SRC
-    src/io.cpp
     src/toolkits/plotly.cpp
     src/toolkits/notebook.cpp
     src/xoctave/display.cpp
     src/xinterpreter.cpp
+    src/input.cpp
+    src/output.cpp
 )
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)

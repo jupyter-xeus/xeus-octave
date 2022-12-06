@@ -17,14 +17,29 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XEUS_OCTAVE_DISPLAY_HPP
-#define XEUS_OCTAVE_DISPLAY_HPP
+#ifndef XEUS_OCTAVE_UTILS_HPP
+#define XEUS_OCTAVE_UTILS_HPP
 
 #include <octave/interpreter.h>
+#include <octave/ov-builtin.h>
+#include <octave/ov-fcn-handle.h>
+#include <octave/ov-null-mat.h>
+#include <octave/ov.h>
 
-namespace xeus_octave::display
+#include <iostream>
+
+#include <xeus/xguid.hpp>
+#include <xtl/xoptional.hpp>
+
+namespace xeus_octave::utils
 {
-void register_all(octave::interpreter& interpreter);
+
+inline void add_native_binding(octave::interpreter& interpreter, std::string const& name, octave_builtin::fcn ff)
+{
+  octave_builtin* fcn = new octave_builtin(ff, name, __FILE__, "");
+  interpreter.get_symbol_table().install_built_in_function(name, fcn);
 }
+
+}  // namespace xeus_octave::utils
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Giulio Girardi.
+ * Copyright (C) 2022 Giulio Girardi.
  *
  * This file is part of xeus-octave.
  *
@@ -17,26 +17,17 @@
  * along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef XEUS_OCTAVE_IO_H
-#define XEUS_OCTAVE_IO_H
+#ifndef XEUS_OCTAVE_INPUT_HPP
+#define XEUS_OCTAVE_INPUT_HPP
 
-#include <mutex>
-#include <ostream>
-#include <streambuf>
+#include <octave/cmd-edit.h>
 
-#include "octave/cmd-edit.h"
-
-namespace xeus_octave
+namespace xeus_octave::io
 {
 
-class input : public octave::command_editor
+class xoctave_input : public octave::command_editor
 {
 public:
-
-  input(std::function<std::string(std::string const&)> callback);
-
-  static void override(input& n);
-  static void restore();
 
   std::string do_readline(std::string const& prompt, bool&) override;
 
@@ -65,34 +56,10 @@ public:
   void do_newline(void) override {}
 
   void do_accept_line(void) override {}
-
-private:
-
-  std::function<std::string(std::string const&)> m_callback;
 };
 
-class output : public std::streambuf
-{
-public:
+void register_input(xoctave_input&);
 
-  output(std::function<void(std::string const&)> callback);
+}  // namespace xeus_octave::io
 
-  static void override(std::ostream&, output&);
-  static void restore(std::ostream&, output&);
-
-protected:
-
-  int_type overflow(int_type c) override;
-  std::streamsize xsputn(char const* s, std::streamsize count) override;
-  int_type sync() override;
-
-  std::function<void(std::string const&)> m_callback;
-  std::string m_output;
-  std::mutex m_mutex;
-
-  std::streambuf* p_oldbuf;
-};
-
-}  // namespace xeus_octave
-
-#endif  // XEUS_OCTAVE_IO_H
+#endif

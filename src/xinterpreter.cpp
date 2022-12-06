@@ -52,7 +52,9 @@
 #include <xeus/xinterpreter.hpp>
 
 #include "xeus-octave/config.hpp"
-#include "xeus-octave/io.hpp"
+#include "xeus-octave/input.hpp"
+#include "xeus-octave/output.hpp"
+#include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
 #include "toolkits/notebook.hpp"
@@ -64,6 +66,32 @@ namespace oc = octave;
 
 namespace xeus_octave
 {
+
+namespace interpreter
+{
+
+namespace
+{
+
+/**
+ * Native binding for getting the xeus-octave override path
+ */
+octave_value_list override_path(octave_value_list const& args, int /*nargout*/)
+{
+  if (args.length() != 0)
+    print_usage();
+
+  return ovl(XEUS_OCTAVE_OVERRIDE_PATH);
+}
+
+}  // namespace
+
+void register_all(octave::interpreter& interpreter)
+{
+  utils::add_native_binding(interpreter, "XEUS_OCTAVE_OVERRIDE_PATH", override_path);
+}
+
+}  // namespace interpreter
 
 void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
 {
@@ -95,27 +123,6 @@ void xoctave_interpreter::publish_execution_error(
 {
   if (!m_silent)
     xinterpreter::publish_execution_error(ename, evalue, trace_back);
-}
-
-std::string xoctave_interpreter::blocking_input_request(std::string const& prompt, bool password)
-{
-  if (m_allow_stdin)
-  {
-    // Register the input handler
-    std::string value;
-
-    register_input_handler([&value](std::string const& v) { value = v; });
-
-    // Send the input request
-    input_request(prompt, password);
-
-    // Remove input handler
-    register_input_handler(nullptr);
-
-    return value;
-  }
-
-  throw std::runtime_error("This frontend does not support input requests");
 }
 
 namespace
@@ -172,11 +179,6 @@ nl::json xoctave_interpreter::execute_request_impl(
 
   m_silent = silent;
   m_allow_stdin = allow_stdin;
-
-  // Override the default io system
-  input::override(m_stdin);
-  output::override(std::cout, m_stdout);
-  output::override(std::cerr, m_stderr);
 
   result = xeus::create_successful_reply();
 
@@ -274,16 +276,16 @@ nl::json xoctave_interpreter::execute_request_impl(
   // Update the figure if present
   interpreter.feval("drawnow");
 
-  // Recover the old io system
-  input::restore();
-  output::restore(std::cout, m_stdout);
-  output::restore(std::cerr, m_stderr);
-
   return result;
 }
 
 void xoctave_interpreter::configure_impl()
 {
+  // Override output system
+  std::cout.rdbuf(&m_stdout);
+  std::cerr.rdbuf(&m_stderr);
+
+  // Install signal handlers to listen for CTRL+C
   octave::install_signal_handlers();
 
   interpreter.read_init_files(true);
@@ -311,19 +313,21 @@ void xoctave_interpreter::configure_impl()
   // do not know which are magic and which are available at compile-time, we go
   // though them all.
   {
-    output::override(std::cerr, m_stderr);
     auto const& a = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
     for (auto i = octave_idx_type{0}; i < a.numel(); ++i)
     {
       octave::feval("graphics_toolkit", ovl(a.elem(i)));
     }
-    output::restore(std::cerr, m_stderr);
   }
 
   octave::feval("graphics_toolkit", ovl("notebook"));
 
   // Register embedded functions
   xeus_octave::display::register_all(interpreter);
+  xeus_octave::interpreter::register_all(interpreter);
+
+  // Register the input system
+  xeus_octave::io::register_input(m_stdin);
 
   // Install version variable
   interpreter.get_symbol_table().install_built_in_function(
