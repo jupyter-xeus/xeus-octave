@@ -29,6 +29,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <optional>
 
 #include <nlohmann/json.hpp>
 #include <octave/defun-dld.h>
@@ -50,6 +51,7 @@
 #include <octave/version.h>
 #include <xeus/xhelper.hpp>
 #include <xeus/xinterpreter.hpp>
+#include <xeus/xmessage.hpp>
 
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/input.hpp"
@@ -521,7 +523,7 @@ nl::json xoctave_interpreter::is_complete_request_impl(std::string const& /*code
 nl::json xoctave_interpreter::kernel_info_request_impl()
 {
   return xeus::create_info_reply(
-    /* protocol_version= */ "5.3",
+    /* protocol_version= */ xeus::get_protocol_version(),
     /* implementation= */ "xoctave",
     /* implementation_version= */ XEUS_OCTAVE_VERSION,
     /* language_name= */ "Octave",
