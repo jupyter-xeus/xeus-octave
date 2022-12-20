@@ -23,13 +23,13 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <ostream>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <optional>
 
 #include <nlohmann/json.hpp>
 #include <octave/defun-dld.h>

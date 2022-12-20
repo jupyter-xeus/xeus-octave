@@ -21,11 +21,12 @@
 #include <memory>
 #include <string_view>
 
+#include <xeus-zmq/xserver_zmq.hpp>
+#include <xeus/xeus_context.hpp>
 #include <xeus/xhelper.hpp>
 #include <xeus/xkernel.hpp>
 #include <xeus/xkernel_configuration.hpp>
 #include <xeus/xlogger.hpp>
-#include <xeus/xserver_zmq.hpp>
 
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/xinterpreter.hpp"

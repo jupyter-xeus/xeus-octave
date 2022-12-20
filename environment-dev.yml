@@ -10,7 +10,7 @@ dependencies:
   # Host dependencies
   - libuuid
   - xtl
-  - xeus >=2.4,<3.0
+  - xeus-zmq =1.*
   - nlohmann_json
   - cppzmq
   - octave =7.*

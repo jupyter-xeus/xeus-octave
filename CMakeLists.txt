@@ -71,16 +71,7 @@ option(
 # Dependencies
 # ============
 
-set(xtl_REQUIRED_VERSION 0.7.4)
-set(xeus_REQUIRED_VERSION 1.0.4)
-
-if(NOT TARGET xtl)
-    find_package(xtl ${xtl_REQUIRED_VERSION} REQUIRED)
-endif()
-if(NOT TARGET xeus AND NOT TARGET xeus-static)
-    find_package(xeus ${xeus_REQUIRED_VERSION} REQUIRED)
-endif()
-
+find_package(xeus-zmq REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glad REQUIRED)
 find_package(glfw3)
@@ -238,9 +229,9 @@ macro(xeus_octave_create_target target_name linkage output_name)
         PRIVATE glad::glad glfw PNG::PNG
     )
     if(XEUS_OCTAVE_USE_SHARED_XEUS)
-        target_link_libraries(${target_name} PUBLIC xeus)
+        target_link_libraries(${target_name} PUBLIC xeus-zmq)
     else()
-        target_link_libraries(${target_name} PUBLIC xeus-static)
+        target_link_libraries(${target_name} PUBLIC xeus-zmq-static)
     endif()
 
     if(WIN32 OR CYGWIN)
