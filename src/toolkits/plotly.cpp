@@ -45,7 +45,7 @@
 namespace oc = octave;
 namespace nl = nlohmann;
 
-namespace xeus_octave
+namespace xeus_octave::tk::plotly
 {
 
 bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
@@ -1041,4 +1041,11 @@ void plotly_graphics_toolkit::setLegendVisibility(nl::json& data, std::string na
   }
 }
 
-}  // namespace xeus_octave
+void register_all(octave::interpreter& interpreter)
+{
+  // Install the toolkit into the interpreter
+  interpreter.get_gtk_manager().register_toolkit("plotly");
+  interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new plotly_graphics_toolkit(interpreter)));
+}
+
+}  // namespace xeus_octave::tk::plotly
