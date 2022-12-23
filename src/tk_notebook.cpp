@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-#include "opengl.hpp"
+#include "xeus-octave/opengl.hpp"
 
 #include <GLFW/glfw3.h>
 #include <nlohmann/json.hpp>
@@ -43,10 +43,9 @@
 #include <png.h>
 #include <xtl/xbase64.hpp>
 
+#include "xeus-octave/plotstream.hpp"
+#include "xeus-octave/tk_notebook.hpp"
 #include "xeus-octave/xinterpreter.hpp"
-
-#include "notebook.hpp"
-#include "plotstream.hpp"
 
 namespace nl = nlohmann;
 namespace oc = octave;

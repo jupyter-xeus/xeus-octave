@@ -105,19 +105,20 @@ set(
     include/xeus-octave/xinterpreter.hpp
     include/xeus-octave/input.hpp
     include/xeus-octave/output.hpp
-    src/toolkits/notebook.hpp
-    src/toolkits/opengl.hpp
-    src/toolkits/plotly.hpp
-    src/toolkits/plotstream.hpp
-    src/toolkits/tex2html.hpp
-    src/xoctave/display.hpp
+    include/xeus-octave/utils.hpp
+    include/xeus-octave/tk_notebook.hpp
+    include/xeus-octave/opengl.hpp
+    include/xeus-octave/tk_plotly.hpp
+    include/xeus-octave/plotstream.hpp
+    include/xeus-octave/tex2html.hpp
+    include/xeus-octave/display.hpp
 )
 
 set(
     XEUS_OCTAVE_SRC
-    src/toolkits/plotly.cpp
-    src/toolkits/notebook.cpp
-    src/xoctave/display.cpp
+    src/tk_plotly.cpp
+    src/tk_notebook.cpp
+    src/display.cpp
     src/xinterpreter.cpp
     src/input.cpp
     src/output.cpp
