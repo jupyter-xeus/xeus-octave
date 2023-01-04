@@ -72,6 +72,8 @@ option(
 # ============
 
 find_package(xeus-zmq REQUIRED)
+find_package(xwidgets REQUIRED)
+find_package(xproperty REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glad REQUIRED)
 find_package(glfw3)
@@ -112,6 +114,7 @@ set(
     include/xeus-octave/plotstream.hpp
     include/xeus-octave/tex2html.hpp
     include/xeus-octave/display.hpp
+    include/xeus-octave/xwidgets.hpp
 )
 
 set(
@@ -122,6 +125,7 @@ set(
     src/xinterpreter.cpp
     src/input.cpp
     src/output.cpp
+    src/xwidgets.cpp
 )
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
@@ -226,7 +230,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
 
     target_link_libraries(
         ${target_name}
-        PUBLIC xtl PkgConfig::octinterp
+        PUBLIC xtl xwidgets PkgConfig::octinterp
         PRIVATE glad::glad glfw PNG::PNG
     )
     if(XEUS_OCTAVE_USE_SHARED_XEUS)
