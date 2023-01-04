@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Giulio Girardi.
+ * Copyright (C) 2022 Giulio Girardi.
  *
  * This file is part of xeus-octave.
  *
@@ -25,19 +25,37 @@
 namespace xeus_octave
 {
 
-inline std::string getPlotStream(octave::graphics_object const& o)
+template <class T> inline T getPlotStream(octave::graphics_object const& o);
+
+/**
+ * Retrieve from the graphics object the plot_stream property
+ */
+template <> inline std::string getPlotStream<std::string>(octave::graphics_object const& o)
 {
-  return dynamic_cast<octave::figure::properties const&>(o.get_ancestor("figure").get_properties())
-    .get___plot_stream__()
-    .string_value();
+  octave_value ps =
+    dynamic_cast<octave::figure::properties const&>(o.get_ancestor("figure").get_properties()).get___plot_stream__();
+
+  if (ps.is_string())
+    return ps.string_value();
+  else
+    return "";
 }
 
+/**
+ * Set in the graphics object the plot_stream propert
+ */
 inline void setPlotStream(octave::graphics_object& o, std::string p)
 {
   if (o.isa("figure"))
-    dynamic_cast<octave::figure::properties&>(o.get_properties()).set___plot_stream__(p);
+  {
+    auto& fp = dynamic_cast<octave::figure::properties&>(o.get_properties());
+    fp.set___plot_stream__(p);
+  }
 }
 
+/**
+ * Set in the graphics object the plot_stream propert (const version)
+ */
 inline void setPlotStream(octave::graphics_object const& o, std::string p)
 {
   // deCONSTify the graphics_object
@@ -47,4 +65,4 @@ inline void setPlotStream(octave::graphics_object const& o, std::string p)
 
 }  // namespace xeus_octave
 
-#endif  // XEUS_OCTAVE_PLOTSTREAM_H
+#endif
