@@ -110,6 +110,26 @@ inline void from_ov(octave_value const& from, xw::xholder& to, octave::interpret
     from_ov(ret(0), id, interpreter);
     to = xw::make_id_holder(id);
   }
+  // This is a figure handle
+  else if (from.is_real_scalar())
+  {
+    // Get the handle
+    graphics_handle gh = interpreter.get_gh_manager().lookup(from);
+
+    if (gh.ok())
+    {
+      // Get the object
+      octave::graphics_object go = interpreter.get_gh_manager().get_object(gh);
+      // Change the graphics_toolkit to widget
+      auto& figureProperties = dynamic_cast<octave::figure::properties&>(go.get_properties());
+      figureProperties.set___graphics_toolkit__("__widget");
+      auto* figure = getPlotStream<xw::image*>(go);
+
+      assert(figure != nullptr);
+
+      to = xw::make_id_holder(figure->id());
+    }
+  }
 }
 
 /**
