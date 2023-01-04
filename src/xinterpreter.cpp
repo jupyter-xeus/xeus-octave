@@ -95,6 +95,11 @@ void register_all(octave::interpreter& interpreter)
 
 }  // namespace interpreter
 
+xoctave_interpreter::xoctave_interpreter()
+{
+  xeus::register_interpreter(this);
+}
+
 void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
 {
   if (!m_silent)

@@ -39,6 +39,11 @@ private:
 
   octave::interpreter interpreter;
 
+public:
+
+  xoctave_interpreter();
+  virtual ~xoctave_interpreter() = default;
+
 private:
 
   void configure_impl() override;
