@@ -5,7 +5,7 @@ classdef FloatSlider < xwidgets.BoundedFloat
 		end
 	end
 
-	properties
+	properties (Sync = true)
 		_view_name = "FloatSliderView";
 		_model_name = "FloatSliderModel";
 

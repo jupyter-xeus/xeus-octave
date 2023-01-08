@@ -1,5 +1,5 @@
 classdef DescriptionWidget < xwidgets.DOMWidget & xwidgets.CoreWidget
-	properties
+	properties (Sync = true)
 		_model_name = "DescriptionModel";
 
 		description = "";

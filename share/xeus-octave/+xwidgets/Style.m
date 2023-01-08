@@ -1,5 +1,5 @@
 classdef Style < xwidgets.Widget
-	properties
+	properties (Sync = true)
 		_model_name = "StyleModel";
 		_view_name = "StyleView";
 		_view_module = "@jupyter-widgets/base";

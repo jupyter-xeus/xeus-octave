@@ -5,7 +5,7 @@ classdef Button < xwidgets.DOMWidget & xwidgets.CoreWidget
 		end
 	end
 
-	properties
+	properties (Sync = true)
 		_model_name = "ButtonModel";
 		_view_name = "ButtonView";
 

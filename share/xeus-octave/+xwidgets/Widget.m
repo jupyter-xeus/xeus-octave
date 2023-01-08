@@ -1,11 +1,5 @@
 classdef Widget < __xwidget_internal__
-	methods
-		function obj = Widget()
-			obj = obj@__xwidget_internal__();
-		end
-	end
-
-	properties
+	properties (Sync = true)
 		_model_name = "WidgetModel";
 		_view_name = "WidgetView";
 		_model_module = "@jupyter-widgets/base";

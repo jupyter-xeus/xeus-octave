@@ -18,24 +18,25 @@
  */
 
 #include <iostream>
-#include <nlohmann/json_fwd.hpp>
+#include <ostream>
+#include <string>
+
+#include <nlohmann/json.hpp>
 #include <octave/cdef-class.h>
 #include <octave/cdef-manager.h>
 #include <octave/cdef-object.h>
 #include <octave/cdef-property.h>
+#include <octave/cdef-utils.h>
 #include <octave/error.h>
 #include <octave/ov-base.h>
 #include <octave/ov-classdef.h>
 #include <octave/ov.h>
-
 #include <octave/ovl.h>
 #include <xwidgets/xcommon.hpp>
 
 #include "xeus-octave/json.hpp"
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xwidgets2.hpp"
-
-constexpr inline char const* XWIDGET_POINTER_PROPERTY = "__pointer__";
 
 namespace xw
 {
@@ -45,15 +46,14 @@ namespace xw
 namespace xeus_octave::widgets
 {
 
-xwidget::xwidget(octave::interpreter& interpreter, octave::cdef_object_rep* obj) :
-  base_type(), m_obj(obj), m_interpreter(interpreter)
+xwidget::xwidget() : octave::handle_cdef_object(), xw::xcommon()
 {
   this->comm().on_message(std::bind(&xwidget::handle_message, this, std::placeholders::_1));
-  this->open();
 }
 
 xwidget::~xwidget()
 {
+  std::clog << "Destructing " << get_class().get_name() << std::endl;
   this->close();
 }
 
@@ -65,44 +65,90 @@ void xwidget::open()
   this->serialize_state(state, buffers);
 
   // open comm
-  base_type::open(std::move(state), std::move(buffers));
+  xw::xcommon::open(std::move(state), std::move(buffers));
 }
 
 void xwidget::close()
 {
-  base_type::close();
+  xw::xcommon::close();
 }
+
+namespace
+{
+
+/**
+ * @brief Check if property should be synced with widget model in frontend
+ * by looking for "Sync" attribute"
+ *
+ * The following must be present in classdef definition in .m file
+ *
+ * ...
+ *   properties (Sync = true)
+ *     _model_name = "ButtonModel";
+ *     _view_name = "ButtonView";
+ *
+ *     description = "";
+ *     tooltip = "";
+ *   end
+ * ...
+ *
+ * We can use a nonstandard attribute because Octave parses all attributes
+ * of properties regardless of their "correctness".
+ *
+ * @param property reference to a property definition object
+ * @return true if property has attribute "Sync" set to true
+ */
+bool is_sync_property(octave::cdef_property& property)
+{
+  return !property.get("Sync").isempty() && property.get("Sync").bool_value();
+}
+
+};  // namespace
 
 void xwidget::serialize_state(nl::json& state, xeus::buffer_sequence& buffers) const
 {
-  octave::cdef_manager& cm = m_interpreter.get_cdef_manager();
-  std::string class_name = m_obj->class_name();
-  octave::cdef_class cls = cm.find_class(class_name);
+  octave::cdef_class cls = this->get_class();
   auto properties = cls.get_property_map(octave::cdef_class::property_all);
 
   for (auto property_tuple : properties)
   {
-    octave::cdef_property property = std::get<1>(property_tuple);
-    octave::cdef_object tmp(m_obj->clone());
-    octave_value ov = property.get_value(tmp, true, "serialize_state");
-    xw::xwidgets_serialize(ov, state[property.get_name()], buffers);
+    octave::cdef_property property = property_tuple.second;
+    if (is_sync_property(property))
+    {
+      octave_value ov = this->get(property.get_name());
+      xw::xwidgets_serialize(ov, state[property.get_name()], buffers);
+    }
   }
 }
 
 void xwidget::apply_patch(nl::json const& state, xeus::buffer_sequence const&)
 {
-  octave::cdef_manager& cm = m_interpreter.get_cdef_manager();
-  std::string class_name = m_obj->class_name();
-  octave::cdef_class cls = cm.find_class(class_name);
+  octave::cdef_class cls = this->get_class();
   auto properties = cls.get_property_map(octave::cdef_class::property_all);
 
   for (auto property_tuple : properties)
   {
-    octave::cdef_property property = std::get<1>(property_tuple);
-    if (state.contains(property.get_name()))
+    octave::cdef_property property = property_tuple.second;
+    if (is_sync_property(property) && state.contains(property.get_name()))
     {
-      octave::cdef_object tmp(m_obj->clone());
-      property.set_value(tmp, state[property.get_name()], true, "apply_patch");
+      // Call superclass put to avoid notifying the view again in a loop
+      octave::handle_cdef_object::put(property.get_name(), state[property.get_name()]);
+    }
+  }
+}
+
+void xwidget::put(std::string const& pname, octave_value const& val)
+{
+  octave::handle_cdef_object::put(pname, val);
+  if (this->is_constructed())  // When default property values are being set
+  {
+    octave::cdef_class cls = this->get_class();
+    auto properties = cls.get_property_map(octave::cdef_class::property_all);
+
+    if (is_sync_property(properties[pname]))
+    {
+      std::clog << "Notify change " << pname << std::endl;
+      this->notify(pname, val);
     }
   }
 }
@@ -140,46 +186,37 @@ void xwidget::handle_message(xeus::xmessage const& message)
   }
 }
 
-void xwidget::register_all(octave::interpreter& interpreter)
+octave_value_list xwidget::cdef_constructor(octave_value_list const& args, int)
 {
-  octave::cdef_manager& cm = interpreter.get_cdef_manager();
-  octave::cdef_class cls = cm.make_class(XWIDGET_CLASS_NAME, cm.find_class("handle"));
+  // Get a reference to the old object
+  octave::cdef_object& obj = args(0).classdef_object_value()->get_object_ref();
+  // Retrieve the class we want to construct
+  octave::cdef_class cls = obj.get_class();
 
-  cls.install_method(cm.make_method(cls, XWIDGET_CLASS_NAME, xwidget::cdef_constructor));
-  cls.install_method(cm.make_method(cls, "display", xwidget::cdef_display));
-  cls.install_method(cm.make_method(cls, "id", xwidget::cdef_id));
-  cls.install_method(cm.make_method(cls, "delete", xwidget::cdef_destructor));
-  cls.install_method(cm.make_method(cls, "subsasgn", xwidget::cdef_subsasgn));
-
-  interpreter.get_symbol_table().install_built_in_function(XWIDGET_CLASS_NAME, cls.get_constructor_function());
-}
-
-octave_value_list xwidget::cdef_constructor(octave::interpreter& interpreter, octave_value_list const& args, int)
-{
-  octave_classdef* obj = args(0).classdef_object_value();
-  xwidget* widget = get_widget(obj);
-
-  if (!widget)
+  if (get_widget(args(0).classdef_object_value()) == nullptr)
   {
-    octave::cdef_object const& object = args(0).classdef_object_value()->get_object_ref();
-    octave::cdef_object_rep const* rep = object.get_rep();
-    widget = new xwidget(interpreter, const_cast<octave::cdef_object_rep*>(rep));
+    std::clog << "Inject xwidget into " << cls.get_name() << std::endl;
+
+    // Create a new object with our widget rep
+    xwidget* wdg = new xwidget();
+    octave::cdef_object new_obj(wdg);
+    // Set it to the new object
+    new_obj.set_class(cls);
+    // Initialize the properties
+    cls.initialize_object(new_obj);
+    // Replace the old object
+    obj = new_obj;
+    // Open the comm
+    wdg->open();
+
+    return ovl(octave::to_ov(new_obj));
   }
+  else  // If the object rep has already been substituted with an xwidget (this will happen with multiple inheritance)
+  {
+    std::clog << "No need to inject xwidget into " << cls.get_name() << std::endl;
 
-  set_widget(obj, widget);
-  return args(0);
-}
-
-octave_value_list xwidget::cdef_destructor(octave_value_list const& args, int)
-{
-  octave_classdef* obj = args(0).classdef_object_value();
-  xwidget* widget = get_widget(obj);
-  set_widget(obj, nullptr);
-
-  if (widget)
-    delete widget;
-
-  return ovl();
+    return ovl(args(0));
+  }
 }
 
 octave_value_list xwidget::cdef_display(octave_value_list const& args, int)
@@ -188,62 +225,29 @@ octave_value_list xwidget::cdef_display(octave_value_list const& args, int)
   return ovl();
 }
 
-octave_value_list xwidget::cdef_subsasgn(octave::interpreter& interpreter, octave_value_list const& args, int)
+octave_value_list xwidget::cdef_id(octave_value_list const& args, int)
 {
-  octave_classdef* obj = args(0).classdef_object_value();
-  octave_map map = args(1).map_value();
-  octave_value rhs = args(2);
-
-  Cell type = map.getfield("type");
-  Cell subs = map.getfield("subs");
-
-  if (type.numel() == 1 && type(0).string_value() == ".")
-  {
-    octave::cdef_manager& cm = interpreter.get_cdef_manager();
-    std::string class_name = obj->class_name();
-    octave::cdef_class cls = cm.find_class(class_name);
-    auto properties = cls.get_property_map(octave::cdef_class::property_all);
-    auto widget = get_widget(obj);
-    std::string property_name = subs(0).string_value();
-
-    if (properties.count(property_name))
-    {
-      // Perform manually the subsasgn call
-      octave::cdef_property property = properties[property_name];
-      octave_value_list retval = obj->get_object_ref().subsasgn(".", {ovl(property_name)}, rhs);
-      widget->notify(property_name, property.get_value(obj->get_object_ref(), false, "subsasgn"));
-      return retval;
-    }
-  }
-
-  // Return an undefined object to have Octave run the real subsasgn function
-  // Add a fake additional return value to avoid having an empty return value
-  return ovl(octave_value(), 0);
+  return ovl(std::string(get_widget(args(0).classdef_object_value())->id()));
 }
 
-octave_value_list xwidget::cdef_id(octave::interpreter& interpreter, octave_value_list const& args, int)
+xwidget* get_widget(octave_classdef const* obj)
 {
-  using namespace utils;
+  octave::cdef_object const& ref = const_cast<octave_classdef*>(obj)->get_object_ref();
+  octave::cdef_object_rep* rep = const_cast<octave::cdef_object_rep*>(ref.get_rep());
 
-  octave_value v;
-  to_ov(v, get_widget(args(0).classdef_object_value())->id(), interpreter);
-  return v;
+  return dynamic_cast<xwidget*>(rep);
 }
 
-inline xwidget* xwidget::get_widget(octave_classdef const* obj)
+void register_all2(octave::interpreter& interpreter)
 {
-  octave_value p = obj->get_object().get(XWIDGET_POINTER_PROPERTY);
+  octave::cdef_manager& cm = interpreter.get_cdef_manager();
+  octave::cdef_class cls = cm.make_class(XWIDGET_CLASS_NAME, cm.find_class("handle"));
 
-  if (p.isempty())
-    return nullptr;
-  else
-    return reinterpret_cast<xwidget*>(p.ulong_value());
-}
+  cls.install_method(cm.make_method(cls, XWIDGET_CLASS_NAME, xwidget::cdef_constructor));
+  cls.install_method(cm.make_method(cls, "display", xwidget::cdef_display));
+  cls.install_method(cm.make_method(cls, "id", xwidget::cdef_id));
 
-inline void xwidget::set_widget(octave_classdef* obj, xwidget const* widget)
-{
-
-  obj->get_object_ref().put(XWIDGET_POINTER_PROPERTY, reinterpret_cast<uintptr_t>(widget));
+  interpreter.get_symbol_table().install_built_in_function(XWIDGET_CLASS_NAME, cls.get_constructor_function());
 }
 
 }  // namespace xeus_octave::widgets

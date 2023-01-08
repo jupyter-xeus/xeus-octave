@@ -1,5 +1,5 @@
 classdef Layout < xwidgets.Widget
-	properties
+	properties (Sync = true)
 		_view_name = "LayoutView";
 		_model_name = "LayoutModel";
 

@@ -5,7 +5,7 @@ classdef DOMWidget < xwidgets.Widget
 		end
 	end
 
-	properties
+	properties (Sync = true)
 		_model_name = "DOMWidgetModel";
 		_view_name = "DOMWidgetView";
 

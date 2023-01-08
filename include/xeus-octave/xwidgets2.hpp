@@ -32,18 +32,20 @@
 namespace xeus_octave::widgets
 {
 
+void register_all2(octave::interpreter&);
+
 constexpr inline char const* XWIDGET_CLASS_NAME = "__xwidget_internal__";
 
-class xwidget : public xw::xcommon
+class xwidget : public octave::handle_cdef_object, public xw::xcommon
 {
+
 public:
 
-  using base_type = xcommon;
-  using base_type::notify;
+  void put(std::string const&, octave_value const&) override;
 
 private:
 
-  xwidget(octave::interpreter&, octave::cdef_object_rep*);
+  xwidget();
   ~xwidget();
 
   void open();
@@ -53,28 +55,17 @@ private:
   void apply_patch(nl::json const&, xeus::buffer_sequence const&);
   void handle_message(xeus::xmessage const&);
 
-public:
-
-  static void register_all(octave::interpreter&);
-  static xwidget* get_widget(octave_classdef const*);
-
 private:
 
-  static octave_value_list cdef_constructor(octave::interpreter& interpreter, octave_value_list const&, int);
-  static octave_value_list cdef_destructor(octave_value_list const&, int);
+  static octave_value_list cdef_constructor(octave_value_list const&, int);
   static octave_value_list cdef_display(octave_value_list const&, int);
-  static octave_value_list cdef_subsasgn(octave::interpreter&, octave_value_list const&, int);
-  static octave_value_list cdef_id(octave::interpreter&, octave_value_list const&, int);
-
-  static void set_widget(octave_classdef* cls, xwidget const*);
+  static octave_value_list cdef_id(octave_value_list const&, int);
 
   template <typename T> friend inline void xw::xwidgets_serialize(T const& value, nl::json& j, xeus::buffer_sequence&);
-
-private:
-
-  octave::cdef_object_rep* m_obj;
-  octave::interpreter& m_interpreter;
+  friend void xeus_octave::widgets::register_all2(octave::interpreter&);
 };
+
+xwidget* get_widget(octave_classdef const*);
 
 }  // namespace xeus_octave::widgets
 #endif

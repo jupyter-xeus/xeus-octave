@@ -410,7 +410,7 @@ void xoctave_interpreter::configure_impl()
   xeus_octave::io::register_input(m_stdin);
 
   // Register the widget system
-  xeus_octave::widgets::xwidget::register_all(interpreter);
+  xeus_octave::widgets::register_all2(interpreter);
 
   // Install version variable
   interpreter.get_symbol_table().install_built_in_function(

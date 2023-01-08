@@ -1,5 +1,5 @@
 classdef SliderStyle < xwidgets.DescriptionStyle & xwidgets.CoreWidget
-	properties
+	properties (Sync = true)
 		_model_name = "SliderStyleModel";
 		handle_color = "";
 	end

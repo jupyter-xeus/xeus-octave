@@ -1,5 +1,5 @@
 classdef ButtonStyle < xwidgets.Widget & xwidgets.CoreWidget
-	properties
+	properties (Sync = true)
 		_model_name = "ButtonStyleModel";
 
 		button_color = "";

@@ -72,7 +72,7 @@ inline void to_json(nl::json& j, Cell const& mv)
 inline void to_json(nl::json& j, octave_classdef const& cdv)
 {
   if (cdv.is_instance_of(xeus_octave::widgets::XWIDGET_CLASS_NAME))
-    j = "IPY_MODEL_" + std::string(xeus_octave::widgets::xwidget::get_widget(&cdv)->id());
+    j = "IPY_MODEL_" + std::string(xeus_octave::widgets::get_widget(&cdv)->id());
   else
     warning("xwidget: cannot serialize classdef");
 }
