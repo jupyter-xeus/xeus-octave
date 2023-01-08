@@ -112,6 +112,7 @@ set(
     include/xeus-octave/plotstream.hpp
     include/xeus-octave/tex2html.hpp
     include/xeus-octave/display.hpp
+    include/xeus-octave/xwidgets2.hpp
 )
 
 set(
@@ -122,6 +123,7 @@ set(
     src/xinterpreter.cpp
     src/input.cpp
     src/output.cpp
+    src/xwidgets2.cpp
 )
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
