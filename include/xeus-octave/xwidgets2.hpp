@@ -27,6 +27,7 @@
 #include <octave/ov.h>
 #include <octave/ovl.h>
 
+#include <string>
 #include <xwidgets/xcommon.hpp>
 
 namespace xeus_octave::widgets
@@ -55,9 +56,21 @@ private:
   void apply_patch(nl::json const&, xeus::buffer_sequence const&);
   void handle_message(xeus::xmessage const&);
 
+  /**
+   * @brief call any observers set in the octave interpreter context for the
+   * specified property name
+   */
+  void notify_backend(std::string const&) const;
+  /**
+   * @brief send to the frontend a new value for the specified property.
+   * Octave value is automatically converted to a json value
+   */
+  void notify_frontend(std::string const&, octave_value const&);
+
 private:
 
   static octave_value_list cdef_constructor(octave_value_list const&, int);
+  static octave_value_list cdef_observe(octave_value_list const&, int);
   static octave_value_list cdef_display(octave_value_list const&, int);
   static octave_value_list cdef_id(octave_value_list const&, int);
 

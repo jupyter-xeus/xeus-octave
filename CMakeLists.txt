@@ -72,6 +72,8 @@ option(
 # ============
 
 find_package(xeus-zmq REQUIRED)
+find_package(xwidgets REQUIRED)
+find_package(xproperty REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glad REQUIRED)
 find_package(glfw3)
@@ -228,7 +230,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
 
     target_link_libraries(
         ${target_name}
-        PUBLIC xtl PkgConfig::octinterp
+        PUBLIC xtl xwidgets PkgConfig::octinterp
         PRIVATE glad::glad glfw PNG::PNG
     )
     if(XEUS_OCTAVE_USE_SHARED_XEUS)

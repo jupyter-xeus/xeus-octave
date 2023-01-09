@@ -32,6 +32,7 @@
 #include <octave/ov-classdef.h>
 #include <octave/ov.h>
 #include <octave/ovl.h>
+#include <octave/parse.h>
 #include <xwidgets/xcommon.hpp>
 
 #include "xeus-octave/json.hpp"
@@ -98,7 +99,7 @@ namespace
  * @param property reference to a property definition object
  * @return true if property has attribute "Sync" set to true
  */
-bool is_sync_property(octave::cdef_property& property)
+inline bool is_sync_property(octave::cdef_property& property)
 {
   return !property.get("Sync").isempty() && property.get("Sync").bool_value();
 }
@@ -115,8 +116,8 @@ void xwidget::serialize_state(nl::json& state, xeus::buffer_sequence& buffers) c
     octave::cdef_property property = property_tuple.second;
     if (is_sync_property(property))
     {
-      octave_value ov = this->get(property.get_name());
-      xw::xwidgets_serialize(ov, state[property.get_name()], buffers);
+      octave_value ov = this->get(property_tuple.first);
+      xw::xwidgets_serialize(ov, state[property_tuple.first], buffers);
     }
   }
 }
@@ -129,10 +130,11 @@ void xwidget::apply_patch(nl::json const& state, xeus::buffer_sequence const&)
   for (auto property_tuple : properties)
   {
     octave::cdef_property property = property_tuple.second;
-    if (is_sync_property(property) && state.contains(property.get_name()))
+    if (properties.count(property_tuple.first) && is_sync_property(property) && state.contains(property_tuple.first))
     {
       // Call superclass put to avoid notifying the view again in a loop
-      octave::handle_cdef_object::put(property.get_name(), state[property.get_name()]);
+      octave::handle_cdef_object::put(property_tuple.first, state[property_tuple.first]);
+      this->notify_backend(property_tuple.first);
     }
   }
 }
@@ -145,10 +147,35 @@ void xwidget::put(std::string const& pname, octave_value const& val)
     octave::cdef_class cls = this->get_class();
     auto properties = cls.get_property_map(octave::cdef_class::property_all);
 
-    if (is_sync_property(properties[pname]))
+    if (properties.count(pname) && is_sync_property(properties[pname]))
     {
       std::clog << "Notify change " << pname << std::endl;
-      this->notify(pname, val);
+      this->notify_frontend(pname, val);
+      this->notify_backend(pname);
+    }
+  }
+}
+
+void xwidget::notify_frontend(std::string const& name, octave_value const& value)
+{
+  xw::xcommon::notify(name, value);
+}
+
+void xwidget::notify_backend(std::string const& pname) const
+{
+  // Get the observer property name
+  std::string oname = "__" + pname + "_observers__";
+  // Get the current list of handles
+  octave_value fcn_list_ov = this->get(oname);
+  // Call the observers
+  if (!fcn_list_ov.isempty())
+  {
+    Cell fcn_list = fcn_list_ov.cell_value();
+    for (octave_idx_type i = 0; i < fcn_list.numel(); i++)
+    {
+      // Object reference
+      octave::cdef_object obj(this->clone());
+      octave::feval(fcn_list(i), octave::to_ov(obj));
     }
   }
 }
@@ -219,6 +246,37 @@ octave_value_list xwidget::cdef_constructor(octave_value_list const& args, int)
   }
 }
 
+octave_value_list xwidget::cdef_observe(octave_value_list const& args, int)
+{
+  // Object reference
+  octave_classdef* obj = args(0).classdef_object_value();
+  // Property to observe
+  std::string pname = args(1).xstring_value("PNAME must be a string with the property name");
+  std::string oname = "__" + pname + "_observers__";
+  // Observer callback
+  octave_value fcn = args(2);
+  if (!fcn.is_function_handle())
+    error("HANDLE must be a function handle");
+
+  // Get the current list of handles
+  octave_value fcn_list_ov = obj->get_object_ref().get(oname);
+
+  std::clog << "Is empty: " << fcn_list_ov.isempty() << std::endl;
+
+  // Append the function handle
+  if (fcn_list_ov.isempty())
+    obj->get_object_ref().put(oname, Cell(fcn));
+  else
+  {
+    Cell fcn_list = obj->get_object_ref().get(oname).cell_value();
+    fcn_list.resize1(fcn_list.numel() + 1);
+    fcn_list(fcn_list.numel()) = fcn;
+    obj->get_object_ref().put(oname, fcn_list);
+  }
+
+  return ovl();
+}
+
 octave_value_list xwidget::cdef_display(octave_value_list const& args, int)
 {
   get_widget(args(0).classdef_object_value())->display();
@@ -244,6 +302,7 @@ void register_all2(octave::interpreter& interpreter)
   octave::cdef_class cls = cm.make_class(XWIDGET_CLASS_NAME, cm.find_class("handle"));
 
   cls.install_method(cm.make_method(cls, XWIDGET_CLASS_NAME, xwidget::cdef_constructor));
+  cls.install_method(cm.make_method(cls, "observe", xwidget::cdef_observe));
   cls.install_method(cm.make_method(cls, "display", xwidget::cdef_display));
   cls.install_method(cm.make_method(cls, "id", xwidget::cdef_id));
 
