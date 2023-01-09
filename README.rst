@@ -31,6 +31,59 @@ many types with ease.
 
 .. [[INTRODUCTION CONTENT END]]
 
+Features
+--------
+Graphical Toolkits
+~~~~~~~~~~~~~~~~~~
+Native Octave graphical toolkit.
+
+.. image:: docs/source/img/screenshots/plot.png
+   :alt: A two dimensional function plot is displayed.
+
+Plotly graphical toolkit.
+
+.. image:: docs/source/img/screenshots/plotly.gif
+   :alt: An interactive two dimensional function plot is displayed, the view and zoom can be changed
+
+Completion and Outputs
+~~~~~~~~~~~~~~~~~~~~~~
+Error are properly reported.
+
+.. image:: docs/source/img/screenshots/error.png
+   :alt: A function that does not exist get called, raithing an error.
+
+Code completion suggests possible matches.
+
+.. image:: docs/source/img/screenshots/completion.png
+   :alt: A dropdown window show completion matches for an incomplete function name.
+
+Help can be queried using a ``?`` after a function name.
+
+.. image:: docs/source/img/screenshots/help.png
+   :alt: The documentaion for of a function is show as a result of executing the cell.
+
+Rich Output
+~~~~~~~~~~~
+Matrices are displayed as tables.
+
+.. image:: docs/source/img/screenshots/table.png
+   :alt: A matrix is shown in HTML and Latex format.
+
+Data structures are displayed as json.
+
+.. image:: docs/source/img/screenshots/struct.png
+   :alt: A data structure is can be explored with folds and intends.
+
+Symbolic classes are displayed as latex.
+
+.. image:: docs/source/img/screenshots/formula.png
+   :alt: An explession is shown as a Latex formula.
+
+Images can be displayed.
+
+.. image:: docs/source/img/screenshots/image.png
+   :alt: An grayscale image of uniform random number is displayed.
+
 Installation
 ------------
 .. Used for including in Sphinx doc
