@@ -31,10 +31,40 @@ many types with ease.
 
 .. [[INTRODUCTION CONTENT END]]
 
+
+Usage
+-----
+
+Native Octave plots
+~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/native-octave-plots.png
+   :alt: Native Octave plots
+
+Interactive Plotly plots
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/interactive-plotly-plots.png
+   :alt: Interactive Plotly plots
+
+Rich display of structs
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/rich-display-structs.png
+   :alt: Rich display of structs
+
+Rich display of LaTeX equations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/rich-display-latex-and-input.png
+   :alt: Rich display of LaTeX equations
+
+
 Installation
 ------------
 .. Used for including in Sphinx doc
 .. [[INSTALLATION CONTENT START]]
+
 With mamba (or conda)
 ~~~~~~~~~~~~~~~~~~~~~
 *Xeus Octave* has been packaged for the mamba (or conda) package manager.
