@@ -4,7 +4,7 @@
 
    The full license is in the file LICENSE, distributed with this software.
 
-.. image:: xeus-octave-logo.svg
+.. image:: img/xeus-octave-logo.svg
    :alt: Xeus Octave logo
 
 

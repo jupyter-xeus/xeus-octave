@@ -1,4 +1,4 @@
-.. image:: docs/source/xeus-octave-logo.svg
+.. image:: docs/source/img/xeus-octave-logo.svg
    :alt: Xeus Octave
 
 .. image:: https://github.com/jupyter-xeus/xeus-octave/actions/workflows/main.yml/badge.svg
@@ -90,7 +90,7 @@ Trying it online
 ----------------
 To try out ``xeus-octave`` interactively in your web browser, just click on the binder link:
 
-.. image:: docs/source/binder-logo.svg
+.. image:: docs/source/img/binder-logo.svg
    :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
    :alt: Run on Binder
 
