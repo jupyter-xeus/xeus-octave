@@ -65,7 +65,7 @@ private:
   getObjectNumber(octave::graphics_object const& o, std::map<std::string, std::vector<unsigned long>>& ids) const;
 
   /**
-   * Get a vector of all the children of the @go octave::graphics_object
+   * Get a vector of all the children of the graphics object @p go.
    */
   std::vector<octave::graphics_object> children(octave::graphics_object const& go, bool all = false) const;
 
