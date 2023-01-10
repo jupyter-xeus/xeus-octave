@@ -10,7 +10,7 @@
    :alt: Documentation status on Readthedocs
 
 .. image:: https://mybinder.org/badge_logo.svg
-   :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/main?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
+   :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/stable?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
    :alt: Run on Binder
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
