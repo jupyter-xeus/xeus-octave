@@ -47,6 +47,12 @@ Interactive Plotly plots
 .. image:: docs/source/interactive-plotly-plots.png
    :alt: Interactive Plotly plots
 
+Rich display of tables
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/rich-display-tables.png
+   :alt: Rich display of tables
+
 Rich display of structs
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -59,6 +65,31 @@ Rich display of LaTeX equations
 .. image:: docs/source/rich-display-latex-and-input.png
    :alt: Rich display of LaTeX equations
 
+Rich display of images
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/rich-display-images.png
+   :alt: Rich display of images
+
+Code completion
+~~~~~~~~~~~~~~~
+
+.. image:: docs/source/code-completion.png
+   :alt: Dropdown completion of a function
+
+Code inspection and contextual help
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/code-inspection.png
+   :alt: Queriyng the help of a function
+
+.. image:: docs/source/contextual-help.png
+   :alt: Contextual help shown dynamically
+
+Stream support
+~~~~~~~~~~~~~~
+.. image:: docs/source/stream-support.png
+   :alt: Input and ouput streams
 
 Installation
 ------------
