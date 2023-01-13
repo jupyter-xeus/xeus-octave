@@ -20,6 +20,8 @@
 #ifndef XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 #define XEUS_OCTAVE_NOTEBOOK_TOOLKIT_H
 
+#include <vector>
+
 #include <octave/graphics-toolkit.h>
 #include <octave/interpreter.h>
 
@@ -28,21 +30,38 @@
 namespace xeus_octave::tk::notebook
 {
 
-class notebook_graphics_toolkit : public octave::base_graphics_toolkit
+/**
+ * Generic graphics_toolkit for rendering within a GLFW context. It cannot be
+ * used on its own, but must be inherited from the actual toolkits
+ */
+class glfw_graphics_toolkit : public octave::base_graphics_toolkit
 {
 public:
 
-  notebook_graphics_toolkit();
-  ~notebook_graphics_toolkit();
+  glfw_graphics_toolkit(std::string const&);
+  ~glfw_graphics_toolkit();
+
+  bool initialize(octave::graphics_object const&) override;
+  void redraw_figure(octave::graphics_object const&) const override;
+  virtual void send_figure(octave::graphics_object const&, std::vector<char> const&, int, int, double) const = 0;
+};
+
+/**
+ * Only "user ready" toolkit. It is based on simple display_data calls. Shows
+ * an empty image on creation with a display_data call. Subsequent redraws are
+ * served by a update_display_data call.
+ */
+class notebook_graphics_toolkit : public glfw_graphics_toolkit
+{
+public:
+
+  notebook_graphics_toolkit() : glfw_graphics_toolkit("notebook") {}
 
   bool is_valid() const override { return true; }
 
   bool initialize(octave::graphics_object const&) override;
-  void redraw_figure(octave::graphics_object const&) const override;
+  void send_figure(octave::graphics_object const&, std::vector<char> const&, int, int, double) const override;
   void show_figure(octave::graphics_object const&) const override;
-  void update(octave::graphics_object const&, int) override;
-
-  void finalize(octave::graphics_object const&) override;
 };
 
 void register_all(octave::interpreter& interpreter);

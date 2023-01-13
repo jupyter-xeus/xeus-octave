@@ -65,7 +65,7 @@ bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
 void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 {
   // Retrieve the figure id
-  std::string id = getPlotStream(go);
+  std::string id = getPlotStream<std::string>(go);
 
   if (go.isa("figure"))
   {
@@ -525,7 +525,7 @@ void plotly_graphics_toolkit::show_figure(oc::graphics_object const& go) const
 {
   // Get an unique identifier for this object, to be used as a display id
   // in the display_data request for subsequent updates of the plot
-  std::string id = getPlotStream(go);
+  std::string id = getPlotStream<std::string>(go);
 
   // Display an empty figure (this is equivalent to the action of creating)
   // a window, and prepares a display with the correct display_id for

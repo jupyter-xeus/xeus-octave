@@ -54,107 +54,13 @@ using namespace std::chrono;
 namespace xeus_octave::tk::notebook
 {
 
-notebook_graphics_toolkit::notebook_graphics_toolkit() : base_graphics_toolkit("notebook")
-{
-  glfwSetErrorCallback([](int error, char const* description)
-                       { std::clog << "GLFW Error: " << description << " (" << error << ")" << '\n'; });
-
-  glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
-
-  if (!glfwInit())
-  {
-    std::clog << "Cannot initialize GLFW" << '\n';
-    return;
-  }
-
-  glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-
-  GLFWwindow* window = glfwCreateWindow(1, 1, "", NULL, NULL);
-  if (!window)
-  {
-    glfwTerminate();
-    return;
-  }
-
-  glfwMakeContextCurrent(window);
-
-  gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-
-#ifndef NDEBUG
-  std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << '\n';
-  std::clog << "OpenGL renderer: " << glGetString(GL_RENDERER) << '\n';
-  std::clog << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
-#endif
-
-  glfwDestroyWindow(window);
-}
-
-notebook_graphics_toolkit::~notebook_graphics_toolkit()
-{
-  glfwTerminate();
-}
-
-bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
-{
-  // We use this call for initializing only the figure
-  if (go.isa("figure"))
-  {
-    // Set the pixel ratio
-    auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
-
-    // Get monitor scale
-    float xscale, yscale;
-
-    if (auto* monitor = glfwGetPrimaryMonitor())
-      glfwGetMonitorContentScale(monitor, &xscale, &yscale);
-    else
-      xscale = yscale = 1;
-
-    float dpr = std::max(xscale, yscale);
-
-#ifndef NDEBUG
-    std::clog << "Device pixel ratio: " << dpr << '\n';
-#endif
-
-    // Store it in the figure
-    figureProperties.set___device_pixel_ratio__(dpr);
-
-    // Create a new object id and store it in the figure
-    setPlotStream(go, xeus::new_xguid());
-
-    // Request to show the empty figure (this serves as a placeholder to
-    // keep the output order, as the figures are drawn after the last line
-    // is executed)
-    show_figure(go);
-
-    return true;
-  }
-
-  return false;
-}
-
-void notebook_graphics_toolkit::finalize(oc::graphics_object const&)
-{
-  // Unused
-}
-
-void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
-{
-  // Get an unique identifier for this object, to be used as a display id
-  // in the display_data request for subsequent updates of the plot
-  std::string id = getPlotStream(go);
-
-  // Display an empty figure (this is equivalent to the action of creating)
-  // a window, and prepares a display with the correct display_id for
-  // future updates
-  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-    .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
-}
-
 namespace
 {
 
-auto png_encode(std::vector<unsigned char>& data, unsigned int width, unsigned int height) -> std::string
+/**
+ * Encode a set of opengl pixels to a PNG stream stored in a std::vector
+ */
+auto png_encode(std::vector<unsigned char>& data, unsigned int width, unsigned int height)
 {
   // A RAII structure to manage the lifetime of PNG structures
   struct PngManager
@@ -192,13 +98,14 @@ auto png_encode(std::vector<unsigned char>& data, unsigned int width, unsigned i
     rows[height - 1 - y] = data.data() + y * width * 3;
   png_set_rows(m.png, m.info, &rows[0]);
 
-  auto img = std::string();
+  std::vector<char> out;
+
   png_set_write_fn(
     m.png,
-    &img,
+    &out,
     [](png_structp png_, png_bytep d, png_size_t l)
     {
-      std::string* img_ptr = static_cast<std::string*>(png_get_io_ptr(png_));
+      std::vector<char>* img_ptr = static_cast<std::vector<char>*>(png_get_io_ptr(png_));
       img_ptr->insert(img_ptr->end(), d, d + l);
     },
     nullptr
@@ -206,19 +113,87 @@ auto png_encode(std::vector<unsigned char>& data, unsigned int width, unsigned i
 
   png_write_png(m.png, m.info, PNG_TRANSFORM_IDENTITY, NULL);
 
-  return img;
+  return out;
 }
 
 }  // namespace
 
-void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
+glfw_graphics_toolkit::glfw_graphics_toolkit(std::string const& nm) : octave::base_graphics_toolkit(nm)
+{
+  glfwSetErrorCallback([](int error, char const* description)
+                       { std::clog << "GLFW Error: " << description << " (" << error << ")" << '\n'; });
+
+  glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
+
+  if (!glfwInit())
+  {
+    std::clog << "Cannot initialize GLFW" << '\n';
+    return;
+  }
+
+  glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+  GLFWwindow* window = glfwCreateWindow(1, 1, "", NULL, NULL);
+  if (!window)
+  {
+    glfwTerminate();
+    return;
+  }
+
+  glfwMakeContextCurrent(window);
+
+  gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+
+#ifndef NDEBUG
+  std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << '\n';
+  std::clog << "OpenGL renderer: " << glGetString(GL_RENDERER) << '\n';
+  std::clog << "OpenGL version: " << glGetString(GL_VERSION) << '\n';
+#endif
+
+  glfwDestroyWindow(window);
+}
+
+glfw_graphics_toolkit::~glfw_graphics_toolkit()
+{
+  glfwTerminate();
+}
+
+bool glfw_graphics_toolkit::initialize(octave::graphics_object const& go)
+{
+  // We use this call for initializing only the figure
+  if (go.isa("figure"))
+  {
+    // Set the pixel ratio
+    auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
+
+    // Get monitor scale
+    float xscale, yscale;
+
+    if (auto* monitor = glfwGetPrimaryMonitor())
+      glfwGetMonitorContentScale(monitor, &xscale, &yscale);
+    else
+      xscale = yscale = 1;
+
+    float dpr = std::max(xscale, yscale);
+
+#ifndef NDEBUG
+    std::clog << "Device pixel ratio: " << dpr << '\n';
+#endif
+
+    // Store it in the figure
+    figureProperties.set___device_pixel_ratio__(dpr);
+
+    return true;
+  }
+
+  return false;
+}
+
+void glfw_graphics_toolkit::redraw_figure(octave::graphics_object const& go) const
 {
 #ifndef NDEBUG
   auto start = high_resolution_clock::now();
 #endif
-
-  // Retrieve the figure id
-  std::string id = getPlotStream(go);
 
   // Get width height and scale factor
   auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
@@ -268,7 +243,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
 #ifndef NDEBUG
   auto encode_start = high_resolution_clock::now();
 #endif
-  std::string img = png_encode(screen, uwidth, uheight);
+  auto img = png_encode(screen, uwidth, uheight);
 #ifndef NDEBUG
   auto encode_stop = high_resolution_clock::now();
   auto encode_duration = duration_cast<microseconds>(encode_stop - encode_start);
@@ -278,19 +253,7 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   auto send_start = high_resolution_clock::now();
 #endif
 
-  nl::json data, meta, tran;
-
-  data["image/png"] = xtl::base64encode(img);
-  // Send real width and height through metadata for optimal scaling
-  meta["image/png"] = {
-    {"width", width / dpr},
-    {"height", height / dpr},
-  };
-  // Dislplay id for updating existing display
-  tran["display_id"] = id;
-
-  // Update
-  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
+  send_figure(go, img, width, height, dpr);
 
 #ifndef NDEBUG
   auto send_stop = high_resolution_clock::now();
@@ -305,9 +268,59 @@ void notebook_graphics_toolkit::redraw_figure(oc::graphics_object const& go) con
   glfwDestroyWindow(window);
 }
 
-void notebook_graphics_toolkit::update(oc::graphics_object const&, int)
+bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
 {
-  // Unused
+  bool ret = glfw_graphics_toolkit::initialize(go);
+
+  if (go.isa("figure"))
+  {
+    // Create a new object id and store it in the figure
+    setPlotStream(go, xeus::new_xguid());
+
+    // Request to show the empty figure (this serves as a placeholder to
+    // keep the output order, as the figures are drawn after the last line
+    // is executed)
+    show_figure(go);
+
+    return true;
+  }
+
+  return ret;
+}
+
+void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
+{
+  // Get an unique identifier for this object, to be used as a display id
+  // in the display_data request for subsequent updates of the plot
+  std::string id = getPlotStream<std::string>(go);
+
+  // Display an empty figure (this is equivalent to the action of creating)
+  // a window, and prepares a display with the correct display_id for
+  // future updates
+  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
+    .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
+}
+
+void notebook_graphics_toolkit::send_figure(
+  oc::graphics_object const& go, std::vector<char> const& img, int width, int height, double dpr
+) const
+{
+  // Retrieve the figure id
+  std::string id = getPlotStream<std::string>(go);
+
+  nl::json data, meta, tran;
+
+  data["image/png"] = xtl::base64encode(std::string(img.begin(), img.end()));
+  // Send real width and height through metadata for optimal scaling
+  meta["image/png"] = {
+    {"width", width / dpr},
+    {"height", height / dpr},
+  };
+  // Dislplay id for updating existing display
+  tran["display_id"] = id;
+
+  // Update
+  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
 }
 
 void register_all(octave::interpreter& interpreter)
