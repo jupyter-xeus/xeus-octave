@@ -122,7 +122,7 @@ void xwidget::serialize_state(nl::json& state, xeus::buffer_sequence& buffers) c
   }
 }
 
-void xwidget::apply_patch(nl::json const& state, xeus::buffer_sequence const&)
+void xwidget::apply_patch(nl::json const& state, xeus::buffer_sequence const& buffers)
 {
   octave::cdef_class cls = this->get_class();
   auto properties = cls.get_property_map(octave::cdef_class::property_all);
@@ -132,8 +132,10 @@ void xwidget::apply_patch(nl::json const& state, xeus::buffer_sequence const&)
     octave::cdef_property property = property_tuple.second;
     if (properties.count(property_tuple.first) && is_sync_property(property) && state.contains(property_tuple.first))
     {
+      octave_value value;
+      xw::xwidgets_deserialize(value, state[property_tuple.first], buffers);
       // Call superclass put to avoid notifying the view again in a loop
-      octave::handle_cdef_object::put(property_tuple.first, state[property_tuple.first]);
+      octave::handle_cdef_object::put(property_tuple.first, value);
       this->notify_backend(property_tuple.first);
     }
   }
@@ -158,7 +160,10 @@ void xwidget::put(std::string const& pname, octave_value const& val)
 
 void xwidget::notify_frontend(std::string const& name, octave_value const& value)
 {
-  xw::xcommon::notify(name, value);
+  nl::json state;
+  xeus::buffer_sequence buffers;
+  xw::xwidgets_serialize(value, state[name], buffers);
+  send_patch(std::move(state), std::move(buffers));
 }
 
 void xwidget::notify_backend(std::string const& pname) const
