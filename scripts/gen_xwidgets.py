@@ -1,6 +1,37 @@
+from textwrap import indent
+
 from ipywidgets import widgets
 from traitlets import CaselessStrEnum, Instance, Unicode, Bool, CFloat, Float, CInt, Int
 from ipywidgets.widgets.trait_types import TypedTuple
+
+def setter(name, incode):
+	code = [
+		"\n",
+		f"function set.{name}(obj, value)",
+		indent(incode, "\t"),
+		"endfunction"
+	]
+	return '\n'.join(code)
+
+def enum_setter(name, values):
+	members = [f'"{val}"' for val in values]
+	return setter(name, f"mustBeMember(value, {{ {','.join(members)} }});")
+
+def cellstr_setter(name):
+	code = [
+		"if ! iscellstr(value)",
+		'	error ("input must be a cellstr");',
+	 	"end"
+	]
+	return setter(name, '\n'.join(code))
+
+def instance_setter(name, instance_name):
+	code = [
+		f'if ! isa(value, "xwidgets.{instance_name}")',
+		f'	error ("input must be instance of {instance_name}");',
+		"end"
+	]
+	return setter(name, '\n'.join(code))
 
 if __name__ == '__main__':
 	widget_list = sorted(widgets.Widget._widget_types.items())
@@ -25,7 +56,7 @@ if __name__ == '__main__':
 
 		with open(f"{widget_name}.m", "w") as cd:
 			setters = []
-			initializers = []
+			initializers = {}
 
 			cd.write(f"classdef {widget_name} < __xwidget_internal__\n")
 			cd.write("\n\tproperties (Sync = true)\n\n")
@@ -41,10 +72,7 @@ if __name__ == '__main__':
 				cd.write(f"\t\t{name}")
 
 				if isinstance(trait, CaselessStrEnum):
-					setters.append(f"""
-		function set.{name}(obj, value)
-			mustBeMember(value, {{ {",".join([f'"{val}"' for val in trait.values])} }});
-		endfunction\n""")
+					setters.append(indent(enum_setter(name, trait.values), '\t\t'))
 					if trait.default() is not None:
 						cd.write(f" = \"{trait.default()}\"")
 				elif isinstance(trait, Unicode):
@@ -52,12 +80,7 @@ if __name__ == '__main__':
 						cd.write(f" = \"{trait.default()}\"")
 				elif isinstance(trait, TypedTuple):
 					if isinstance(trait._trait, Unicode):
-						setters.append(f"""
-		function set.{name}(obj, value)
-			if ! iscellstr(value)
-				error ("Error");
-			end
-		endfunction\n""")
+						setters.append(indent(cellstr_setter(name), '\t\t'))
 				elif isinstance(trait, Bool):
 					if trait.default() is not None:
 						cd.write(f" = {str(trait.default()).lower()}")
@@ -73,16 +96,8 @@ if __name__ == '__main__':
 							instance_name = widget_data[2].removesuffix("Model")
 							break
 
-					setters.append(f"""
-		function set.{name}(obj, value)
-			if ! isa(value, "xwidgets.{instance_name}")
-				error ("Error");
-			end
-		endfunction\n""")
-					initializers.append(f"{name} = xwidgets.{instance_name}")
-
-					# if (trait.klass not in [i[1] for i in widget_list] and trait.klass is not widgets.Widget):
-					# 	widget_list.append((trait.klass.__name__, trait.klass))
+					setters.append(indent(instance_setter(name, instance_name), '\t\t'))
+					initializers[name] = f"xwidgets.{instance_name}"
 				else:
 					print(f"Unhandled property {name} of {widget_name}")
 
@@ -90,18 +105,19 @@ if __name__ == '__main__':
 
 			cd.write("\n\tend\n")
 
+			# Methods section, setters and constructor.
 			if setters or initializers:
 				cd.write("\n\tmethods (Sync = true)\n")
 
 				# Properties to be initialized in constructor
 				if initializers:
 					cd.write(f"\n\t\tfunction obj = {klass.__name__}()\n")
-					for initializer in initializers:
-						cd.write(f"\t\t\tobj.{initializer};\n")
-					cd.write("\t\tendfunction\n")
+					for name, value in initializers.items():
+						cd.write(f"\t\t\tobj.{name} = {value};\n")
+					cd.write("\t\tendfunction")
 
-				for setter in setters:
-					cd.write(setter)
+				for s in setters:
+					cd.write(s)
 
 				cd.write("\n\tend\n")
 
