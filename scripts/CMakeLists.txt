@@ -7,7 +7,6 @@ execute_process(
 )
 
 set(WIDGETS_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-# set(WIDGETS_OUT_DIR ${CMAKE_BINARY_DIR}/share/xeus-octave/+xwidgets)
 
 # add the custom commands for each document
 foreach(WIDGET ${WIDGETS})
