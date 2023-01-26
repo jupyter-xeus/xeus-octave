@@ -130,6 +130,8 @@ set(
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
 
+add_subdirectory(scripts)
+
 # Targets and link - Macros
 # =========================
 
