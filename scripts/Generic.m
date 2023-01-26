@@ -8,7 +8,7 @@
 		%[[[end]]]
 	end
 
-	methods (Sync = true)
+	methods ()
 
 		%[[[cog constructor() ]]]
 		%[[[end]]]

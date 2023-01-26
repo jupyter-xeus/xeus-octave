@@ -41,6 +41,25 @@
 namespace xw
 {
 
+inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer_sequence& b);
+
+namespace
+{
+
+template <typename M> inline void xwidgets_serialize_matrix_like(M const& mv, nl::json& j, xeus::buffer_sequence& b)
+{
+  j = nl::json::array();
+
+  for (octave_idx_type i = 0; i < mv.numel(); i++)
+  {
+    nl::json e;
+    xwidgets_serialize(mv.elem(i), e, b);
+    j.push_back(e);
+  }
+}
+
+}  // namespace
+
 inline void xwidgets_serialize(octave_classdef const& cdv, nl::json& j, xeus::buffer_sequence&)
 {
   if (cdv.is_instance_of(xeus_octave::widgets::XWIDGET_CLASS_NAME))
@@ -49,12 +68,14 @@ inline void xwidgets_serialize(octave_classdef const& cdv, nl::json& j, xeus::bu
     warning("xwidget: cannot serialize classdef");
 }
 
-inline void xwidgets_serialize(Array<std::string> const& mv, nl::json& j, xeus::buffer_sequence&)
+inline void xwidgets_serialize(Array<std::string> const& mv, nl::json& j, xeus::buffer_sequence& b)
 {
-  j = nl::json::array();
+  xwidgets_serialize_matrix_like(mv, j, b);
+}
 
-  for (octave_idx_type i = 0; i < mv.numel(); i++)
-    j.push_back(mv.elem(i));
+inline void xwidgets_serialize(Cell const& cv, nl::json& j, xeus::buffer_sequence& b)
+{
+  xwidgets_serialize_matrix_like(cv, j, b);
 }
 
 inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer_sequence& b)
@@ -67,10 +88,10 @@ inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer
     xwidgets_serialize(ov.int64_value(), j, b);
   else if (ov.is_string())
     xwidgets_serialize(ov.string_value(), j, b);
-  else if (ov.iscellstr())
-    xwidgets_serialize(ov.cellstr_value(), j, b);
   else if (ov.is_classdef_object())
     xwidgets_serialize(*ov.classdef_object_value(), j, b);
+  else if (ov.iscell())
+    xwidgets_serialize(ov.cell_value(), j, b);
   else if (ov.isnull())
     xwidgets_serialize(nullptr, j, b);
   else
