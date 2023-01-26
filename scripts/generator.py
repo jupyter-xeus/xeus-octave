@@ -5,7 +5,7 @@ import traitlets
 from ipywidgets import widgets
 from pathlib import Path
 from typing import Type
-from ipywidgets.widgets.trait_types import TypedTuple, InstanceDict, NumberFormat, Color
+from ipywidgets.widgets.trait_types import TypedTuple, InstanceDict, NumberFormat, Color, CByteMemoryView
 
 widget_list = sorted(widgets.Widget._widget_types.items())
 widget_name = Path(cog.outFile).stem
@@ -54,15 +54,20 @@ def properties():
 				cog.out(f" = {default}")
 			elif type(trait) is traitlets.Bool:
 				cog.out(f" = {str(default).lower()}")
-			elif type(trait) is TypedTuple:
-				if type(trait._trait) is traitlets.Unicode:
-					elements = [f'"{val}"' for val in default]
-					cog.out(f" = {{ {','.join(elements)} }}")
+			elif type(trait) is TypedTuple and type(trait._trait) is traitlets.Unicode:
+				pass
+			elif type(trait) is traitlets.List and type(trait._trait) is traitlets.Unicode:
+				pass
 			elif type(trait) in (traitlets.Instance, InstanceDict) and issubclass(trait.klass, widgets.Widget): # type: ignore
-				# To avoid warning
+				pass
+			elif type(trait) is TypedTuple and type(trait._trait) is traitlets.Instance and issubclass(trait._trait.klass, widgets.Widget): # type: ignore
+				pass
+			elif type(trait) is CByteMemoryView:
 				pass
 			else:
 				cog.msg(f"Unhandled default of {trait_name}")
+		else:
+			cog.out(" = []")
 
 		cog.outl(";")
 
@@ -82,6 +87,15 @@ def initializers():
 					break
 
 			cog.outl(f"obj.{trait_name} = xwidgets.{instance_name};")
+		elif (type(trait) is TypedTuple and type(trait._trait) is traitlets.Unicode) or (type(trait) is traitlets.List and type(trait._trait) is traitlets.Unicode):
+			default = trait.default()
+			if default is not None:
+				elements = [f'"{val}"' for val in default]
+				cog.outl(f"obj.{trait_name} = {{ {','.join(elements)} }};")
+		elif type(trait) is TypedTuple and type(trait._trait) is traitlets.Instance and issubclass(trait._trait.klass, widgets.Widget): # type: ignore
+			cog.outl(f"obj.{trait_name} = {{}};")
+		elif type(trait) is CByteMemoryView:
+			cog.outl(f"obj.{trait_name} = uint8([]);")
 
 def setters():
 	for trait_name, trait in widget.traits(sync=True).items():
@@ -101,7 +115,7 @@ def setters():
 		elif type(trait) in (traitlets.Unicode, NumberFormat, Color):
 			cog.out(f"""
 				function set.{trait_name}(obj, value)
-					if !isstring(value)
+					if !ischar(value)
 						error ("input must be a string");
 					end
 
@@ -111,7 +125,7 @@ def setters():
 		elif type(trait) is traitlets.CUnicode:
 			cog.out(f"""
 				function set.{trait_name}(obj, value)
-					if !isstring(value)
+					if !ischar(value)
 						obj.{trait_name} = num2str(value);
 					else
 						obj.{trait_name} = value;
@@ -163,18 +177,25 @@ def setters():
 					obj.{trait_name} = value;
 				endfunction
 			""", dedent=True, trimblanklines=False)
-		elif type(trait) is TypedTuple:
-			if type(trait._trait) is traitlets.Unicode:
-				cog.out(f"""
-					function set.{trait_name}(obj, value)
-						if !iscellstr(value)
-							error ("input must be an array of strings");
-						end
+		elif type(trait) is TypedTuple and type(trait._trait) is traitlets.Unicode:
+			cog.out(f"""
+				function set.{trait_name}(obj, value)
+					if !iscellstr(value)
+						error ("input must be an array of strings");
+					end
 
-						obj.{trait_name} = value;
-					endfunction
-				""", dedent=True, trimblanklines=False)
-			else:
-				cog.msg(f"Unhandled setter of {trait_name} {type(trait)}")
+					obj.{trait_name} = value;
+				endfunction
+			""", dedent=True, trimblanklines=False)
+		elif type(trait) is CByteMemoryView:
+			cog.out(f"""
+				function set.{trait_name}(obj, value)
+					if !strcmp(value), "uint8 matrix")
+						error ("input must be an array of uint8 bytes");
+					end
+
+					obj.{trait_name} = value;
+				endfunction
+			""", dedent=True, trimblanklines=False)
 		else:
 			cog.msg(f"Unhandled setter of {trait_name} {type(trait)}")

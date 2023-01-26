@@ -35,12 +35,49 @@
 #include <octave/parse.h>
 #include <xwidgets/xcommon.hpp>
 
-#include "xeus-octave/json.hpp"
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xwidgets2.hpp"
 
 namespace xw
 {
+
+inline void xwidgets_serialize(octave_classdef const& cdv, nl::json& j, xeus::buffer_sequence&)
+{
+  if (cdv.is_instance_of(xeus_octave::widgets::XWIDGET_CLASS_NAME))
+    j = "IPY_MODEL_" + std::string(xeus_octave::widgets::get_widget(&cdv)->id());
+  else
+    warning("xwidget: cannot serialize classdef");
+}
+
+inline void xwidgets_serialize(Array<std::string> const& mv, nl::json& j, xeus::buffer_sequence&)
+{
+  j = nl::json::array();
+
+  for (octave_idx_type i = 0; i < mv.numel(); i++)
+    j.push_back(mv.elem(i));
+}
+
+inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer_sequence& b)
+{
+  if (ov.is_bool_scalar())
+    xwidgets_serialize(ov.bool_value(), j, b);
+  else if (ov.is_real_scalar())
+    xwidgets_serialize(ov.scalar_value(), j, b);
+  else if (ov.isinteger())
+    xwidgets_serialize(ov.int64_value(), j, b);
+  else if (ov.is_string())
+    xwidgets_serialize(ov.string_value(), j, b);
+  else if (ov.iscellstr())
+    xwidgets_serialize(ov.cellstr_value(), j, b);
+  else if (ov.is_classdef_object())
+    xwidgets_serialize(*ov.classdef_object_value(), j, b);
+  else if (ov.isnull())
+    xwidgets_serialize(nullptr, j, b);
+  else
+    warning("xwidget: cannot serialize octave value %s", ov.type_name().data());
+}
+
+inline void xwidgets_deserialize(octave_value&, nl::json const&, xeus::buffer_sequence const&) {}
 
 }  // namespace xw
 
@@ -218,7 +255,16 @@ void xwidget::handle_message(xeus::xmessage const& message)
   }
 }
 
-octave_value_list xwidget::cdef_constructor(octave_value_list const& args, int)
+void xwidget::mark_as_constructed(octave::cdef_class const& cls)
+{
+  octave::handle_cdef_object::mark_as_constructed(cls);
+
+  if (m_ctor_list.empty())
+    // Open the comm
+    this->open();
+}
+
+octave_value_list xwidget::cdef_constructor(octave::interpreter& interpreter, octave_value_list const& args, int)
 {
   // Get a reference to the old object
   octave::cdef_object& obj = args(0).classdef_object_value()->get_object_ref();
@@ -236,10 +282,10 @@ octave_value_list xwidget::cdef_constructor(octave_value_list const& args, int)
     new_obj.set_class(cls);
     // Initialize the properties
     cls.initialize_object(new_obj);
+    // Construct superclasses (only handle)
+    interpreter.get_cdef_manager().find_class("handle").run_constructor(new_obj, ovl());
     // Replace the old object
     obj = new_obj;
-    // Open the comm
-    wdg->open();
 
     return ovl(octave::to_ov(new_obj));
   }

@@ -43,6 +43,7 @@ class xwidget : public octave::handle_cdef_object, public xw::xcommon
 public:
 
   void put(std::string const&, octave_value const&) override;
+  void mark_as_constructed(octave::cdef_class const& cls) override;
 
 private:
 
@@ -69,7 +70,7 @@ private:
 
 private:
 
-  static octave_value_list cdef_constructor(octave_value_list const&, int);
+  static octave_value_list cdef_constructor(octave::interpreter&, octave_value_list const&, int);
   static octave_value_list cdef_observe(octave_value_list const&, int);
   static octave_value_list cdef_display(octave_value_list const&, int);
   static octave_value_list cdef_id(octave_value_list const&, int);
