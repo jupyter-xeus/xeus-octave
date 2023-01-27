@@ -38,6 +38,7 @@ dependencies:
   - ccache
   - cmake-format
   - plotly
-  - ipywidgets
-  - widgetsnbextension =3.6.1
+  - ipywidgets =8
+  - widgetsnbextension
   - jupyter-dash
+  - mako
