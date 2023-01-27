@@ -130,7 +130,7 @@ set(
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
 
-add_subdirectory(scripts)
+add_subdirectory(share/xeus-octave/+xwidgets)
 
 # Targets and link - Macros
 # =========================
@@ -193,7 +193,7 @@ endmacro()
 # Scripts directory for xeus-octave
 set(
     XEUS_OCTAVE_SCRIPTS_BASEDIR
-    "share"
+    ${CMAKE_INSTALL_DATADIR}
     CACHE STRING "Xeus-octave scripts base directory"
 )
 
@@ -221,7 +221,8 @@ macro(xeus_octave_create_target target_name linkage output_name)
     target_compile_definitions(
         ${target_name}
         PUBLIC "XEUS_OCTAVE_EXPORTS"
-        PRIVATE XEUS_OCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/share/xeus-octave"
+        PRIVATE
+            XEUS_OCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/${XEUS_OCTAVE_SCRIPTS_BASEDIR}/xeus-octave"
     )
     target_compile_features(${target_name} PRIVATE cxx_std_17)
 
@@ -318,7 +319,7 @@ if(XEUS_OCTAVE_BUILD_EXECUTABLE)
     # Configuration and data directories for jupyter and xeus-octave
     set(
         XJUPYTER_DATA_DIR
-        "share/jupyter"
+        "${CMAKE_INSTALL_DATADIR}/jupyter"
         CACHE STRING "Jupyter data directory"
     )
 
@@ -336,6 +337,7 @@ if(XEUS_OCTAVE_BUILD_EXECUTABLE)
         DIRECTORY ${XOCTAVE_SCRIPTS_DIR}
         DESTINATION ${XEUS_OCTAVE_SCRIPTS_BASEDIR}
         PATTERN "*.in" EXCLUDE
+        PATTERN "+xwidgets" EXCLUDE
     )
 
     # Extra path for installing Jupyter kernelspec

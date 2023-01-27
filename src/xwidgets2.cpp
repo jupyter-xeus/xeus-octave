@@ -30,6 +30,7 @@
 #include <octave/error.h>
 #include <octave/ov-base.h>
 #include <octave/ov-classdef.h>
+#include <octave/ov-null-mat.h>
 #include <octave/ov.h>
 #include <octave/ovl.h>
 #include <octave/parse.h>
@@ -42,6 +43,7 @@ namespace xw
 {
 
 inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer_sequence& b);
+inline void xwidgets_deserialize(octave_value& ov, nl::json const& j, xeus::buffer_sequence const& b);
 
 namespace
 {
@@ -56,6 +58,16 @@ template <typename M> inline void xwidgets_serialize_matrix_like(M const& mv, nl
     xwidgets_serialize(mv.elem(i), e, b);
     j.push_back(e);
   }
+}
+
+template <typename T>
+inline void xwidgets_deserialize_matrix_like(octave_value& ov, nl::json const& j, xeus::buffer_sequence const& b)
+{
+  T p(dim_vector(static_cast<octave_idx_type>(j.size()), 1));
+  octave_idx_type i = 0;
+  for (auto& e : j)
+    xwidgets_deserialize(p(i++), e, b);
+  ov = p;
 }
 
 }  // namespace
@@ -84,7 +96,7 @@ inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer
     xwidgets_serialize(ov.bool_value(), j, b);
   else if (ov.is_real_scalar())
     xwidgets_serialize(ov.scalar_value(), j, b);
-  else if (ov.isinteger())
+  else if (ov.isinteger() && ov.is_scalar_type())
     xwidgets_serialize(ov.int64_value(), j, b);
   else if (ov.is_string())
     xwidgets_serialize(ov.string_value(), j, b);
@@ -98,7 +110,24 @@ inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer
     warning("xwidget: cannot serialize octave value %s", ov.type_name().data());
 }
 
-inline void xwidgets_deserialize(octave_value&, nl::json const&, xeus::buffer_sequence const&) {}
+inline void xwidgets_deserialize(octave_value& ov, nl::json const& j, xeus::buffer_sequence const& b)
+{
+  if (j.is_boolean())
+    ov = j.get<bool>();
+  else if (j.is_number_float())
+    ov = j.get<double>();
+  else if (j.is_number_integer())
+    ov = octave_int64(j.get<int64_t>());
+  else if (j.is_string())
+    ov = j.get<std::string>();
+  // No classdef at the moment
+  else if (j.is_array())
+    xwidgets_deserialize_matrix_like<Cell>(ov, j, b);
+  else if (j.is_null())
+    ov = octave_null_matrix::instance;
+  else
+    warning("xwidget: cannot deserialize json value %s", j.type_name());
+}
 
 }  // namespace xw
 

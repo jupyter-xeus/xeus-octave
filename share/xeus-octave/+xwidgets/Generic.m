@@ -8,7 +8,7 @@
 		%[[[end]]]
 	end
 
-	methods ()
+	methods
 
 		%[[[cog constructor() ]]]
 		%[[[end]]]
