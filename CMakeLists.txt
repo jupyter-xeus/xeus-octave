@@ -1,5 +1,5 @@
 # ##################################################################################################
-# Copyright (c) 2022, Giulio Girardi
+# Copyright (c) 2023, Giulio Girardi
 #
 # Distributed under the terms of the GNU General Public License v3.
 #
@@ -129,8 +129,6 @@ set(
 )
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
-
-add_subdirectory(share/xeus-octave/+xwidgets)
 
 # Targets and link - Macros
 # =========================
@@ -282,6 +280,8 @@ if(XEUS_OCTAVE_BUILD_EXECUTABLE)
     xeus_octave_set_common_options(xoctave)
     xeus_octave_set_kernel_options(xoctave)
 endif()
+
+add_subdirectory(share/xeus-octave/+xwidgets)
 
 # Installation
 # ============
