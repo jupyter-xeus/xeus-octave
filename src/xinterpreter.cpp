@@ -316,34 +316,38 @@ nl::json xoctave_interpreter::execute_request_impl(
     {
       auto const ename = "Interrupt exception";
       auto const evalue = "Kernel was interrupted";
+      auto traceback = fix_traceback(ename, evalue);
       interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
-      result = xeus::create_error_reply(ename, evalue);
+      publish_execution_error(ename, evalue, traceback);
+      result = xeus::create_error_reply(ename, evalue, traceback);
     }
     catch (oc::index_exception const& e)
     {
       auto const ename = "Index exception";
       auto evalue = e.message();
+      auto traceback = fix_traceback(ename, evalue, e.stack_trace());
       interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
-      result = xeus::create_error_reply(ename, evalue);
+      publish_execution_error(ename, evalue, traceback);
+      result = xeus::create_error_reply(ename, evalue, traceback);
     }
     catch (oc::execution_exception const& e)
     {
       auto const ename = "Execution exception";
       auto evalue = e.message();
+      auto traceback = fix_traceback(ename, evalue, e.stack_trace());
       interpreter.get_error_system().save_exception(e);
       interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
-      result = xeus::create_error_reply(ename, evalue);
+      publish_execution_error(ename, evalue, traceback);
+      result = xeus::create_error_reply(ename, evalue, traceback);
     }
     catch (std::bad_alloc const&)
     {
       auto const ename = "Memory exception";
       auto const evalue = "Could not allocate the memory required for the computation";
+      auto traceback = fix_traceback(ename, evalue);
       interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
-      result = xeus::create_error_reply(ename, evalue);
+      publish_execution_error(ename, evalue, traceback);
+      result = xeus::create_error_reply(ename, evalue, traceback);
     }
   }
 
