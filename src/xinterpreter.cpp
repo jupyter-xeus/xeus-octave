@@ -234,7 +234,7 @@ std::vector<std::string> fix_traceback(std::string const& ename, std::string con
 }  // namespace
 
 nl::json xoctave_interpreter::execute_request_impl(
-  int /*execution_counter*/,
+  int execution_counter,
   std::string const& code,
   bool silent,
   bool /*store_history*/,
@@ -242,6 +242,21 @@ nl::json xoctave_interpreter::execute_request_impl(
   bool allow_stdin
 )
 {
+  class parser : public oc::parser
+  {
+  public:
+
+    parser(int execution_counter, std::string const& eval_string, oc::interpreter& interp) :
+      oc::parser(eval_string, interp)
+    {
+      m_lexer.m_force_script = true;
+      m_lexer.prep_for_file();
+      m_lexer.m_fcn_file_full_name = "cell[" + std::to_string(execution_counter) + "]";
+    }
+
+    octave_value primary_fcn() { return m_primary_fcn; }
+  };
+
 #ifndef NDEBUG
   std::clog << "Executing: " << code << std::endl;
 #endif
@@ -279,7 +294,7 @@ nl::json xoctave_interpreter::execute_request_impl(
   else
   {
     // Execute code
-    auto str_parser = oc::parser(code, interpreter);
+    auto str_parser = parser(execution_counter, code, interpreter);
 
     // Clear current figure
     // This is useful for creating a figure in every cell, otherwise running code
@@ -289,64 +304,47 @@ nl::json xoctave_interpreter::execute_request_impl(
       dynamic_cast<octave::root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
     root_figure.set_currentfigure(octave_value(NAN));
 
-    // Code evaluation
-    int exit_status = 0;
-    do
+    try
     {
-      try
-      {
-        str_parser.reset();
-        exit_status = str_parser.run();
-
-        if (exit_status == 0)
-        {
-          auto stmt_list = str_parser.statement_list();
-
-          if (stmt_list)
-          {
-            interpreter.get_evaluator().eval(stmt_list, false);
-          }
-          else if (str_parser.at_end_of_input())
-          {
-            exit_status = EOF;
-            break;
-          }
-        }
-      }
-      catch (oc::interrupt_exception const&)
-      {
-        auto const ename = "Interrupt exception";
-        auto const evalue = "Kernel was interrupted";
-        interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
-        result = xeus::create_error_reply(ename, evalue);
-      }
-      catch (oc::index_exception const& e)
-      {
-        auto const ename = "Index exception";
-        auto evalue = e.message();
-        interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
-        result = xeus::create_error_reply(ename, evalue);
-      }
-      catch (oc::execution_exception const& e)
-      {
-        auto const ename = "Execution exception";
-        auto evalue = e.message();
-        interpreter.get_error_system().save_exception(e);
-        interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
-        result = xeus::create_error_reply(ename, evalue);
-      }
-      catch (std::bad_alloc const&)
-      {
-        auto const ename = "Memory exception";
-        auto const evalue = "Could not allocate the memory required for the computation";
-        interpreter.recover_from_exception();
-        publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
-        result = xeus::create_error_reply(ename, evalue);
-      }
-    } while (exit_status == 0);
+      // Code evaluation
+      str_parser.run();
+      octave_value ov_fcn = str_parser.primary_fcn();
+      octave_user_code* ov_code = ov_fcn.user_code_value();
+      ov_code->call(interpreter.get_evaluator(), 0, octave_value_list());
+    }
+    catch (oc::interrupt_exception const&)
+    {
+      auto const ename = "Interrupt exception";
+      auto const evalue = "Kernel was interrupted";
+      interpreter.recover_from_exception();
+      publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
+      result = xeus::create_error_reply(ename, evalue);
+    }
+    catch (oc::index_exception const& e)
+    {
+      auto const ename = "Index exception";
+      auto evalue = e.message();
+      interpreter.recover_from_exception();
+      publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
+      result = xeus::create_error_reply(ename, evalue);
+    }
+    catch (oc::execution_exception const& e)
+    {
+      auto const ename = "Execution exception";
+      auto evalue = e.message();
+      interpreter.get_error_system().save_exception(e);
+      interpreter.recover_from_exception();
+      publish_execution_error(ename, evalue, fix_traceback(ename, evalue, e.stack_trace()));
+      result = xeus::create_error_reply(ename, evalue);
+    }
+    catch (std::bad_alloc const&)
+    {
+      auto const ename = "Memory exception";
+      auto const evalue = "Could not allocate the memory required for the computation";
+      interpreter.recover_from_exception();
+      publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
+      result = xeus::create_error_reply(ename, evalue);
+    }
   }
 
   // Update the figure if present
