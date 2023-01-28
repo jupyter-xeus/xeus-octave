@@ -117,6 +117,25 @@ class KernelTests(jupyter_kernel_test.KernelTests):
 
         self.assertEqual(content0["transient"]["display_id"], content1["transient"]["display_id"])
 
+    def test_issue_68(self):
+        """
+        This tests that parsing of code with multiple errors is actually stopped
+        on the first error
+        """
+        codes = [
+            "*+3",
+            "[][1]",
+            "undefined_symbol_1\nundefined_symbol_2"
+        ]
+
+        for code in codes:
+            self.flush_channels()
+            reply, output_msgs = self.execute_helper(code=code)
+
+            # Only the first error message should be present
+            self.assertTrue(len(output_msgs) == 1)
+            self.assertEqual(output_msgs[0]["msg_type"], "error")
+
     def test_octave_scripts(self):
         directory = Path(__file__).parent / 'octave'
 
