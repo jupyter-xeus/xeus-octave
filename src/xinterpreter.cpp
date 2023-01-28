@@ -251,7 +251,7 @@ nl::json xoctave_interpreter::execute_request_impl(
     {
       m_lexer.m_force_script = true;
       m_lexer.prep_for_file();
-      m_lexer.m_fcn_file_full_name = "cell[" + std::to_string(execution_counter) + "]";
+      m_lexer.m_fcn_file_name = m_lexer.m_fcn_file_full_name = "cell[" + std::to_string(execution_counter) + "]";
     }
 
     octave_value primary_fcn() { return m_primary_fcn; }
