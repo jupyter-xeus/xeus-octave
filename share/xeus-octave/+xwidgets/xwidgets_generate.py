@@ -48,6 +48,7 @@ if __name__ == "__main__":
 					widget_list=widget_list,
 					widget_name=widget_name,
 					widget=widget,
+					doc=klass.__doc__,
 					traits=traits.items()
 				))
 	else:

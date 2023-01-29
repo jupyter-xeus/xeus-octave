@@ -17,7 +17,6 @@
 #
 # along with xeus-octave.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 <%!
 from traitlets import (
     CaselessStrEnum,
@@ -39,12 +38,30 @@ from traitlets import (
 from ipywidgets.widgets import Widget
 from ipywidgets.widgets.trait_types import TypedTuple, CByteMemoryView, InstanceDict
 %>
-
 classdef ${widget_name} < __xwidget_internal__
+	<%self:octavedoc>
+		-*- texinfo -*-
+		@deftypefn {} {@var{w} =} xwidgets.${widget_name} ()
+
+		% if doc:
+			${doc.split("Parameters")[0]}
+		% endif
+
+		% for trait_name, trait in traits:
+			% if trait.help:
+				@deftypefn {} {} xwidgets.${widget_name}.${trait_name}
+				${trait.help}
+				@end deftypefn
+			% endif
+		% endfor
+
+		@end deftypefn
+	</%self:octavedoc>
+
 	properties (Sync = true)
 % for trait_name, trait in traits:
 	% if trait.help:
-		# ${trait.help}
+		${'##'} ${trait.help}
 	% endif
 	% if trait.default() is None:
 		${trait_name} = []; # null
@@ -182,3 +199,9 @@ classdef ${widget_name} < __xwidget_internal__
 % endfor
 	endmethods
 endclassdef
+
+<%def name="octavedoc()">
+	% for line in capture(caller.body).strip().splitlines():
+	${'##'} ${line.strip()}
+	% endfor
+</%def>
