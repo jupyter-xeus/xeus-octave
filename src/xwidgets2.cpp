@@ -24,6 +24,7 @@
 #include <nlohmann/json.hpp>
 #include <octave/cdef-class.h>
 #include <octave/cdef-manager.h>
+#include <octave/cdef-method.h>
 #include <octave/cdef-object.h>
 #include <octave/cdef-property.h>
 #include <octave/cdef-utils.h>
@@ -43,7 +44,8 @@ namespace xw
 {
 
 inline void xwidgets_serialize(octave_value const& ov, nl::json& j, xeus::buffer_sequence& b);
-inline void xwidgets_deserialize(octave_value& ov, nl::json const& j, xeus::buffer_sequence const& b);
+inline void
+xwidgets_deserialize(octave_value& ov, nl::json const& j, xeus::buffer_sequence const& b = xeus::buffer_sequence());
 
 namespace
 {
@@ -67,6 +69,18 @@ inline void xwidgets_deserialize_matrix_like(octave_value& ov, nl::json const& j
   octave_idx_type i = 0;
   for (auto& e : j)
     xwidgets_deserialize(p(i++), e, b);
+  ov = p;
+}
+
+inline void xwidgets_deserialize_object(octave_value& ov, nl::json const& j, xeus::buffer_sequence const& b)
+{
+  octave_scalar_map p;
+  for (auto& [key, val] : j.items())
+  {
+    octave_value e;
+    xwidgets_deserialize(e, val, b);
+    p.assign(key, e);
+  }
   ov = p;
 }
 
@@ -123,6 +137,8 @@ inline void xwidgets_deserialize(octave_value& ov, nl::json const& j, xeus::buff
   // No classdef at the moment
   else if (j.is_array())
     xwidgets_deserialize_matrix_like<Cell>(ov, j, b);
+  else if (j.is_object())
+    xwidgets_deserialize_object(ov, j, b);
   else if (j.is_null())
     ov = octave_null_matrix::instance;
   else
@@ -299,6 +315,32 @@ void xwidget::handle_message(xeus::xmessage const& message)
   }
 }
 
+void xwidget::handle_custom_message(nl::json const& jsonmessage)
+{
+  auto meth = this->get_class().find_method("handle_custom_message");
+
+  if (meth.ok())
+  {
+    octave_value message;
+    xw::xwidgets_deserialize(message, jsonmessage);
+    octave::cdef_object obj(this->clone());
+    meth.execute(obj, ovl(message), 0);
+  }
+  else if (jsonmessage.contains("event"))
+  {
+    std::string event = jsonmessage["event"];
+    if (this->m_eventCallbacks.count(event))
+    {
+      for (auto callback : this->m_eventCallbacks[event])
+      {
+        // Object reference
+        octave::cdef_object obj(this->clone());
+        octave::feval(callback, octave::to_ov(obj));
+      }
+    }
+  }
+}
+
 void xwidget::mark_as_constructed(octave::cdef_class const& cls)
 {
   octave::handle_cdef_object::mark_as_constructed(cls);
@@ -369,6 +411,23 @@ octave_value_list xwidget::cdef_id(octave_value_list const& args, int)
   return ovl(std::string(get_widget(args(0).classdef_object_value())->id()));
 }
 
+octave_value_list xwidget::cdef_on(octave_value_list const& args, int)
+{
+  // Object reference
+  octave_classdef* obj = args(0).classdef_object_value();
+  // Property to observe
+  std::string event = args(1).xstring_value("EVENT must be a string with the event name");
+  // Observer callback
+  octave_value fcn = args(2);
+
+  if (!fcn.is_function_handle())
+    error("HANDLE must be a function handle");
+
+  get_widget(obj)->m_eventCallbacks[event].push_back(fcn);
+
+  return ovl();
+}
+
 xwidget* get_widget(octave_classdef const* obj)
 {
   octave::cdef_object const& ref = const_cast<octave_classdef*>(obj)->get_object_ref();
@@ -386,6 +445,7 @@ void register_all2(octave::interpreter& interpreter)
   cls.install_method(cm.make_method(cls, "observe", xwidget::cdef_observe));
   cls.install_method(cm.make_method(cls, "display", xwidget::cdef_display));
   cls.install_method(cm.make_method(cls, "id", xwidget::cdef_id));
+  cls.install_method(cm.make_method(cls, "on", xwidget::cdef_on));
 
   interpreter.get_symbol_table().install_built_in_function(XWIDGET_CLASS_NAME, cls.get_constructor_function());
 }

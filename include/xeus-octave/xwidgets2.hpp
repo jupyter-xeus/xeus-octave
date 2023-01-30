@@ -56,6 +56,7 @@ private:
   void serialize_state(nl::json&, xeus::buffer_sequence&) const;
   void apply_patch(nl::json const&, xeus::buffer_sequence const&);
   void handle_message(xeus::xmessage const&);
+  void handle_custom_message(nl::json const&);
 
   /**
    * @brief call any observers set in the octave interpreter context for the
@@ -74,6 +75,7 @@ private:
   static octave_value_list cdef_observe(octave_value_list const&, int);
   static octave_value_list cdef_display(octave_value_list const&, int);
   static octave_value_list cdef_id(octave_value_list const&, int);
+  static octave_value_list cdef_on(octave_value_list const&, int);
 
   template <typename T> friend inline void xw::xwidgets_serialize(T const& value, nl::json& j, xeus::buffer_sequence&);
   friend void xeus_octave::widgets::register_all2(octave::interpreter&);
@@ -81,6 +83,7 @@ private:
 private:
 
   std::map<std::string, std::list<octave_value>> m_observerCallbacks;
+  std::map<std::string, std::list<octave_value>> m_eventCallbacks;
 };
 
 xwidget* get_widget(octave_classdef const*);
