@@ -61,7 +61,7 @@ private:
    * @brief call any observers set in the octave interpreter context for the
    * specified property name
    */
-  void notify_backend(std::string const&) const;
+  void notify_backend(std::string const&);
   /**
    * @brief send to the frontend a new value for the specified property.
    * Octave value is automatically converted to a json value
@@ -77,6 +77,10 @@ private:
 
   template <typename T> friend inline void xw::xwidgets_serialize(T const& value, nl::json& j, xeus::buffer_sequence&);
   friend void xeus_octave::widgets::register_all2(octave::interpreter&);
+
+private:
+
+  std::map<std::string, std::list<octave_value>> m_observerCallbacks;
 };
 
 xwidget* get_widget(octave_classdef const*);

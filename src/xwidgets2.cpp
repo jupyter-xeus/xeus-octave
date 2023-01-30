@@ -253,21 +253,15 @@ void xwidget::notify_frontend(std::string const& name, octave_value const& value
   send_patch(std::move(state), std::move(buffers));
 }
 
-void xwidget::notify_backend(std::string const& pname) const
+void xwidget::notify_backend(std::string const& pname)
 {
-  // Get the observer property name
-  std::string oname = "__" + pname + "_observers__";
-  // Get the current list of handles
-  octave_value fcn_list_ov = this->get(oname);
-  // Call the observers
-  if (!fcn_list_ov.isempty())
+  if (this->m_observerCallbacks.count(pname))
   {
-    Cell fcn_list = fcn_list_ov.cell_value();
-    for (octave_idx_type i = 0; i < fcn_list.numel(); i++)
+    for (auto callback : this->m_observerCallbacks[pname])
     {
       // Object reference
       octave::cdef_object obj(this->clone());
-      octave::feval(fcn_list(i), octave::to_ov(obj));
+      octave::feval(callback, octave::to_ov(obj));
     }
   }
 }
@@ -353,27 +347,13 @@ octave_value_list xwidget::cdef_observe(octave_value_list const& args, int)
   octave_classdef* obj = args(0).classdef_object_value();
   // Property to observe
   std::string pname = args(1).xstring_value("PNAME must be a string with the property name");
-  std::string oname = "__" + pname + "_observers__";
   // Observer callback
   octave_value fcn = args(2);
+
   if (!fcn.is_function_handle())
     error("HANDLE must be a function handle");
 
-  // Get the current list of handles
-  octave_value fcn_list_ov = obj->get_object_ref().get(oname);
-
-  std::clog << "Is empty: " << fcn_list_ov.isempty() << std::endl;
-
-  // Append the function handle
-  if (fcn_list_ov.isempty())
-    obj->get_object_ref().put(oname, Cell(fcn));
-  else
-  {
-    Cell fcn_list = obj->get_object_ref().get(oname).cell_value();
-    fcn_list.resize1(fcn_list.numel() + 1);
-    fcn_list(fcn_list.numel()) = fcn;
-    obj->get_object_ref().put(oname, fcn_list);
-  }
+  get_widget(obj)->m_observerCallbacks[pname].push_back(fcn);
 
   return ovl();
 }
