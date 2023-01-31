@@ -231,6 +231,48 @@ std::vector<std::string> fix_traceback(std::string const& ename, std::string con
   return fix_traceback(ename, evalue, std::move(trace_back));
 }
 
+void fix_parse_error(std::string& evalue, std::string const& code, int line, int col)
+{
+  std::ostringstream new_evalue;
+  std::istringstream cell(code);
+  std::string text;
+  int i = 1;
+
+  new_evalue << evalue;
+  new_evalue.seekp(-1, std::ios_base::end);  // Remove last '\n'
+
+  do
+  {
+    if (!std::getline(cell, text))
+    {
+      text = "";
+      break;
+    }
+  } while (i++ < line);
+
+  if (!text.empty())
+  {
+    std::size_t len = text.length();
+
+    if (text[len - 1] == '\n')
+      text.resize(len - 1);
+
+    // Print the line, maybe with a pointer near the error token.
+
+    new_evalue << ">>> " << text << "\n";
+
+    if (col == 0)
+      col = static_cast<int>(len);
+
+    for (int j = 0; j < col + 3; j++)
+      new_evalue << " ";
+
+    new_evalue << "^";
+  }
+
+  evalue = new_evalue.str();
+}
+
 }  // namespace
 
 nl::json xoctave_interpreter::execute_request_impl(
@@ -255,6 +297,8 @@ nl::json xoctave_interpreter::execute_request_impl(
     }
 
     octave_value primary_fcn() { return m_primary_fcn; }
+
+    bool parse_error() const { return !m_parse_error_msg.empty(); }
   };
 
 #ifndef NDEBUG
@@ -334,6 +378,19 @@ nl::json xoctave_interpreter::execute_request_impl(
     {
       auto const ename = "Execution exception";
       auto evalue = e.message();
+      if (str_parser.parse_error())
+      {
+        // Add code where the error happened
+        // FIXME: we have to do this because by specifiyng that the file
+        // currently being executed is `cell[x]`, whenever there is a parse
+        // error, octave will try to read `cell[x]` file to get the code where
+        // the error happened. Being that it obviously does not exist, no
+        // information about the wrong code is being reported
+        int line = str_parser.get_lexer().m_filepos.line();
+        int col = str_parser.get_lexer().m_filepos.column() - 1;  // Adjust column
+
+        fix_parse_error(evalue, code, line, col);
+      }
       auto traceback = fix_traceback(ename, evalue, e.stack_trace());
       interpreter.get_error_system().save_exception(e);
       interpreter.recover_from_exception();
