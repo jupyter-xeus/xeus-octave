@@ -1,23 +1,25 @@
 {
-  "version": 2,
+  "version": 4,
   "buildPresets": [
     {
-      "configurePreset": "conda-debug",
-      "name": "conda-debug"
+      "configurePreset": "conda-debug-unix",
+      "name": "conda-debug-unix"
+    },
+    {
+      "configurePreset": "conda-debug-win",
+      "name": "conda-debug-win"
     }
   ],
   "configurePresets": [
     {
       "binaryDir": "${sourceDir}/build/cmake/${presetName}",
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_INSTALL_PREFIX": "$env{CONDA_PREFIX}",
         "CMAKE_PREFIX_PATH": "$env{CONDA_PREFIX}"
       },
       "description": "Dev base profile using conda libraries",
       "displayName": "Conda Dev",
-      "generator": "Unix Makefiles",
       "hidden": true,
       "name": "conda-dev",
       "warnings": {
@@ -30,12 +32,41 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       },
-      "description": "A debug build using conda libraries",
+      "displayName": "Debug",
+      "hidden": true,
+      "name": "debug"
+    },
+    {
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache"
+      },
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows",
+        "type": "notEquals"
+      },
+      "description": "A debug build using conda libraries for Linux/MacOS",
       "displayName": "Conda Debug",
+      "generator": "Unix Makefiles",
       "inherits": [
-        "conda-dev"
+        "conda-dev",
+        "debug"
       ],
-      "name": "conda-debug"
+      "name": "conda-debug-unix"
+    },
+    {
+      "condition": {
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows",
+        "type": "equals"
+      },
+      "description": "A debug build using conda libraries for Windows",
+      "generator": "NMake Makefiles",
+      "inherits": [
+        "conda-dev",
+        "debug"
+      ],
+      "name": "conda-debug-win"
     }
   ]
 }

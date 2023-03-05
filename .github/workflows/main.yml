@@ -13,7 +13,7 @@ defaults:
     shell: bash -l -eo pipefail {0}
 
 jobs:
-  test:
+  test-unix:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -27,11 +27,11 @@ jobs:
           environment-name: xeus-octave
           cache-downloads: true
       - name: Configure
-        run: cmake --preset conda-debug
+        run: cmake --preset conda-debug-unix
       - name: Build
-        run: cmake --build --preset conda-debug
+        run: cmake --build --preset conda-debug-unix
       - name: Install
-        run: cmake --install build/cmake/conda-debug
+        run: cmake --install build/cmake/conda-debug-unix
       - name: Test
         run: python -m pytest ./test -k 'not plot'
       - name: Plotly toolkit test
@@ -41,6 +41,43 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install libgl1-mesa-dev xvfb
           xvfb-run python -m pytest ./test -k 'plot_notebook'
+
+  test-win:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install mamba
+        uses: mamba-org/provision-with-micromamba@v13
+        with:
+          environment-file: environment-dev.yml
+          environment-name: xeus-octave
+          cache-downloads: true
+      - name: micromamba shell hook
+        shell: powershell
+        run: micromamba shell hook -s cmd.exe -p C:\Users\runneradmin\micromamba
+      - name: Configure
+        shell: cmd
+        run: |
+          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+          cmake --preset conda-debug-win
+      - name: Build
+        shell: cmd
+        run: |
+          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+          cmake --build --preset conda-debug-win
+      - name: Install
+        shell: cmd
+        run: |
+          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+          cmake --install build\cmake\conda-debug-win
+      - name: Test
+        shell: cmd
+        run: |
+          call C:\Users\runneradmin\micromamba\condabin\micromamba.bat activate xeus-octave
+          pytest test
 
   static-analysis:
     runs-on: "ubuntu-latest"
