@@ -61,6 +61,7 @@
 #include "xeus-octave/tk_plotly.hpp"
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+#include "xeus-octave/xwidgets.hpp"
 
 namespace nl = nlohmann;
 namespace oc = octave;
@@ -93,6 +94,11 @@ void register_all(octave::interpreter& interpreter)
 }
 
 }  // namespace interpreter
+
+xoctave_interpreter::xoctave_interpreter()
+{
+  xeus::register_interpreter(this);
+}
 
 void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
 {
@@ -466,6 +472,9 @@ void xoctave_interpreter::configure_impl()
 
   // Register the input system
   xeus_octave::io::register_input(m_stdin);
+
+  // Register the widget system
+  xeus_octave::widgets::register_all(interpreter);
 
   // Install version variable
   interpreter.get_symbol_table().install_built_in_function(

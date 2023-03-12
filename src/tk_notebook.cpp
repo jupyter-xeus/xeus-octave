@@ -42,6 +42,7 @@
 #include <octave/ov.h>
 #include <png.h>
 #include <xtl/xbase64.hpp>
+#include <xwidgets/ximage.hpp>
 
 #include "xeus-octave/plotstream.hpp"
 #include "xeus-octave/tk_notebook.hpp"
@@ -323,11 +324,70 @@ void notebook_graphics_toolkit::send_figure(
   dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
 }
 
+void interact_graphics_toolkit::send_figure(
+  oc::graphics_object const&, std::vector<char> const& img, int width, int height, double dpr
+) const
+{
+  nl::json data, meta;
+
+  data["image/png"] = xtl::base64encode(std::string(img.begin(), img.end()));
+  // Send real width and height through metadata for optimal scaling
+  meta["image/png"] = {
+    {"width", width / dpr},
+    {"height", height / dpr},
+  };
+
+  // Update
+  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
+    .display_data(data, meta, nl::json(nl::json::value_t::object));
+}
+
+bool widget_graphics_toolkit::initialize(oc::graphics_object const& go)
+{
+  bool ret = glfw_graphics_toolkit::initialize(go);
+
+  if (go.isa("figure"))
+  {
+    // Create a new object id and store it in the figure
+    setPlotStream(go, new xw::image());
+
+    return true;
+  }
+
+  return ret;
+}
+
+void widget_graphics_toolkit::show_figure(oc::graphics_object const&) const {}
+
+void widget_graphics_toolkit::send_figure(
+  octave::graphics_object const& go, std::vector<char> const& img, int width, int height, double dpr
+) const
+{
+  // Retrieve the figure id
+  xw::image* figure = getPlotStream<xw::image*>(go);
+
+  // TODO check value is changed before setting
+  figure->width = std::to_string(width / dpr);
+  figure->height = std::to_string(height / dpr);
+  figure->value = img;
+}
+
+void widget_graphics_toolkit::finalize(octave::graphics_object const& go)
+{
+  xw::image* figure = getPlotStream<xw::image*>(go);
+
+  delete figure;
+}
+
 void register_all(octave::interpreter& interpreter)
 {
   // Install the toolkit into the interpreter
   interpreter.get_gtk_manager().register_toolkit("notebook");
   interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new notebook_graphics_toolkit()));
+  interpreter.get_gtk_manager().register_toolkit("__interact");
+  interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new interact_graphics_toolkit()));
+  interpreter.get_gtk_manager().register_toolkit("__widget");
+  interpreter.get_gtk_manager().load_toolkit(octave::graphics_toolkit(new widget_graphics_toolkit()));
 }
 
 }  // namespace xeus_octave::tk::notebook

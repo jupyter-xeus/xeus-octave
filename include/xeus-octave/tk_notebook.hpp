@@ -64,6 +64,47 @@ public:
   void show_figure(octave::graphics_object const&) const override;
 };
 
+/**
+ * Stupidly simple toolkit. On each redraw request just sends a display_data
+ * call to the frontend. Suitable for cases where update_display_data calls are
+ * not supported (e.g. using xoutput widget)
+ *
+ * Should not be used by users
+ */
+class interact_graphics_toolkit : public glfw_graphics_toolkit
+{
+public:
+
+  interact_graphics_toolkit() : glfw_graphics_toolkit("__interact") {}
+
+  bool is_valid() const override { return true; }
+
+  void send_figure(octave::graphics_object const&, std::vector<char> const&, int, int, double) const override;
+};
+
+/**
+ * Toolkit that uses a ximage as output region, updating its contents on each
+ * redraw. When a figure is added to a widget container (e.g. xvbox or xhbox)
+ * its toolkit is automatically converted to this one.
+ * Does not display anything on its own, it MUST be included in a container
+ * widget.
+ *
+ * Should not be used by users
+ */
+class widget_graphics_toolkit : public glfw_graphics_toolkit
+{
+public:
+
+  widget_graphics_toolkit() : glfw_graphics_toolkit("__widget") {}
+
+  bool is_valid() const override { return true; }
+
+  bool initialize(octave::graphics_object const&) override;
+  void send_figure(octave::graphics_object const&, std::vector<char> const&, int, int, double) const override;
+  void show_figure(octave::graphics_object const&) const override;
+  void finalize(octave::graphics_object const&) override;
+};
+
 void register_all(octave::interpreter& interpreter);
 
 }  // namespace xeus_octave::tk::notebook

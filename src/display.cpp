@@ -21,6 +21,7 @@
 #include <octave/defun-int.h>
 #include <octave/interpreter.h>
 #include <octave/oct-map.h>
+#include <octave/ovl.h>
 #include <octave/symtab.h>
 
 #include <nlohmann/json.hpp>
@@ -73,6 +74,26 @@ octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
   // Invoke xeus method
   dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter())
     .display_data(data, metadata, nl::json(nl::json::value_t::object));
+
+  return ovl();
+}
+
+/**
+ * Native binding to xeus function clear_output
+ */
+octave_value_list clear_output(octave_value_list const& args, int /*nargout*/)
+{
+  // Agruments check
+  if (args.length() > 1)
+    print_usage();
+
+  bool wait = false;
+
+  if (args.length() == 1)
+    wait = args(0).xbool_value("WAIT must be a boolean");
+
+  // Invoke xeus method
+  dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter()).clear_output(wait);
 
   return ovl();
 }
@@ -214,6 +235,7 @@ namespace xeus_octave::display
 void register_all(octave::interpreter& interpreter)
 {
   utils::add_native_binding(interpreter, "display_data", display_data);
+  utils::add_native_binding(interpreter, "clear_output", clear_output);
   utils::add_native_binding(interpreter, "__matrix_to_html__", matrix_to_html);
   utils::add_native_binding(interpreter, "__matrix_to_latex__", matrix_to_latex);
   utils::add_native_binding(interpreter, "__latex_fix_sci_not__", latex_fix_sci_not);

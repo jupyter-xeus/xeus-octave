@@ -22,10 +22,26 @@
 
 #include <octave/graphics.h>
 
+#include <xwidgets/ximage.hpp>
+
 namespace xeus_octave
 {
 
 template <class T> inline T getPlotStream(octave::graphics_object const& o);
+
+/**
+ * Retrieve from the graphics object the plot_stream property
+ */
+template <> inline xw::image* getPlotStream<xw::image*>(octave::graphics_object const& o)
+{
+  octave_value ps =
+    dynamic_cast<octave::figure::properties const&>(o.get_ancestor("figure").get_properties()).get___plot_stream__();
+
+  if (ps.isnumeric() && ps.is_scalar_type())
+    return reinterpret_cast<xw::image*>(ps.long_value());
+  else
+    return nullptr;
+}
 
 /**
  * Retrieve from the graphics object the plot_stream property
@@ -44,6 +60,18 @@ template <> inline std::string getPlotStream<std::string>(octave::graphics_objec
 /**
  * Set in the graphics object the plot_stream propert
  */
+inline void setPlotStream(octave::graphics_object& o, xw::image* p)
+{
+  if (o.isa("figure"))
+  {
+    auto& fp = dynamic_cast<octave::figure::properties&>(o.get_properties());
+    fp.set___plot_stream__(reinterpret_cast<intptr_t>(p));
+  }
+}
+
+/**
+ * Set in the graphics object the plot_stream propert
+ */
 inline void setPlotStream(octave::graphics_object& o, std::string p)
 {
   if (o.isa("figure"))
@@ -51,6 +79,16 @@ inline void setPlotStream(octave::graphics_object& o, std::string p)
     auto& fp = dynamic_cast<octave::figure::properties&>(o.get_properties());
     fp.set___plot_stream__(p);
   }
+}
+
+/**
+ * Set in the graphics object the plot_stream propert (const version)
+ */
+inline void setPlotStream(octave::graphics_object const& o, xw::image* p)
+{
+  // deCONSTify the graphics_object
+  auto _go = o;
+  setPlotStream(_go, p);
 }
 
 /**
