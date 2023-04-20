@@ -13,7 +13,7 @@ dependencies:
   - xeus-zmq =1.*
   - nlohmann_json
   - cppzmq
-  - octave =7.*
+  - octave =8.*
   - glad
   - glfw
   - libpng
