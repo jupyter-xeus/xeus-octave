@@ -142,7 +142,7 @@ glfw_graphics_toolkit::glfw_graphics_toolkit(std::string const& nm) : octave::ba
 
   glfwMakeContextCurrent(window);
 
-  gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+  gladLoadGL(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress));
 
 #ifndef NDEBUG
   std::clog << "OpenGL vendor: " << glGetString(GL_VENDOR) << '\n';

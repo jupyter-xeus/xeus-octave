@@ -73,11 +73,13 @@ option(
 
 find_package(xeus-zmq REQUIRED)
 find_package(PNG REQUIRED)
-find_package(glad REQUIRED)
 find_package(glfw3)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
+
+add_subdirectory(glad/cmake)
+glad_add_library(glad-static STATIC API gl:compatibility=1.1)
 
 # Flags =====
 include(CheckCXXCompilerFlag)
@@ -227,7 +229,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
     target_link_libraries(
         ${target_name}
         PUBLIC xtl PkgConfig::octinterp
-        PRIVATE glad::glad glfw PNG::PNG
+        PRIVATE glfw PNG::PNG glad-static
     )
     if(XEUS_OCTAVE_USE_SHARED_XEUS)
         target_link_libraries(${target_name} PUBLIC xeus-zmq)
