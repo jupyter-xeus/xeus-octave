@@ -102,11 +102,11 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 #if OCTAVE_MAJOR_VERSION >= 6
         auto xlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_xlabel());
         auto ylabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
-        auto zlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
+        auto zlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_zlabel());
 #else
         auto xlabel = gh_manager::get_object(axisProperties.get_xlabel());
         auto ylabel = gh_manager::get_object(axisProperties.get_ylabel());
-        auto zlabel = gh_manager::get_object(axisProperties.get_ylabel());
+        auto zlabel = gh_manager::get_object(axisProperties.get_zlabel());
 #endif
         auto& xlabelProperties = dynamic_cast<oc::text::properties&>(xlabel.get_properties());
         auto& ylabelProperties = dynamic_cast<oc::text::properties&>(ylabel.get_properties());
