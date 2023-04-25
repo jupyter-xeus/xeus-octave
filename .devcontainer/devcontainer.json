@@ -11,7 +11,8 @@
         "twxs.cmake",
         "ms-vscode.cpptools-extension-pack",
         "mhutchie.git-graph",
-        "ms-toolsai.vscode-jupyter-powertoys"
+        "ms-toolsai.vscode-jupyter-powertoys",
+        "apjanke.octave-hacking"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/opt/conda/bin/python",
