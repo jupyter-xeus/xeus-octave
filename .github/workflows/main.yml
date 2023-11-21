@@ -19,7 +19,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install mamba
         uses: mamba-org/provision-with-micromamba@v13
         with:
@@ -45,7 +45,7 @@ jobs:
   static-analysis:
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install mamba
         uses: mamba-org/provision-with-micromamba@v13
         with:
@@ -64,7 +64,7 @@ jobs:
   test-doc:
     runs-on: "ubuntu-latest"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install mamba
         uses: mamba-org/provision-with-micromamba@v13
         with:
