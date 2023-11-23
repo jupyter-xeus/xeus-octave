@@ -3,6 +3,7 @@ channels:
 dependencies:
   # Build dependencies
   - cxx-compiler
+  - fortran-compiler
   - c-compiler
   - cmake
   - make
@@ -11,6 +12,7 @@ dependencies:
   - libuuid
   - xtl
   - xeus-zmq =1.*
+  - xwidgets =0.27.3
   - nlohmann_json
   - cppzmq
   - octave =8.*
@@ -36,5 +38,7 @@ dependencies:
   - ccache
   - cmake-format
   - plotly
-  - ipywidgets
+  - ipywidgets =8
+  - widgetsnbextension
   - jupyter-dash
+  - mako
