@@ -20,8 +20,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install mamba
-        uses: mamba-org/provision-with-micromamba@v13
+      - name: Install micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment-dev.yml
           environment-name: xeus-octave
@@ -43,11 +43,11 @@ jobs:
           xvfb-run python -m pytest ./test -k 'plot_notebook'
 
   static-analysis:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install mamba
-        uses: mamba-org/provision-with-micromamba@v13
+      - name: Install micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment-dev.yml
           environment-name: xeus-octave
@@ -62,11 +62,11 @@ jobs:
         run: python -m pre_commit run --all-files --show-diff-on-failure
 
   test-doc:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install mamba
-        uses: mamba-org/provision-with-micromamba@v13
+      - name: Install micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environment-dev.yml
           environment-name: xeus-octave
