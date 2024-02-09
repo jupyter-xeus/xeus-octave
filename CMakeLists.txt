@@ -140,6 +140,7 @@ set(
 macro(xeus_octave_set_common_options target_name)
     xeus_octave_target_add_compile_warnings(${target_name})
 
+    target_compile_features(${target_name} PRIVATE cxx_std_17)
     if(
         CMAKE_CXX_COMPILER_ID MATCHES "Clang"
         OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"
@@ -154,7 +155,6 @@ macro(xeus_octave_set_common_options target_name)
             target_compile_options(${target_name} PUBLIC -march=native)
         endif()
 
-        target_compile_features(${target_name} PRIVATE cxx_std_17)
     endif()
 
     if(APPLE)
@@ -217,7 +217,6 @@ macro(xeus_octave_create_target target_name linkage output_name)
         PUBLIC "XEUS_OCTAVE_EXPORTS"
         PRIVATE XEUS_OCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/share/xeus-octave"
     )
-    target_compile_features(${target_name} PRIVATE cxx_std_17)
 
     target_include_directories(
         ${target_name}
@@ -271,7 +270,6 @@ endif()
 # =======
 if(XEUS_OCTAVE_BUILD_EXECUTABLE)
     add_executable(xoctave ${XEUS_OCTAVE_MAIN_SRC})
-    target_compile_features(xoctave PRIVATE cxx_std_17)
     xeus_octave_set_common_options(xoctave)
     xeus_octave_set_kernel_options(xoctave)
 endif()
