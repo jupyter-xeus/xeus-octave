@@ -21,6 +21,15 @@
 #include <memory>
 #include <string_view>
 
+#ifdef __GNUC__
+#include <execinfo.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#endif
+
+#include "xeus-zmq/xzmq_context.hpp"
 #include <xeus-zmq/xserver_zmq.hpp>
 #include <xeus/xeus_context.hpp>
 #include <xeus/xhelper.hpp>
@@ -30,6 +39,29 @@
 
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+
+#ifdef __GNUC__
+void handler(int sig)
+{
+  void* array[10];
+  // get void*'s for all entries on the stack
+  int size = backtrace(array, 10);
+  // print out all the frames to stderr
+  fprintf(stderr, "Error: signal %d:\n", sig);
+  backtrace_symbols_fd(array, size, STDERR_FILENO);
+  exit(1);
+}
+#endif
+
+std::unique_ptr<xeus::xlogger> make_file_logger(xeus::xlogger::level log_level)
+{
+  auto logfile = std::getenv("JUPYTER_LOGFILE");
+  if (logfile == nullptr)
+  {
+    return nullptr;
+  }
+  return xeus::make_file_logger(log_level, logfile);
+}
 
 int main(int argc, char* argv[])
 {
@@ -52,19 +84,56 @@ int main(int argc, char* argv[])
   }
 #endif
 
+  // Registering SIGSEGV handler
+#ifdef __GNUC__
+  std::clog << "registering handler for SIGSEGV" << std::endl;
+  signal(SIGSEGV, handler);
+#endif
+
+  std::unique_ptr<xeus::xcontext> context = xeus::make_zmq_context();
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
   xeus::register_interpreter(interpreter.get());
-  auto config = xeus::load_configuration(xeus::extract_filename(argc, argv));
-  std::cout << xeus::print_starting_message(config);
+  auto hist = xeus::make_in_memory_history_manager();
+  auto logger = xeus::make_console_logger(xeus::xlogger::full, make_file_logger(xeus::xlogger::full));
 
-  auto kernel = xeus::xkernel(
-    /* config= */ std::move(config),
-    /* user_name= */ xeus::get_user_name(),
-    /* context= */ xeus::make_context<zmq::context_t>(),
-    /* interpreter= */ std::move(interpreter),
-    /* sbuilder= */ xeus::make_xserver_zmq
-  );
-  kernel.start();
+  std::string connection_filename = xeus::extract_filename(argc, argv);
+
+  if (!connection_filename.empty())
+  {
+    xeus::xconfiguration config = xeus::load_configuration(connection_filename);
+
+    std::cout << "Instantiating kernel" << std::endl;
+    auto kernel = xeus::xkernel(
+      /* config= */ std::move(config),
+      /* user_name= */ xeus::get_user_name(),
+      /* context= */ std::move(context),
+      /* interpreter= */ std::move(interpreter),
+      /* sbuilder= */ xeus::make_xserver_default,
+      /* history_manager= */ std::move(hist),
+      /* logger= */ std::move(logger)
+    );
+
+    std::cout << "Starting xoctave kernel...\n\n"
+                 "If you want to connect to this kernel from an other client, you can use"
+                 " the " +
+                   connection_filename + " file."
+              << std::endl;
+    kernel.start();
+  }
+  else
+  {
+    auto kernel = xeus::xkernel(
+      /* user_name= */ xeus::get_user_name(),
+      /* context= */ std::move(context),
+      /* interpreter= */ std::move(interpreter),
+      /* sbuilder= */ xeus::make_xserver_default
+    );
+
+    std::cout << "Getting config" << std::endl;
+    auto const& config = kernel.get_config();
+    std::cout << xeus::get_start_message(config);
+    kernel.start();
+  }
 
   return 0;
 }

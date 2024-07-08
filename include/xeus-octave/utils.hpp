@@ -29,7 +29,6 @@
 #include <iostream>
 
 #include <xeus/xguid.hpp>
-#include <xtl/xoptional.hpp>
 
 namespace xeus_octave::utils
 {

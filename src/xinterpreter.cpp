@@ -275,25 +275,24 @@ void fix_parse_error(std::string& evalue, std::string const& code, int line, int
 
 }  // namespace
 
-nl::json xoctave_interpreter::execute_request_impl(
-  int execution_counter,
+void xoctave_interpreter::execute_request_impl(
+  send_reply_callback cb,
+  int execution_count,
   std::string const& code,
-  bool silent,
-  bool /*store_history*/,
-  nl::json /*user_expressions*/,
-  bool allow_stdin
+  xeus::execute_request_config config,
+  nl::json /*user_expressions*/
 )
 {
   class parser : public oc::parser
   {
   public:
 
-    parser(int execution_counter, std::string const& eval_string, oc::interpreter& interp) :
+    parser(int execution_count, std::string const& eval_string, oc::interpreter& interp) :
       oc::parser(eval_string, interp)
     {
       m_lexer.m_force_script = true;
       m_lexer.prep_for_file();
-      m_lexer.m_fcn_file_name = m_lexer.m_fcn_file_full_name = "cell[" + std::to_string(execution_counter) + "]";
+      m_lexer.m_fcn_file_name = m_lexer.m_fcn_file_full_name = "cell[" + std::to_string(execution_count) + "]";
     }
 
     octave_value primary_fcn() { return m_primary_fcn; }
@@ -306,8 +305,8 @@ nl::json xoctave_interpreter::execute_request_impl(
 #endif
   nl::json result;
 
-  m_silent = silent;
-  m_allow_stdin = allow_stdin;
+  m_silent = config.silent;
+  m_allow_stdin = config.allow_stdin;
 
   result = xeus::create_successful_reply();
 
@@ -338,7 +337,7 @@ nl::json xoctave_interpreter::execute_request_impl(
   else
   {
     // Execute code
-    auto str_parser = parser(execution_counter, code, interpreter);
+    auto str_parser = parser(execution_count, code, interpreter);
 
     // Clear current figure
     // This is useful for creating a figure in every cell, otherwise running code
@@ -411,7 +410,7 @@ nl::json xoctave_interpreter::execute_request_impl(
   // Update the figure if present
   interpreter.feval("drawnow");
 
-  return result;
+  cb(result);
 }
 
 void xoctave_interpreter::configure_impl()
