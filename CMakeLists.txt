@@ -6,7 +6,7 @@
 # The full license is in the file LICENSE, distributed with this software.
 # ##################################################################################################
 
-cmake_minimum_required(VERSION 3.4.3)
+cmake_minimum_required(VERSION 3.24)
 project(xeus-octave)
 
 set(XEUS_OCTAVE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -70,6 +70,8 @@ option(
 
 # Dependencies
 # ============
+
+set(xeus_zmq_REQUIRED_VERSION 3.0.0)
 
 find_package(xeus-zmq REQUIRED)
 find_package(PNG REQUIRED)
@@ -225,7 +227,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
 
     target_link_libraries(
         ${target_name}
-        PUBLIC xtl PkgConfig::octinterp
+        PUBLIC PkgConfig::octinterp
         PRIVATE glad::glad glfw PNG::PNG
     )
     if(XEUS_OCTAVE_USE_SHARED_XEUS)

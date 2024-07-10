@@ -41,7 +41,7 @@
 #include <octave/interpreter.h>
 #include <octave/ov.h>
 #include <png.h>
-#include <xtl/xbase64.hpp>
+#include <xeus/xbase64.hpp>
 
 #include "xeus-octave/plotstream.hpp"
 #include "xeus-octave/tk_notebook.hpp"
@@ -310,7 +310,7 @@ void notebook_graphics_toolkit::send_figure(
 
   nl::json data, meta, tran;
 
-  data["image/png"] = xtl::base64encode(std::string(img.begin(), img.end()));
+  data["image/png"] = xeus::base64encode(std::string(img.begin(), img.end()));
   // Send real width and height through metadata for optimal scaling
   meta["image/png"] = {
     {"width", width / dpr},
