@@ -27,7 +27,7 @@ dependencies:
   - pytest-rerunfailures
   # Doc dependencies
   - doxygen
-  - sphinx <6
+  - sphinx
   - breathe
   - sphinx_rtd_theme
   # Dev dependencies
