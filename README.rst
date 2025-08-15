@@ -114,7 +114,7 @@ The safest usage is to create an environment named ``xeus-octave``
     mamba activate -n myenv
 
 Then you can install in this freshly created environment other dependencies, such as ``notebook``
-or JupyterLab_
+or JupyterLab_.
 
 .. code::
 
@@ -122,7 +122,7 @@ or JupyterLab_
 
 From Source
 ~~~~~~~~~~~
-You can install ``xeus-octave`` from source with Cmake.
+You can install ``xeus-octave`` from source with CMake.
 This requires that you have all the dependencies installed in the same prefix, for instance a
 superset of these dependencies can be found in the file ``environment-dev.yml``.
 
@@ -130,7 +130,7 @@ superset of these dependencies can be found in the file ``environment-dev.yml``.
 
    mamba install --file environment-dev.yml
 
-Then you can install in the same Conda environment with
+Then you can install ``xeus-octave`` in the same Conda environment with
 
 .. code:: bash
 
@@ -138,12 +138,11 @@ Then you can install in the same Conda environment with
     cmake --build build --parallel 4
     cmake --install build
 
-.. Sphink linkcheck fails on this anchor https://github.com/conda-forge/miniforge#mambaforge
+.. Sphinx linkcheck fails on this anchor https://github.com/conda-forge/miniforge#mambaforge
 .. _miniforge: https://github.com/conda-forge/miniforge
-.. _miniconda: https://conda.io/miniconda.html
+.. _miniconda: https://www.anaconda.com/docs/getting-started/miniconda/main
 .. _anaconda: https://www.anaconda.com
 .. _JupyterLab: https://jupyterlab.readthedocs.io
-.. _xeus-octave-wheel: https://github.com/jupyter-xeus/xeus-octave-wheel
 
 .. [[INSTALLATION CONTENT END]]
 
