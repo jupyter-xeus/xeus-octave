@@ -80,7 +80,9 @@ find_package(glfw3)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp>=10.0)
 
-# Flags =====
+# Flags
+# =====
+
 include(CheckCXXCompilerFlag)
 
 if(
@@ -169,7 +171,7 @@ macro(xeus_octave_set_common_options target_name)
     set_target_properties(${target_name} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 endmacro()
 
-# Common macro kernels (xoctave )
+# Common macro kernels (xoctave)
 macro(xeus_octave_set_kernel_options target_name)
     if(XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE)
         target_link_libraries(${target_name} PRIVATE xeus-octave)
