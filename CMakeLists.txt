@@ -80,8 +80,8 @@ find_package(glfw3)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp>=10.0)
 
-# Flags
-# =====
+# Compiler flags
+# ==============
 
 include(CheckCXXCompilerFlag)
 
