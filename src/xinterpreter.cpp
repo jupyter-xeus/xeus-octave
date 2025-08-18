@@ -491,8 +491,8 @@ std::string get_symbol_from_cursor_pos(std::string const& code, size_t cursor_po
 
   size_t end_pos = cursor_pos ? ++cursor_pos : 0;
 
-  while (end_pos < code.size() && (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_' || code.at(end_pos) == '.')
-  )
+  while (end_pos < code.size() &&
+         (std::isalnum(code.at(end_pos)) || code.at(end_pos) == '_' || code.at(end_pos) == '.'))
   {
     end_pos++;
   }

@@ -6,7 +6,7 @@ Contributing to Xeus-Octave
 
 *Xeus* and *Xeus-Octave* are subprojects of Project Jupyter and subject to the
 `Jupyter governance <https://github.com/jupyter/governance>`_ and
-`Code of conduct <https://github.com/jupyter/governance/blob/master/conduct/code_of_conduct.md>`_.
+`Code of conduct <https://github.com/jupyter/governance/blob/main/conduct/code_of_conduct.md>`_.
 
 General Guidelines
 ~~~~~~~~~~~~~~~~~~
