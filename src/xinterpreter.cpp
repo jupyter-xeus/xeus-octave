@@ -423,7 +423,7 @@ void xoctave_interpreter::configure_impl()
   octave::install_signal_handlers();
 
   // Set interpreter to read user/global configuration files
-  interpreter.read_init_files(true);
+  interpreter.read_user_files(true);
 
   // Initialize interpreter
   interpreter.execute();

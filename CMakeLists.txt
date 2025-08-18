@@ -11,8 +11,8 @@ project(xeus-octave)
 
 set(XEUS_OCTAVE_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Versionning
-# ===========
+# Versioning
+# ==========
 
 file(
     STRINGS "${XEUS_OCTAVE_INCLUDE_DIR}/xeus-octave/config.hpp" version_defines
@@ -72,16 +72,17 @@ option(
 # ============
 
 set(xeus_zmq_REQUIRED_VERSION 3.0.0)
+find_package(xeus-zmq ${xeus_zmq_REQUIRED_VERSION} REQUIRED)
 
-find_package(xeus-zmq REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glad REQUIRED)
 find_package(glfw3)
-
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
+pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp>=10.0)
 
-# Flags =====
+# Compiler flags
+# ==============
+
 include(CheckCXXCompilerFlag)
 
 if(
@@ -170,7 +171,7 @@ macro(xeus_octave_set_common_options target_name)
     set_target_properties(${target_name} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
 endmacro()
 
-# Common macro kernels (xoctave )
+# Common macro kernels (xoctave)
 macro(xeus_octave_set_kernel_options target_name)
     if(XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE)
         target_link_libraries(${target_name} PRIVATE xeus-octave)
@@ -357,7 +358,7 @@ configure_package_config_file(
     INSTALL_DESTINATION ${PROJECT_BINARY_DIR}
 )
 
-# Configure 'xeus-octaveConfig.cmake.in for an install tree
+# Configure 'xeus-octaveConfig.cmake.in' for an install tree
 set(XEUS_OCTAVE_CONFIG_CODE "")
 configure_package_config_file(
     ${PROJECT_NAME}Config.cmake.in
