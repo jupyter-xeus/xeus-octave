@@ -42,13 +42,12 @@
 #include "xeus-octave/tex2html.hpp"
 #include "xeus-octave/tk_plotly.hpp"
 
-namespace oc = octave;
 namespace nl = nlohmann;
 
 namespace xeus_octave::tk::plotly
 {
 
-bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
+bool plotly_graphics_toolkit::initialize(octave::graphics_object const& go)
 {
   if (go.isa("figure"))
   {
@@ -62,7 +61,7 @@ bool plotly_graphics_toolkit::initialize(oc::graphics_object const& go)
   return false;
 }
 
-void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
+void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) const
 {
   // Retrieve the figure id
   std::string id = getPlotStream<std::string>(go);
@@ -70,7 +69,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
   if (go.isa("figure"))
   {
     std::map<std::string, std::vector<unsigned long>> ids;
-    auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
+    auto& figureProperties = dynamic_cast<octave::figure::properties&>(octave::graphics_object(go).get_properties());
     Matrix figurePosition = figureProperties.get_position().matrix_value();
     nl::json plot, output;
 
@@ -98,7 +97,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
     for (auto ax : children(go))
       if (ax.isa("axes"))
       {
-        auto& axisProperties = dynamic_cast<oc::axes::properties&>(ax.get_properties());
+        auto& axisProperties = dynamic_cast<octave::axes::properties&>(ax.get_properties());
 #if OCTAVE_MAJOR_VERSION >= 6
         auto xlabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_xlabel());
         auto ylabel = m_interpreter.get_gh_manager().get_object(axisProperties.get_ylabel());
@@ -108,9 +107,9 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
         auto ylabel = gh_manager::get_object(axisProperties.get_ylabel());
         auto zlabel = gh_manager::get_object(axisProperties.get_zlabel());
 #endif
-        auto& xlabelProperties = dynamic_cast<oc::text::properties&>(xlabel.get_properties());
-        auto& ylabelProperties = dynamic_cast<oc::text::properties&>(ylabel.get_properties());
-        auto& zlabelProperties = dynamic_cast<oc::text::properties&>(zlabel.get_properties());
+        auto& xlabelProperties = dynamic_cast<octave::text::properties&>(xlabel.get_properties());
+        auto& ylabelProperties = dynamic_cast<octave::text::properties&>(ylabel.get_properties());
+        auto& zlabelProperties = dynamic_cast<octave::text::properties&>(zlabel.get_properties());
 
         Matrix axisPosition = axisProperties.get_position().matrix_value();
         std::string axNumber = getObjectNumber(ax, ids);
@@ -331,7 +330,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
 
           if (d.isa("line"))
           {
-            auto& lineProperties = dynamic_cast<oc::line::properties&>(d.get_properties());
+            auto& lineProperties = dynamic_cast<octave::line::properties&>(d.get_properties());
             std::string type;
 
             // Set corresponding type and axes/scene
@@ -376,7 +375,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           }
           else if (d.isa("surface"))
           {
-            auto& surfaceProperties = dynamic_cast<oc::surface::properties&>(d.get_properties());
+            auto& surfaceProperties = dynamic_cast<octave::surface::properties&>(d.get_properties());
 
             if (axisProperties.get_is2D())
             {
@@ -404,7 +403,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           }
           else if (d.isa("text"))
           {
-            auto& textProperties = dynamic_cast<oc::text::properties&>(d.get_properties());
+            auto& textProperties = dynamic_cast<octave::text::properties&>(d.get_properties());
 
             Matrix textPosition = textProperties.get_position().matrix_value();
 
@@ -444,7 +443,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
           else if (d.isa("hggroup"))
           {
             auto components = children(d);
-            auto& hggroupProperties = dynamic_cast<oc::hggroup::properties&>(d.get_properties());
+            auto& hggroupProperties = dynamic_cast<octave::hggroup::properties&>(d.get_properties());
 
             switch (components.size())
             {
@@ -452,7 +451,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
               // We suppose that a line+line hggroup is a stem
               if (components[0].isa("line") && components[1].isa("line"))
               {
-                auto& lineProperties = dynamic_cast<oc::line::properties&>(components[0].get_properties());
+                auto& lineProperties = dynamic_cast<octave::line::properties&>(components[0].get_properties());
                 std::string type;
 
                 if (axisProperties.get_is2D())
@@ -521,7 +520,7 @@ void plotly_graphics_toolkit::redraw_figure(oc::graphics_object const& go) const
   }
 }
 
-void plotly_graphics_toolkit::show_figure(oc::graphics_object const& go) const
+void plotly_graphics_toolkit::show_figure(octave::graphics_object const& go) const
 {
   // Get an unique identifier for this object, to be used as a display id
   // in the display_data request for subsequent updates of the plot
@@ -581,11 +580,11 @@ std::string plotly_graphics_toolkit::getObjectNumber(
   }
 }
 
-std::vector<oc::graphics_object> plotly_graphics_toolkit::children(oc::graphics_object const& go, bool all) const
+std::vector<octave::graphics_object> plotly_graphics_toolkit::children(octave::graphics_object const& go, bool all) const
 {
   Matrix c = all ? go.get_properties().get_all_children() : go.get_properties().get_children();
   auto len = c.numel();
-  std::vector<oc::graphics_object> ret;
+  std::vector<octave::graphics_object> ret;
 
   for (auto i = len - 1; i >= 0; i--)
   {
@@ -627,7 +626,7 @@ std::string convertText(std::string text, std::string format = "none")
   }
   else if (format == "tex")
   {
-    oc::text_parser_tex tex = oc::text_parser_tex();
+    octave::text_parser_tex tex = octave::text_parser_tex();
     tex_to_html html;
     tex.parse(text)->accept(html);
     return html;

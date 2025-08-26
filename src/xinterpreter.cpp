@@ -63,7 +63,6 @@
 #include "xeus-octave/xinterpreter.hpp"
 
 namespace nl = nlohmann;
-namespace oc = octave;
 
 namespace xeus_octave
 {
@@ -283,12 +282,12 @@ void xoctave_interpreter::execute_request_impl(
   nl::json /*user_expressions*/
 )
 {
-  class parser : public oc::parser
+  class parser : public octave::parser
   {
   public:
 
-    parser(int execution_count, std::string const& eval_string, oc::interpreter& interp) :
-      oc::parser(eval_string, interp)
+    parser(int execution_count, std::string const& eval_string, octave::interpreter& interp) :
+      octave::parser(eval_string, interp)
     {
       m_lexer.m_force_script = true;
       m_lexer.prep_for_file();
@@ -355,7 +354,7 @@ void xoctave_interpreter::execute_request_impl(
       octave_user_code* ov_code = ov_fcn.user_code_value();
       ov_code->call(interpreter.get_evaluator(), 0, octave_value_list());
     }
-    catch (oc::interrupt_exception const&)
+    catch (octave::interrupt_exception const&)
     {
       auto const ename = "Interrupt exception";
       auto const evalue = "Kernel was interrupted";
@@ -364,7 +363,7 @@ void xoctave_interpreter::execute_request_impl(
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
-    catch (oc::index_exception const& e)
+    catch (octave::index_exception const& e)
     {
       auto const ename = "Index exception";
       auto evalue = e.message();
@@ -373,7 +372,7 @@ void xoctave_interpreter::execute_request_impl(
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
-    catch (oc::execution_exception const& e)
+    catch (octave::execution_exception const& e)
     {
       auto const ename = "Execution exception";
       auto evalue = e.message();
