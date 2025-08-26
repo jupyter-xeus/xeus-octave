@@ -357,12 +357,6 @@ void xoctave_interpreter::execute_request_impl(
       // Code evaluation
       str_parser.run();
       octave_value ov_fcn = str_parser.primary_fcn();
-      std::cout << "RTTI available: " << (typeid(ov_fcn).name() != typeid(void).name()) << "\n";
-      std::cout << "ov_fcn type: " << ov_fcn.type_name() << "\n";
-      std::cout << "is_user_code: " << ov_fcn.is_user_code() << "\n";
-      std::cout << "is_function: " << ov_fcn.is_function() << "\n";
-      std::cout << "is_defined: " << ov_fcn.is_defined() << "\n";
-
       octave_user_code* ov_code = ov_fcn.user_code_value();
       ov_code->call(interpreter.get_evaluator(), 0, octave_value_list());
     }
