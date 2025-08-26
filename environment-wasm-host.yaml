@@ -9,3 +9,8 @@ dependencies:
   - octave
   - libpng
   - zlib
+  - libflang
+  - pcre2
+  - libblas
+  - liblapack
+  - freetype
