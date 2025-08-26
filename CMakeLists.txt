@@ -58,27 +58,54 @@ option(XEUS_OCTAVE_BUILD_SHARED "Split xoctave build into executable and library
 option(XEUS_OCTAVE_BUILD_EXECUTABLE "Build the xoctave executable" ON)
 
 option(
-    XEUS_OCTAVE_USE_SHARED_XEUS
-    "Link xeus-octave  with the xeus shared library (instead of the static library)"
+    XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ
+    "Link xeus-octave with the xeus-zmq shared library (instead of the static library)"
     ON
 )
 option(
     XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE
-    "Link xoctave  with the xeus shared library (instead of the static library)"
+    "Link xoctave with the xeus-octave shared library (instead of the static library)"
     ON
 )
+
+if(EMSCRIPTEN)
+    set(XEUS_OCTAVE_BUILD_STATIC ON)
+    set(XEUS_OCTAVE_BUILD_SHARED OFF)
+    set(XEUS_OCTAVE_BUILD_EXECUTABLE ON)
+    set(XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ OFF)
+    set(XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE OFF)
+    set(XEUS_OCTAVE_DISABLE_ARCH_NATIVE ON)
+    set(XEUS_OCTAVE_DISABLE_TUNE_GENERIC ON)
+endif()
 
 # Dependencies
 # ============
 
-set(xeus_zmq_REQUIRED_VERSION 3.0.0)
-find_package(xeus-zmq ${xeus_zmq_REQUIRED_VERSION} REQUIRED)
-
 find_package(PNG REQUIRED)
-find_package(glad REQUIRED)
-find_package(glfw3)
+
+if(NOT EMSCRIPTEN)
+    set(xeus_zmq_REQUIRED_VERSION 3.0.0)
+    find_package(xeus-zmq ${xeus_zmq_REQUIRED_VERSION} REQUIRED)
+    find_package(glad REQUIRED)
+    find_package(glfw3)
+else()
+    find_package(xeus-lite REQUIRED)
+endif()
+
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp>=10.0)
+pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
+
+# FIXME:
+if(EMSCRIPTEN)
+    # Add octave library directory to link path
+    find_path(OCTAVE_LIB_DIR liboctave.so
+              PATHS ${CMAKE_PREFIX_PATH}/lib/octave/10.2.0
+              NO_DEFAULT_PATH)
+    if(OCTAVE_LIB_DIR)
+        link_directories(${OCTAVE_LIB_DIR})
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OCTAVE_LIB_DIR}")
+    endif()
+endif()
 
 # Compiler flags
 # ==============
@@ -105,29 +132,48 @@ endif()
 set(
     XEUS_OCTAVE_HEADERS
     include/xeus-octave/config.hpp
-    include/xeus-octave/xinterpreter.hpp
-    include/xeus-octave/input.hpp
     include/xeus-octave/output.hpp
     include/xeus-octave/utils.hpp
-    include/xeus-octave/tk_notebook.hpp
-    include/xeus-octave/opengl.hpp
-    include/xeus-octave/tk_plotly.hpp
     include/xeus-octave/plotstream.hpp
     include/xeus-octave/tex2html.hpp
-    include/xeus-octave/display.hpp
 )
+
+if(EMSCRIPTEN)
+    list(APPEND XEUS_OCTAVE_HEADERS
+        include/xeus-octave/xinterpreter_wasm.hpp
+    )
+else()
+    list(APPEND XEUS_OCTAVE_HEADERS
+        include/xeus-octave/input.hpp
+        include/xeus-octave/display.hpp
+        include/xeus-octave/xinterpreter.hpp
+        include/xeus-octave/opengl.hpp
+        include/xeus-octave/tk_notebook.hpp
+        include/xeus-octave/tk_plotly.hpp
+    )
+endif()
 
 set(
     XEUS_OCTAVE_SRC
-    src/tk_plotly.cpp
-    src/tk_notebook.cpp
-    src/display.cpp
-    src/xinterpreter.cpp
-    src/input.cpp
     src/output.cpp
+    src/xinterpreter.cpp
+    src/display.cpp
 )
 
+if(EMSCRIPTEN)
+    list(APPEND XEUS_OCTAVE_SRC
+        src/xinterpreter_wasm.cpp
+    )
+else()
+    list(APPEND XEUS_OCTAVE_SRC
+        src/input.cpp
+        src/tk_plotly.cpp
+        src/tk_notebook.cpp
+    )
+endif()
+
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
+set(XEUS_OCTAVE_MAIN_WASM_SRC src/main_wasm.cpp)
 
 # Targets and link - Macros
 # =========================
@@ -182,8 +228,10 @@ macro(xeus_octave_set_kernel_options target_name)
         target_link_libraries(${target_name} PRIVATE xeus-octave-static)
     endif()
 
-    find_package(Threads)
-    target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+    if(NOT EMSCRIPTEN)
+        find_package(Threads)
+        target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+    endif()
 
 endmacro()
 
@@ -229,21 +277,26 @@ macro(xeus_octave_create_target target_name linkage output_name)
     target_link_libraries(
         ${target_name}
         PUBLIC PkgConfig::octinterp
-        PRIVATE glad::glad glfw PNG::PNG
+        PRIVATE PNG::PNG
     )
-    if(XEUS_OCTAVE_USE_SHARED_XEUS)
-        target_link_libraries(${target_name} PUBLIC xeus-zmq)
-    else()
-        target_link_libraries(${target_name} PUBLIC xeus-zmq-static)
+
+    if(NOT EMSCRIPTEN)
+        target_link_libraries(${target_name} PRIVATE glad::glad glfw)
+        if(XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ)
+            target_link_libraries(${target_name} PUBLIC xeus-zmq)
+        else()
+            target_link_libraries(${target_name} PUBLIC xeus-zmq-static)
+        endif()
     endif()
 
-    if(WIN32 OR CYGWIN)
-        #
-    elseif(APPLE)
+    if(APPLE)
         target_link_libraries(${target_name} PRIVATE "-undefined dynamic_lookup")
     endif()
-    find_package(Threads)
-    target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+    if(NOT EMSCRIPTEN)
+        find_package(Threads)
+        target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+    endif()
 
 endmacro()
 
@@ -272,9 +325,23 @@ endif()
 # xeus-octave
 # =======
 if(XEUS_OCTAVE_BUILD_EXECUTABLE)
-    add_executable(xoctave ${XEUS_OCTAVE_MAIN_SRC})
-    xeus_octave_set_common_options(xoctave)
-    xeus_octave_set_kernel_options(xoctave)
+    if(NOT EMSCRIPTEN)
+        add_executable(xoctave ${XEUS_OCTAVE_MAIN_SRC})
+        xeus_octave_set_common_options(xoctave)
+        xeus_octave_set_kernel_options(xoctave)
+    else()
+        include(WasmBuildOptions)
+        add_executable(xoctave ${XEUS_OCTAVE_MAIN_WASM_SRC})
+        target_link_libraries(xoctave PRIVATE xeus-lite)
+        xeus_octave_set_kernel_options(xoctave)
+
+        xeus_wasm_compile_options(xoctave)
+        xeus_wasm_link_options(xoctave "web,worker")
+        target_link_options(xoctave
+            PUBLIC "SHELL: --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js"
+            PUBLIC "SHELL: --post-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/post.js"
+        )
+    endif()
 endif()
 
 # Installation
@@ -383,4 +450,11 @@ if(XEUS_OCTAVE_BUILD_SHARED)
         FILE ${PROJECT_NAME}Targets.cmake
         DESTINATION ${XEUS_OCTAVE_CMAKECONFIG_INSTALL_DIR}
     )
+endif()
+
+if(EMSCRIPTEN)
+    install(FILES
+            "$<TARGET_FILE_DIR:xoctave>/xoctave.js"
+            "$<TARGET_FILE_DIR:xoctave>/xoctave.wasm"
+            DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
