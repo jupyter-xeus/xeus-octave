@@ -25,7 +25,10 @@
 #include <octave/oct-stream.h>
 #include <xeus/xinterpreter.hpp>
 
+#ifndef __EMSCRIPTEN__
 #include "xeus-octave/input.hpp"
+#endif
+
 #include "xeus-octave/output.hpp"
 #include "xeus-octave/config.hpp"
 
@@ -96,9 +99,11 @@ namespace xeus_octave
 
   private:
 
+#ifndef __EMSCRIPTEN__
     io::xoctave_output m_stdout{"stdout"};
     io::xoctave_output m_stderr{"stderr"};
     io::xoctave_input m_stdin;
+#endif
 
     bool m_silent, m_allow_stdin;
   };
