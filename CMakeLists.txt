@@ -95,18 +95,6 @@ endif()
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
 
-# FIXME:
-if(EMSCRIPTEN)
-    # Add octave library directory to link path
-    find_path(OCTAVE_LIB_DIR liboctave.so
-              PATHS ${CMAKE_PREFIX_PATH}/lib/octave/10.2.0
-              NO_DEFAULT_PATH)
-    if(OCTAVE_LIB_DIR)
-        link_directories(${OCTAVE_LIB_DIR})
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OCTAVE_LIB_DIR}")
-    endif()
-endif()
-
 # Compiler flags
 # ==============
 
@@ -274,28 +262,32 @@ macro(xeus_octave_create_target target_name linkage output_name)
         PUBLIC $<BUILD_INTERFACE:${XEUS_OCTAVE_INCLUDE_DIR}> $<INSTALL_INTERFACE:include>
     )
 
-    target_link_libraries(
-        ${target_name}
-        PUBLIC PkgConfig::octinterp
-        PRIVATE PNG::PNG
-    )
+    target_link_libraries(${target_name} PRIVATE PNG::PNG)
 
-    if(NOT EMSCRIPTEN)
-        target_link_libraries(${target_name} PRIVATE glad::glad glfw)
+    if(EMSCRIPTEN)
+        target_compile_options(${target_name} PRIVATE ${octinterp_CFLAGS})
+        target_link_libraries(${target_name}
+            # Cannot mix shared and static libs with emscripten
+            PUBLIC ${octinterp_STATIC_LIBRARIES}
+        )
+    else()
+        target_link_libraries(${target_name}
+            PUBLIC PkgConfig::octinterp
+            PRIVATE glad::glad glfw
+        )
+
         if(XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ)
             target_link_libraries(${target_name} PUBLIC xeus-zmq)
         else()
             target_link_libraries(${target_name} PUBLIC xeus-zmq-static)
         endif()
+
+        find_package(Threads)
+        target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
     if(APPLE)
         target_link_libraries(${target_name} PRIVATE "-undefined dynamic_lookup")
-    endif()
-
-    if(NOT EMSCRIPTEN)
-        find_package(Threads)
-        target_link_libraries(${target_name} PRIVATE ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
 endmacro()
@@ -337,9 +329,12 @@ if(XEUS_OCTAVE_BUILD_EXECUTABLE)
 
         xeus_wasm_compile_options(xoctave)
         xeus_wasm_link_options(xoctave "web,worker")
+        target_compile_options(xoctave PRIVATE ${octinterp_CFLAGS})
         target_link_options(xoctave
             PUBLIC "SHELL: --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js"
             PUBLIC "SHELL: --post-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/post.js"
+            PRIVATE ${octinterp_LDFLAGS}
+            PRIVATE "SHELL: -L${CMAKE_INSTALL_PREFIX}/lib -lfreetype -lFortranDecimal -Wl,--allow-multiple-definition"
         )
     endif()
 endif()
