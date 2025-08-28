@@ -55,15 +55,18 @@
 
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/display.hpp"
-#include "xeus-octave/input.hpp"
 #include "xeus-octave/output.hpp"
+
+#ifndef __EMSCRIPTEN__
+#include "xeus-octave/input.hpp"
 #include "xeus-octave/tk_notebook.hpp"
 #include "xeus-octave/tk_plotly.hpp"
+#endif
+
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
 namespace nl = nlohmann;
-namespace oc = octave;
 
 namespace xeus_octave
 {
@@ -283,12 +286,12 @@ void xoctave_interpreter::execute_request_impl(
   nl::json /*user_expressions*/
 )
 {
-  class parser : public oc::parser
+  class parser : public octave::parser
   {
   public:
 
-    parser(int execution_count, std::string const& eval_string, oc::interpreter& interp) :
-      oc::parser(eval_string, interp)
+    parser(int execution_count, std::string const& eval_string, octave::interpreter& interp) :
+      octave::parser(eval_string, interp)
     {
       m_lexer.m_force_script = true;
       m_lexer.prep_for_file();
@@ -339,6 +342,7 @@ void xoctave_interpreter::execute_request_impl(
     // Execute code
     auto str_parser = parser(execution_count, code, interpreter);
 
+#ifndef __EMSCRIPTEN__
     // Clear current figure
     // This is useful for creating a figure in every cell, otherwise running code
     // in subsequent cells updates a previously displayed figure.
@@ -346,6 +350,7 @@ void xoctave_interpreter::execute_request_impl(
     auto& root_figure =
       dynamic_cast<octave::root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
     root_figure.set_currentfigure(octave_value(NAN));
+#endif
 
     try
     {
@@ -355,7 +360,7 @@ void xoctave_interpreter::execute_request_impl(
       octave_user_code* ov_code = ov_fcn.user_code_value();
       ov_code->call(interpreter.get_evaluator(), 0, octave_value_list());
     }
-    catch (oc::interrupt_exception const&)
+    catch (octave::interrupt_exception const&)
     {
       auto const ename = "Interrupt exception";
       auto const evalue = "Kernel was interrupted";
@@ -364,7 +369,7 @@ void xoctave_interpreter::execute_request_impl(
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
-    catch (oc::index_exception const& e)
+    catch (octave::index_exception const& e)
     {
       auto const ename = "Index exception";
       auto evalue = e.message();
@@ -373,7 +378,7 @@ void xoctave_interpreter::execute_request_impl(
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
-    catch (oc::execution_exception const& e)
+    catch (octave::execution_exception const& e)
     {
       auto const ename = "Execution exception";
       auto evalue = e.message();
@@ -415,9 +420,12 @@ void xoctave_interpreter::execute_request_impl(
 
 void xoctave_interpreter::configure_impl()
 {
+
+#ifndef __EMSCRIPTEN__
   // Override output system
   std::cout.rdbuf(&m_stdout);
   std::cerr.rdbuf(&m_stderr);
+#endif
 
   // Install signal handlers to listen for CTRL+C
   octave::install_signal_handlers();
@@ -443,6 +451,7 @@ void xoctave_interpreter::configure_impl()
 
   interpreter.get_output_system().page_screen_output(true);
 
+#ifndef __EMSCRIPTEN__
   // Register the graphics toolkits
   xeus_octave::tk::notebook::register_all(interpreter);
   xeus_octave::tk::plotly::register_all(interpreter);
@@ -459,12 +468,13 @@ void xoctave_interpreter::configure_impl()
 
   octave::feval("graphics_toolkit", ovl("notebook"));
 
+  // Register the input system
+  xeus_octave::io::register_input(m_stdin);
+#endif // __EMSCRIPTEN__
+
   // Register embedded functions
   xeus_octave::display::register_all(interpreter);
   xeus_octave::interpreter::register_all(interpreter);
-
-  // Register the input system
-  xeus_octave::io::register_input(m_stdin);
 
   // Install version variable
   interpreter.get_symbol_table().install_built_in_function(
