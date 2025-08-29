@@ -95,7 +95,7 @@ namespace xeus_octave
 
     void shutdown_request_impl() override;
 
-    octave::interpreter interpreter;
+    octave::interpreter m_octave_interpreter;
 
   private:
 
