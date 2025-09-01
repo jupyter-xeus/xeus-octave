@@ -11,12 +11,12 @@
 
 #include <xeus/xembind.hpp>
 
-#include "xeus-octave/xinterpreter_wasm.hpp"
+#include "xeus-octave/xinterpreter.hpp"
 
 
 EMSCRIPTEN_BINDINGS(my_module)
 {
     xeus::export_core();
-    using interpreter_type = xeus_octave::wasm_interpreter;
+    using interpreter_type = xeus_octave::xoctave_interpreter;
     xeus::export_kernel<interpreter_type>("xkernel");
 }

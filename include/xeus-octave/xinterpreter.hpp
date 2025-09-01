@@ -29,7 +29,7 @@
 #include "xeus-octave/input.hpp"
 #endif
 
-#include "xeus-octave/output.hpp"
+#include "xeus-octave/xbuffer.hpp"
 #include "xeus-octave/config.hpp"
 
 namespace nl = nlohmann;
@@ -40,6 +40,14 @@ namespace xeus_octave
   class XEUS_OCTAVE_API xoctave_interpreter : public xeus::xinterpreter
   {
   public:
+
+#ifdef __EMSCRIPTEN__
+    xoctave_interpreter();
+    virtual ~xoctave_interpreter() = default;
+
+    void publish_stdout(const std::string&);
+    void publish_stderr(const std::string&);
+#endif
 
     void publish_stream(std::string const& name, std::string const& text);
 
@@ -97,15 +105,20 @@ namespace xeus_octave
 
     octave::interpreter m_octave_interpreter;
 
-  private:
-
-#ifndef __EMSCRIPTEN__
+  protected:
+#ifdef __EMSCRIPTEN__
+    std::streambuf* p_cout_strbuf;
+    std::streambuf* p_cerr_strbuf;
+    xoutput_buffer m_cout_buffer;
+    xoutput_buffer m_cerr_buffer;
+#else
     io::xoctave_output m_stdout{"stdout"};
     io::xoctave_output m_stderr{"stderr"};
     io::xoctave_input m_stdin;
 #endif
 
-    bool m_silent, m_allow_stdin;
+    bool m_silent{false};
+    bool m_allow_stdin{false};
   };
 
 }  // namespace xeus_octave
