@@ -55,7 +55,7 @@
 
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/display.hpp"
-// #include "xeus-octave/output.hpp"
+#include "xeus-octave/output.hpp"
 #include "xeus-octave/xbuffer.hpp"
 
 #ifndef __EMSCRIPTEN__
