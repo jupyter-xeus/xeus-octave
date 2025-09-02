@@ -39,7 +39,7 @@ namespace
  */
 octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
 {
-  // Agruments check
+  // Arguments check
   if (args.length() < 1 || args.length() > 2)
     print_usage();
 
@@ -70,9 +70,15 @@ octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
     }
   }
 
+#ifdef __EMSCRIPTEN__
+  // RTTI support not enabled
+  xeus_octave::xoctave_interpreter::get_instance()
+    .display_data(data, metadata, nl::json(nl::json::value_t::object));
+#else
   // Invoke xeus method
   dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter())
     .display_data(data, metadata, nl::json(nl::json::value_t::object));
+#endif
 
   return ovl();
 }

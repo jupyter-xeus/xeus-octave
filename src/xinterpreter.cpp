@@ -72,6 +72,11 @@ namespace nl = nlohmann;
 namespace xeus_octave
 {
 
+#ifdef __EMSCRIPTEN__
+// Define the static member
+xoctave_interpreter* xoctave_interpreter::s_instance = nullptr;
+#endif
+
 namespace interpreter
 {
 
@@ -105,13 +110,10 @@ xoctave_interpreter::xoctave_interpreter()
     , m_cout_buffer(std::bind(&xoctave_interpreter::publish_stdout, this, std::placeholders::_1))
     , m_cerr_buffer(std::bind(&xoctave_interpreter::publish_stderr, this, std::placeholders::_1))
 {
+    s_instance = this;
+
     m_octave_interpreter.initialize_load_path(false);
     m_octave_interpreter.initialize();
-
-    // FIXME: Without this, there's an std::bad_cast error when executing code.
-    // Other simple expressions such as `a = 1 > 0` still cause std::bad_cast
-    // errors regardless.
-    m_octave_interpreter.eval("1 - 1", 0);
 
     // Output redirect
     p_cout_strbuf = std::cout.rdbuf();
@@ -128,6 +130,14 @@ void xoctave_interpreter::publish_stdout(const std::string& s)
 void xoctave_interpreter::publish_stderr(const std::string& s)
 {
     publish_stream("stderr", s);
+}
+
+xoctave_interpreter& xoctave_interpreter::get_instance()
+{
+    if (!s_instance) {
+        throw std::runtime_error("xoctave_interpreter instance not initialized");
+    }
+    return *s_instance;
 }
 #endif  // __EMSCRIPTEN__
 

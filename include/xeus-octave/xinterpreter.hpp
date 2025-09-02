@@ -47,6 +47,8 @@ namespace xeus_octave
 
     void publish_stdout(const std::string&);
     void publish_stderr(const std::string&);
+
+    static xoctave_interpreter& get_instance();
 #endif
 
     void publish_stream(std::string const& name, std::string const& text);
@@ -105,12 +107,14 @@ namespace xeus_octave
 
     octave::interpreter m_octave_interpreter;
 
-  protected:
+  private:
 #ifdef __EMSCRIPTEN__
     std::streambuf* p_cout_strbuf;
     std::streambuf* p_cerr_strbuf;
     xoutput_buffer m_cout_buffer;
     xoutput_buffer m_cerr_buffer;
+
+    static xoctave_interpreter* s_instance;
 #else
     io::xoctave_output m_stdout{"stdout"};
     io::xoctave_output m_stderr{"stderr"};
