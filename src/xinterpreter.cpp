@@ -100,16 +100,18 @@ void register_all(octave::interpreter& interpreter)
 
 #ifdef __EMSCRIPTEN__
 xoctave_interpreter::xoctave_interpreter()
-    : m_octave_interpreter()
-    , p_cout_strbuf(nullptr)
+    : p_cout_strbuf(nullptr)
     , p_cerr_strbuf(nullptr)
     , m_cout_buffer(std::bind(&xoctave_interpreter::publish_stdout, this, std::placeholders::_1))
     , m_cerr_buffer(std::bind(&xoctave_interpreter::publish_stderr, this, std::placeholders::_1))
 {
+    m_octave_interpreter.initialize_load_path(false);
+    m_octave_interpreter.initialize();
+
     // FIXME: Without this, there's an std::bad_cast error when executing code.
     // Other simple expressions such as `a = 1 > 0` still cause std::bad_cast
     // errors regardless.
-    octave_value_list result_list = m_octave_interpreter.eval("1 - 1", 0);
+    m_octave_interpreter.eval("1 - 1", 0);
 
     // Output redirect
     p_cout_strbuf = std::cout.rdbuf();
@@ -180,6 +182,10 @@ std::optional<nl::json> get_help_for_symbol(octave::interpreter& interpreter, st
     // Get the texinfo help text from the interpreter
     interpreter.get_help_system().get_help_text(name, text, format);
 
+#ifdef __EMSCRIPTEN__
+    // Unable to start subprocess for 'makeinfo ...'
+    format = "plain text";
+#endif
     // Octave gives the help in many formats according to the platform
     if (format == "texinfo")
     {
