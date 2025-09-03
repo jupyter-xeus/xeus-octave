@@ -71,11 +71,6 @@ namespace nl = nlohmann;
 namespace xeus_octave
 {
 
-#ifdef __EMSCRIPTEN__
-// Define the static member
-xoctave_interpreter* xoctave_interpreter::s_instance = nullptr;
-#endif
-
 namespace interpreter
 {
 
@@ -102,23 +97,6 @@ void register_all(octave::interpreter& interpreter)
 
 }  // namespace interpreter
 
-#ifdef __EMSCRIPTEN__
-xoctave_interpreter::xoctave_interpreter()
-{
-    s_instance = this;
-
-    m_octave_interpreter.initialize_load_path(false);
-    m_octave_interpreter.initialize();
-}
-
-xoctave_interpreter& xoctave_interpreter::get_instance()
-{
-    if (!s_instance) {
-        throw std::runtime_error("xoctave_interpreter instance not initialized");
-    }
-    return *s_instance;
-}
-#endif  // __EMSCRIPTEN__
 
 void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
 {

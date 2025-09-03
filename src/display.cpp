@@ -28,6 +28,7 @@
 
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+#include "xeus-octave/xinterpreter_wasm.hpp"
 #include "xeus/xinterpreter.hpp"
 
 namespace nl = nlohmann;
@@ -72,7 +73,7 @@ octave_value_list display_data(octave_value_list const& args, int /*nargout*/)
 
 #ifdef __EMSCRIPTEN__
   // RTTI support not enabled
-  xeus_octave::xoctave_interpreter::get_instance()
+  xeus_octave::xoctave_wasm_interpreter::get_instance()
     .display_data(data, metadata, nl::json(nl::json::value_t::object));
 #else
   // Invoke xeus method

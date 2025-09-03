@@ -7,16 +7,36 @@
 ****************************************************************************/
 
 
-#include <emscripten/bind.h>
-
-#include <xeus/xembind.hpp>
-
-#include "xeus-octave/xinterpreter_wasm.hpp"
+#ifndef XEUS_OCTAVE_INTERPRETER_WASM_HPP
+#define XEUS_OCTAVE_INTERPRETER_WASM_HPP
 
 
-EMSCRIPTEN_BINDINGS(my_module)
+#include <memory>
+
+#include "xeus-octave/xinterpreter.hpp"
+
+
+namespace xeus_octave
 {
-    xeus::export_core();
-    using interpreter_type = xeus_octave::xoctave_wasm_interpreter;
-    xeus::export_kernel<interpreter_type>("xkernel");
-}
+
+  class XEUS_OCTAVE_API xoctave_wasm_interpreter
+    : public xoctave_interpreter
+  {
+
+  public:
+
+    xoctave_wasm_interpreter();
+    virtual ~xoctave_wasm_interpreter() = default;
+
+    static xoctave_wasm_interpreter& get_instance();
+
+  private:
+
+    static xoctave_wasm_interpreter* s_wasm_instance;
+
+  };
+
+}  // namespace xeus_octave
+
+
+#endif  // XEUS_OCTAVE_INTERPRETER_WASM_HPP

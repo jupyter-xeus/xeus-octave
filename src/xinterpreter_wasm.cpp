@@ -7,16 +7,28 @@
 ****************************************************************************/
 
 
-#include <emscripten/bind.h>
-
-#include <xeus/xembind.hpp>
+#include <memory>
 
 #include "xeus-octave/xinterpreter_wasm.hpp"
 
 
-EMSCRIPTEN_BINDINGS(my_module)
+namespace xeus_octave
 {
-    xeus::export_core();
-    using interpreter_type = xeus_octave::xoctave_wasm_interpreter;
-    xeus::export_kernel<interpreter_type>("xkernel");
-}
+
+  xoctave_wasm_interpreter* xoctave_wasm_interpreter::s_wasm_instance = nullptr;
+
+  xoctave_wasm_interpreter::xoctave_wasm_interpreter()
+  {
+    s_wasm_instance = this;
+    m_octave_interpreter.initialize_load_path(false);
+    m_octave_interpreter.initialize();
+  }
+
+  xoctave_wasm_interpreter& xoctave_wasm_interpreter::get_instance() {
+    if (!s_wasm_instance) {
+      throw std::runtime_error("xoctave_interpreter instance not initialized");
+    }
+    return *s_wasm_instance;
+  }
+
+}  // namespace xeus_octave

@@ -38,13 +38,6 @@ namespace xeus_octave
   {
   public:
 
-#ifdef __EMSCRIPTEN__
-    xoctave_interpreter();
-    virtual ~xoctave_interpreter() = default;
-
-    static xoctave_interpreter& get_instance();
-#endif
-
     void publish_stream(std::string const& name, std::string const& text);
 
     void display_data(
@@ -99,12 +92,10 @@ namespace xeus_octave
 
     void shutdown_request_impl() override;
 
+  protected:
+
     octave::interpreter m_octave_interpreter;
 
-  private:
-#ifdef __EMSCRIPTEN__
-    static xoctave_interpreter* s_instance;
-#endif
     io::xoctave_output m_stdout{"stdout"};
     io::xoctave_output m_stderr{"stderr"};
     io::xoctave_input m_stdin;

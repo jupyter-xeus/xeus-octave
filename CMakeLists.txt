@@ -130,7 +130,11 @@ set(
     include/xeus-octave/xinterpreter.hpp
 )
 
-if(NOT EMSCRIPTEN)
+if(EMSCRIPTEN)
+    list(APPEND XEUS_OCTAVE_HEADERS
+        include/xeus-octave/xinterpreter_wasm.hpp
+    )
+else()
     list(APPEND XEUS_OCTAVE_HEADERS
         include/xeus-octave/opengl.hpp
         include/xeus-octave/tk_notebook.hpp
@@ -146,7 +150,11 @@ set(
     src/xinterpreter.cpp
 )
 
-if(NOT EMSCRIPTEN)
+if(EMSCRIPTEN)
+    list(APPEND XEUS_OCTAVE_SRC
+        src/xinterpreter_wasm.cpp
+    )
+else()
     list(APPEND XEUS_OCTAVE_SRC
         src/tk_notebook.cpp
     )
