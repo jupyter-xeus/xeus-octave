@@ -417,7 +417,7 @@ void xoctave_interpreter::execute_request_impl(
   }
 
   // Update the figure if present
-  // m_octave_interpreter.feval("drawnow"); // FIXME: later
+  m_octave_interpreter.feval("drawnow");
 
   cb(result);
 }
