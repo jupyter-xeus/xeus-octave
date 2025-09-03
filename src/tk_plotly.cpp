@@ -580,7 +580,8 @@ std::string plotly_graphics_toolkit::getObjectNumber(
   }
 }
 
-std::vector<octave::graphics_object> plotly_graphics_toolkit::children(octave::graphics_object const& go, bool all) const
+std::vector<octave::graphics_object>
+plotly_graphics_toolkit::children(octave::graphics_object const& go, bool all) const
 {
   Matrix c = all ? go.get_properties().get_all_children() : go.get_properties().get_children();
   auto len = c.numel();

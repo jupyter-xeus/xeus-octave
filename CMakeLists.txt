@@ -131,11 +131,11 @@ set(
 )
 
 if(EMSCRIPTEN)
-    list(APPEND XEUS_OCTAVE_HEADERS
-        include/xeus-octave/xinterpreter_wasm.hpp
-    )
+    list(APPEND XEUS_OCTAVE_HEADERS include/xeus-octave/xinterpreter_wasm.hpp)
 else()
-    list(APPEND XEUS_OCTAVE_HEADERS
+    list(
+        APPEND
+        XEUS_OCTAVE_HEADERS
         include/xeus-octave/opengl.hpp
         include/xeus-octave/tk_notebook.hpp
     )
@@ -143,21 +143,13 @@ endif()
 
 set(
     XEUS_OCTAVE_SRC
-    src/display.cpp
-    src/input.cpp
-    src/output.cpp
-    src/tk_plotly.cpp
-    src/xinterpreter.cpp
+    src/display.cpp src/input.cpp src/output.cpp src/tk_plotly.cpp src/xinterpreter.cpp
 )
 
 if(EMSCRIPTEN)
-    list(APPEND XEUS_OCTAVE_SRC
-        src/xinterpreter_wasm.cpp
-    )
+    list(APPEND XEUS_OCTAVE_SRC src/xinterpreter_wasm.cpp)
 else()
-    list(APPEND XEUS_OCTAVE_SRC
-        src/tk_notebook.cpp
-    )
+    list(APPEND XEUS_OCTAVE_SRC src/tk_notebook.cpp)
 endif()
 
 set(XEUS_OCTAVE_MAIN_SRC src/main.cpp)
@@ -266,12 +258,14 @@ macro(xeus_octave_create_target target_name linkage output_name)
 
     if(EMSCRIPTEN)
         target_compile_options(${target_name} PRIVATE ${octinterp_CFLAGS})
-        target_link_libraries(${target_name}
+        target_link_libraries(
+            ${target_name}
             # Cannot mix shared and static libs with emscripten
             PUBLIC ${octinterp_STATIC_LIBRARIES}
         )
     else()
-        target_link_libraries(${target_name}
+        target_link_libraries(
+            ${target_name}
             PUBLIC PkgConfig::octinterp
             PRIVATE glad::glad glfw
         )
@@ -330,11 +324,16 @@ if(XEUS_OCTAVE_BUILD_EXECUTABLE)
         xeus_wasm_compile_options(xoctave)
         xeus_wasm_link_options(xoctave "web,worker")
         target_compile_options(xoctave PRIVATE ${octinterp_CFLAGS})
-        target_link_options(xoctave
-            PUBLIC "SHELL: --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js"
-            PUBLIC "SHELL: --post-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/post.js"
-            PRIVATE ${octinterp_LDFLAGS}
-            PRIVATE "SHELL: -L${CMAKE_INSTALL_PREFIX}/lib -lfreetype -lFortranDecimal -Wl,--allow-multiple-definition"
+        target_link_options(
+            xoctave
+            PUBLIC
+            "SHELL: --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js"
+            PUBLIC
+            "SHELL: --post-js ${CMAKE_CURRENT_SOURCE_DIR}/wasm/post.js"
+            PRIVATE
+            ${octinterp_LDFLAGS}
+            PRIVATE
+            "SHELL: -L${CMAKE_INSTALL_PREFIX}/lib -lfreetype -lFortranDecimal -Wl,--allow-multiple-definition"
         )
     endif()
 endif()
@@ -448,8 +447,8 @@ if(XEUS_OCTAVE_BUILD_SHARED)
 endif()
 
 if(EMSCRIPTEN)
-    install(FILES
-            "$<TARGET_FILE_DIR:xoctave>/xoctave.js"
-            "$<TARGET_FILE_DIR:xoctave>/xoctave.wasm"
-            DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(
+        FILES "$<TARGET_FILE_DIR:xoctave>/xoctave.js" "$<TARGET_FILE_DIR:xoctave>/xoctave.wasm"
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()

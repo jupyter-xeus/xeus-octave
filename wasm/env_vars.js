@@ -8,4 +8,3 @@ Module["preRun"] = () => {
     ENV["OCTAVE_BUILT_IN_DOCSTRINGS_FILE"] = "/share/octave/10.2.0/etc/built-in-docstrings";
     ENV["OCTAVE_TEXI_MACROS_FILE"] = "/share/octave/10.2.0/etc/macros.texi";
 };
-

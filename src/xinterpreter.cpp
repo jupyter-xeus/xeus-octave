@@ -55,16 +55,15 @@
 
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/display.hpp"
-#include "xeus-octave/output.hpp"
 #include "xeus-octave/input.hpp"
+#include "xeus-octave/output.hpp"
 #include "xeus-octave/tk_plotly.hpp"
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
 #ifndef __EMSCRIPTEN__
-#  include "xeus-octave/tk_notebook.hpp"
+#include "xeus-octave/tk_notebook.hpp"
 #endif
-
 
 namespace nl = nlohmann;
 
@@ -96,7 +95,6 @@ void register_all(octave::interpreter& interpreter)
 }
 
 }  // namespace interpreter
-
 
 void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
 {
@@ -352,8 +350,9 @@ void xoctave_interpreter::execute_request_impl(
     // This is useful for creating a figure in every cell, otherwise running code
     // in subsequent cells updates a previously displayed figure.
     // The current figure is stored in the properties of the root gh object (id 0)
-    auto& root_figure =
-      dynamic_cast<octave::root_figure::properties&>(m_octave_interpreter.get_gh_manager().get_object(0).get_properties());
+    auto& root_figure = dynamic_cast<octave::root_figure::properties&>(
+      m_octave_interpreter.get_gh_manager().get_object(0).get_properties()
+    );
     root_figure.set_currentfigure(octave_value(NAN));
 #endif
 
@@ -472,7 +471,7 @@ void xoctave_interpreter::configure_impl()
 
   // Register the input system
   xeus_octave::io::register_input(m_stdin);
-#endif // __EMSCRIPTEN__
+#endif  // __EMSCRIPTEN__
 
   // Register embedded functions
   xeus_octave::display::register_all(m_octave_interpreter);

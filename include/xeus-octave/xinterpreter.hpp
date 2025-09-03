@@ -25,84 +25,65 @@
 #include <octave/oct-stream.h>
 #include <xeus/xinterpreter.hpp>
 
+#include "xeus-octave/config.hpp"
 #include "xeus-octave/input.hpp"
 #include "xeus-octave/output.hpp"
-#include "xeus-octave/config.hpp"
 
 namespace nl = nlohmann;
 
 namespace xeus_octave
 {
 
-  class XEUS_OCTAVE_API xoctave_interpreter : public xeus::xinterpreter
-  {
-  public:
+class XEUS_OCTAVE_API xoctave_interpreter : public xeus::xinterpreter
+{
+public:
 
-    void publish_stream(std::string const& name, std::string const& text);
+  void publish_stream(std::string const& name, std::string const& text);
 
-    void display_data(
-      nl::json data,
-      nl::json metadata = nl::json::object(),
-      nl::json transient = nl::json::object()
-    );
+  void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
 
-    void update_display_data(
-      nl::json data,
-      nl::json metadata = nl::json::object(),
-      nl::json transient = nl::json::object()
-    );
+  void
+  update_display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
 
-    void publish_execution_result(
-      int execution_count,
-      nl::json data, nl::json metadata
-    );
+  void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
 
-    void publish_execution_error(
-      std::string const& ename,
-      std::string const& evalue,
-      std::vector<std::string> const& trace_back
-    );
+  void publish_execution_error(
+    std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
+  );
 
-  protected:
+protected:
 
-    void configure_impl() override;
+  void configure_impl() override;
 
-    void execute_request_impl(
-      send_reply_callback cb,
-      int execution_counter,
-      std::string const& code,
-      xeus::execute_request_config config,
-      nl::json user_expressions
-    ) override;
+  void execute_request_impl(
+    send_reply_callback cb,
+    int execution_counter,
+    std::string const& code,
+    xeus::execute_request_config config,
+    nl::json user_expressions
+  ) override;
 
-    nl::json complete_request_impl(
-      std::string const& code,
-      int cursor_pos
-    ) override;
+  nl::json complete_request_impl(std::string const& code, int cursor_pos) override;
 
-    nl::json inspect_request_impl(
-      std::string const& code,
-      int cursor_pos,
-      int detail_level
-    ) override;
+  nl::json inspect_request_impl(std::string const& code, int cursor_pos, int detail_level) override;
 
-    nl::json is_complete_request_impl(std::string const& code) override;
+  nl::json is_complete_request_impl(std::string const& code) override;
 
-    nl::json kernel_info_request_impl() override;
+  nl::json kernel_info_request_impl() override;
 
-    void shutdown_request_impl() override;
+  void shutdown_request_impl() override;
 
-  protected:
+protected:
 
-    octave::interpreter m_octave_interpreter;
+  octave::interpreter m_octave_interpreter;
 
-    io::xoctave_output m_stdout{"stdout"};
-    io::xoctave_output m_stderr{"stderr"};
-    io::xoctave_input m_stdin;
+  io::xoctave_output m_stdout{"stdout"};
+  io::xoctave_output m_stderr{"stderr"};
+  io::xoctave_input m_stdin;
 
-    bool m_silent{false};
-    bool m_allow_stdin{false};
-  };
+  bool m_silent{false};
+  bool m_allow_stdin{false};
+};
 
 }  // namespace xeus_octave
 
