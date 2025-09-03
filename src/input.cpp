@@ -22,6 +22,7 @@
 #include <octave/cmd-edit.h>
 
 #include "xeus-octave/xinterpreter.hpp"
+#include "xeus-octave/xinterpreter_wasm.hpp"
 
 namespace
 {
@@ -58,8 +59,14 @@ namespace xeus_octave::io
 std::string xoctave_input::do_readline(std::string const& prompt, bool&)
 {
   // Interpreter reference
+#ifdef __EMSCRIPTEN__
+    // RTTI support not enabled
+    xeus_octave::xoctave_interpreter& interpreter =
+      xeus_octave::xoctave_wasm_interpreter::get_instance();
+#else
   xeus_octave::xoctave_interpreter& interpreter =
     dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter());
+#endif
   // Read value
   std::string value;
 

@@ -468,10 +468,10 @@ void xoctave_interpreter::configure_impl()
   }
 
   octave::feval("graphics_toolkit", ovl("notebook"));
+#endif  // __EMSCRIPTEN__
 
   // Register the input system
   xeus_octave::io::register_input(m_stdin);
-#endif  // __EMSCRIPTEN__
 
   // Register embedded functions
   xeus_octave::display::register_all(m_octave_interpreter);
