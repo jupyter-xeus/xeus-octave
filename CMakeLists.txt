@@ -51,7 +51,7 @@ else()
     configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json.in"
         "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
-)
+    )
 endif()
 
 # Build options
