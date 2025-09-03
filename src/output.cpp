@@ -52,7 +52,14 @@ xoctave_output::int_type xoctave_output::sync()
   // Called in case of flush.
   if (!m_output.empty())
   {
-    dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter()).publish_stream(m_channel, m_output);
+#ifdef __EMSCRIPTEN__
+  // RTTI support not enabled
+  xeus_octave::xoctave_interpreter::get_instance()
+    .publish_stream(m_channel, m_output);
+#else
+    dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter())
+      .publish_stream(m_channel, m_output);
+#endif
     m_output.clear();
   }
   return 0;

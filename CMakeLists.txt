@@ -120,34 +120,34 @@ endif()
 set(
     XEUS_OCTAVE_HEADERS
     include/xeus-octave/config.hpp
-    include/xeus-octave/xbuffer.hpp
-    include/xeus-octave/utils.hpp
+    include/xeus-octave/display.hpp
+    include/xeus-octave/input.hpp
+    include/xeus-octave/output.hpp
     include/xeus-octave/plotstream.hpp
     include/xeus-octave/tex2html.hpp
-    include/xeus-octave/display.hpp
+    include/xeus-octave/tk_plotly.hpp
+    include/xeus-octave/utils.hpp
+    include/xeus-octave/xinterpreter.hpp
 )
 
 if(NOT EMSCRIPTEN)
     list(APPEND XEUS_OCTAVE_HEADERS
-        include/xeus-octave/input.hpp
-        include/xeus-octave/xinterpreter.hpp
         include/xeus-octave/opengl.hpp
         include/xeus-octave/tk_notebook.hpp
-        include/xeus-octave/tk_plotly.hpp
     )
 endif()
 
 set(
     XEUS_OCTAVE_SRC
-    src/output.cpp
-    src/xinterpreter.cpp
     src/display.cpp
+    src/input.cpp
+    src/output.cpp
+    src/tk_plotly.cpp
+    src/xinterpreter.cpp
 )
 
 if(NOT EMSCRIPTEN)
     list(APPEND XEUS_OCTAVE_SRC
-        src/input.cpp
-        src/tk_plotly.cpp
         src/tk_notebook.cpp
     )
 endif()

@@ -56,16 +56,15 @@
 #include "xeus-octave/config.hpp"
 #include "xeus-octave/display.hpp"
 #include "xeus-octave/output.hpp"
-#include "xeus-octave/xbuffer.hpp"
-
-#ifndef __EMSCRIPTEN__
 #include "xeus-octave/input.hpp"
-#include "xeus-octave/tk_notebook.hpp"
 #include "xeus-octave/tk_plotly.hpp"
-#endif
-
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
+
+#ifndef __EMSCRIPTEN__
+#  include "xeus-octave/tk_notebook.hpp"
+#endif
+
 
 namespace nl = nlohmann;
 
@@ -105,31 +104,11 @@ void register_all(octave::interpreter& interpreter)
 
 #ifdef __EMSCRIPTEN__
 xoctave_interpreter::xoctave_interpreter()
-    : p_cout_strbuf(nullptr)
-    , p_cerr_strbuf(nullptr)
-    , m_cout_buffer(std::bind(&xoctave_interpreter::publish_stdout, this, std::placeholders::_1))
-    , m_cerr_buffer(std::bind(&xoctave_interpreter::publish_stderr, this, std::placeholders::_1))
 {
     s_instance = this;
 
     m_octave_interpreter.initialize_load_path(false);
     m_octave_interpreter.initialize();
-
-    // Output redirect
-    p_cout_strbuf = std::cout.rdbuf();
-    p_cerr_strbuf = std::cerr.rdbuf();
-    std::cout.rdbuf(&m_cout_buffer);
-    std::cerr.rdbuf(&m_cerr_buffer);
-}
-
-void xoctave_interpreter::publish_stdout(const std::string& s)
-{
-    publish_stream("stdout", s);
-}
-
-void xoctave_interpreter::publish_stderr(const std::string& s)
-{
-    publish_stream("stderr", s);
 }
 
 xoctave_interpreter& xoctave_interpreter::get_instance()
@@ -468,11 +447,9 @@ void xoctave_interpreter::execute_request_impl(
 
 void xoctave_interpreter::configure_impl()
 {
-#ifndef __EMSCRIPTEN__
   // Override output system
   std::cout.rdbuf(&m_stdout);
   std::cerr.rdbuf(&m_stderr);
-#endif
 
   // Install signal handlers to listen for CTRL+C
   octave::install_signal_handlers();

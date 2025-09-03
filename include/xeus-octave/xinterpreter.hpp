@@ -25,11 +25,8 @@
 #include <octave/oct-stream.h>
 #include <xeus/xinterpreter.hpp>
 
-#ifndef __EMSCRIPTEN__
 #include "xeus-octave/input.hpp"
-#endif
-
-#include "xeus-octave/xbuffer.hpp"
+#include "xeus-octave/output.hpp"
 #include "xeus-octave/config.hpp"
 
 namespace nl = nlohmann;
@@ -44,9 +41,6 @@ namespace xeus_octave
 #ifdef __EMSCRIPTEN__
     xoctave_interpreter();
     virtual ~xoctave_interpreter() = default;
-
-    void publish_stdout(const std::string&);
-    void publish_stderr(const std::string&);
 
     static xoctave_interpreter& get_instance();
 #endif
@@ -109,17 +103,11 @@ namespace xeus_octave
 
   private:
 #ifdef __EMSCRIPTEN__
-    std::streambuf* p_cout_strbuf;
-    std::streambuf* p_cerr_strbuf;
-    xoutput_buffer m_cout_buffer;
-    xoutput_buffer m_cerr_buffer;
-
     static xoctave_interpreter* s_instance;
-#else
+#endif
     io::xoctave_output m_stdout{"stdout"};
     io::xoctave_output m_stderr{"stderr"};
     io::xoctave_input m_stdin;
-#endif
 
     bool m_silent{false};
     bool m_allow_stdin{false};
