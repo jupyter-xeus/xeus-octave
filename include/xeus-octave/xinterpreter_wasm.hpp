@@ -9,8 +9,6 @@
 #ifndef XEUS_OCTAVE_INTERPRETER_WASM_HPP
 #define XEUS_OCTAVE_INTERPRETER_WASM_HPP
 
-#include <memory>
-
 #include "xeus-octave/xinterpreter.hpp"
 
 namespace xeus_octave

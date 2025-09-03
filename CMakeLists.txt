@@ -93,7 +93,7 @@ else()
 endif()
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp)
+pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp>=10.0)
 
 # Compiler flags
 # ==============
