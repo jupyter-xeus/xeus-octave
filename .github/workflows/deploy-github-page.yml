@@ -65,8 +65,7 @@ jobs:
               --XeusAddon.prefix=${{ env.PREFIX }} \
               --XeusAddon.mounts=$PREFIX/share/octave:/share/octave \
               --XeusAddon.mounts=$PREFIX/share/xeus-octave:/share/xeus-octave \
-              --contents notebooks/xeus-octave.ipynb \
-              --contents notebooks/microwave-waveguide.ipynb \
+              --contents notebooks/xeus-octave-wasm.ipynb \
               --output-dir dist
 
       - name: Upload artifact
