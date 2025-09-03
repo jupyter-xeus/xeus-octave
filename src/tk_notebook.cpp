@@ -48,7 +48,6 @@
 #include "xeus-octave/xinterpreter.hpp"
 
 namespace nl = nlohmann;
-namespace oc = octave;
 using namespace std::chrono;
 
 namespace xeus_octave::tk::notebook
@@ -164,7 +163,7 @@ bool glfw_graphics_toolkit::initialize(octave::graphics_object const& go)
   if (go.isa("figure"))
   {
     // Set the pixel ratio
-    auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
+    auto& figureProperties = dynamic_cast<octave::figure::properties&>(octave::graphics_object(go).get_properties());
 
     // Get monitor scale
     float xscale, yscale;
@@ -196,7 +195,7 @@ void glfw_graphics_toolkit::redraw_figure(octave::graphics_object const& go) con
 #endif
 
   // Get width height and scale factor
-  auto& figureProperties = dynamic_cast<oc::figure::properties&>(oc::graphics_object(go).get_properties());
+  auto& figureProperties = dynamic_cast<octave::figure::properties&>(octave::graphics_object(go).get_properties());
   Matrix figurePosition = figureProperties.get_position().matrix_value();
 
   auto const dpr = figureProperties.get___device_pixel_ratio__();
@@ -214,8 +213,8 @@ void glfw_graphics_toolkit::redraw_figure(octave::graphics_object const& go) con
   auto const uheight = static_cast<unsigned int>(height);
 
   // Use the octave renderer to draw the plot on the EGL context
-  oc::opengl_functions m_glfcns;
-  oc::opengl_renderer m_renderer(m_glfcns);
+  octave::opengl_functions m_glfcns;
+  octave::opengl_renderer m_renderer(m_glfcns);
 
   // Create a hidden GLFW window
   auto window = glfwCreateWindow(width, height, "", NULL, NULL);
@@ -268,7 +267,7 @@ void glfw_graphics_toolkit::redraw_figure(octave::graphics_object const& go) con
   glfwDestroyWindow(window);
 }
 
-bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
+bool notebook_graphics_toolkit::initialize(octave::graphics_object const& go)
 {
   bool ret = glfw_graphics_toolkit::initialize(go);
 
@@ -288,7 +287,7 @@ bool notebook_graphics_toolkit::initialize(oc::graphics_object const& go)
   return ret;
 }
 
-void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
+void notebook_graphics_toolkit::show_figure(octave::graphics_object const& go) const
 {
   // Get an unique identifier for this object, to be used as a display id
   // in the display_data request for subsequent updates of the plot
@@ -302,7 +301,7 @@ void notebook_graphics_toolkit::show_figure(oc::graphics_object const& go) const
 }
 
 void notebook_graphics_toolkit::send_figure(
-  oc::graphics_object const& go, std::vector<char> const& img, int width, int height, double dpr
+  octave::graphics_object const& go, std::vector<char> const& img, int width, int height, double dpr
 ) const
 {
   // Retrieve the figure id

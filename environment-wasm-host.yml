@@ -1,0 +1,16 @@
+name: xeus-octave-wasm-host
+channels:
+  - https://repo.prefix.dev/emscripten-forge-dev
+  - conda-forge
+dependencies:
+  - xeus
+  - xeus-lite
+  - nlohmann_json
+  - octave
+  - libpng
+  - zlib
+  - libflang
+  - pcre2
+  - libblas
+  - liblapack
+  - freetype

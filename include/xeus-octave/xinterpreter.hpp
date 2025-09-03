@@ -25,6 +25,7 @@
 #include <octave/oct-stream.h>
 #include <xeus/xinterpreter.hpp>
 
+#include "xeus-octave/config.hpp"
 #include "xeus-octave/input.hpp"
 #include "xeus-octave/output.hpp"
 
@@ -33,13 +34,24 @@ namespace nl = nlohmann;
 namespace xeus_octave
 {
 
-class xoctave_interpreter : public xeus::xinterpreter
+class XEUS_OCTAVE_API xoctave_interpreter : public xeus::xinterpreter
 {
-private:
+public:
 
-  octave::interpreter interpreter;
+  void publish_stream(std::string const& name, std::string const& text);
 
-private:
+  void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
+
+  void
+  update_display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
+
+  void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
+
+  void publish_execution_error(
+    std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
+  );
+
+protected:
 
   void configure_impl() override;
 
@@ -61,24 +73,16 @@ private:
 
   void shutdown_request_impl() override;
 
-public:
+protected:
 
-  void publish_stream(std::string const& name, std::string const& text);
-  void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
-  void
-  update_display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
-  void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
-  void publish_execution_error(
-    std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
-  );
-
-private:
+  octave::interpreter m_octave_interpreter;
 
   io::xoctave_output m_stdout{"stdout"};
   io::xoctave_output m_stderr{"stderr"};
   io::xoctave_input m_stdin;
 
-  bool m_silent, m_allow_stdin;
+  bool m_silent{false};
+  bool m_allow_stdin{false};
 };
 
 }  // namespace xeus_octave

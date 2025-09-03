@@ -57,13 +57,15 @@
 #include "xeus-octave/display.hpp"
 #include "xeus-octave/input.hpp"
 #include "xeus-octave/output.hpp"
-#include "xeus-octave/tk_notebook.hpp"
 #include "xeus-octave/tk_plotly.hpp"
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
 
+#ifndef __EMSCRIPTEN__
+#include "xeus-octave/tk_notebook.hpp"
+#endif
+
 namespace nl = nlohmann;
-namespace oc = octave;
 
 namespace xeus_octave
 {
@@ -145,6 +147,10 @@ std::optional<nl::json> get_help_for_symbol(octave::interpreter& interpreter, st
     // Get the texinfo help text from the interpreter
     interpreter.get_help_system().get_help_text(name, text, format);
 
+#ifdef __EMSCRIPTEN__
+    // Unable to start subprocess for 'makeinfo ...'
+    format = "plain text";
+#endif
     // Octave gives the help in many formats according to the platform
     if (format == "texinfo")
     {
@@ -283,12 +289,12 @@ void xoctave_interpreter::execute_request_impl(
   nl::json /*user_expressions*/
 )
 {
-  class parser : public oc::parser
+  class parser : public octave::parser
   {
   public:
 
-    parser(int execution_count, std::string const& eval_string, oc::interpreter& interp) :
-      oc::parser(eval_string, interp)
+    parser(int execution_count, std::string const& eval_string, octave::interpreter& interp) :
+      octave::parser(eval_string, interp)
     {
       m_lexer.m_force_script = true;
       m_lexer.prep_for_file();
@@ -318,7 +324,7 @@ void xoctave_interpreter::execute_request_impl(
     // User asked for function help
     // Remove ?
     trim.pop_back();
-    auto data = get_help_for_symbol(interpreter, trim);
+    auto data = get_help_for_symbol(m_octave_interpreter, trim);
 
     if (!data)
     {
@@ -337,15 +343,18 @@ void xoctave_interpreter::execute_request_impl(
   else
   {
     // Execute code
-    auto str_parser = parser(execution_count, code, interpreter);
+    auto str_parser = parser(execution_count, code, m_octave_interpreter);
 
+#ifndef __EMSCRIPTEN__
     // Clear current figure
     // This is useful for creating a figure in every cell, otherwise running code
     // in subsequent cells updates a previously displayed figure.
     // The current figure is stored in the properties of the root gh object (id 0)
-    auto& root_figure =
-      dynamic_cast<octave::root_figure::properties&>(interpreter.get_gh_manager().get_object(0).get_properties());
+    auto& root_figure = dynamic_cast<octave::root_figure::properties&>(
+      m_octave_interpreter.get_gh_manager().get_object(0).get_properties()
+    );
     root_figure.set_currentfigure(octave_value(NAN));
+#endif
 
     try
     {
@@ -353,27 +362,27 @@ void xoctave_interpreter::execute_request_impl(
       str_parser.run();
       octave_value ov_fcn = str_parser.primary_fcn();
       octave_user_code* ov_code = ov_fcn.user_code_value();
-      ov_code->call(interpreter.get_evaluator(), 0, octave_value_list());
+      ov_code->call(m_octave_interpreter.get_evaluator(), 0, octave_value_list());
     }
-    catch (oc::interrupt_exception const&)
+    catch (octave::interrupt_exception const&)
     {
       auto const ename = "Interrupt exception";
       auto const evalue = "Kernel was interrupted";
       auto traceback = fix_traceback(ename, evalue);
-      interpreter.recover_from_exception();
+      m_octave_interpreter.recover_from_exception();
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
-    catch (oc::index_exception const& e)
+    catch (octave::index_exception const& e)
     {
       auto const ename = "Index exception";
       auto evalue = e.message();
       auto traceback = fix_traceback(ename, evalue, e.stack_trace());
-      interpreter.recover_from_exception();
+      m_octave_interpreter.recover_from_exception();
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
-    catch (oc::execution_exception const& e)
+    catch (octave::execution_exception const& e)
     {
       auto const ename = "Execution exception";
       auto evalue = e.message();
@@ -391,8 +400,8 @@ void xoctave_interpreter::execute_request_impl(
         fix_parse_error(evalue, code, line, col);
       }
       auto traceback = fix_traceback(ename, evalue, e.stack_trace());
-      interpreter.get_error_system().save_exception(e);
-      interpreter.recover_from_exception();
+      m_octave_interpreter.get_error_system().save_exception(e);
+      m_octave_interpreter.recover_from_exception();
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
@@ -401,14 +410,14 @@ void xoctave_interpreter::execute_request_impl(
       auto const ename = "Memory exception";
       auto const evalue = "Could not allocate the memory required for the computation";
       auto traceback = fix_traceback(ename, evalue);
-      interpreter.recover_from_exception();
+      m_octave_interpreter.recover_from_exception();
       publish_execution_error(ename, evalue, traceback);
       result = xeus::create_error_reply(ename, evalue, traceback);
     }
   }
 
   // Update the figure if present
-  interpreter.feval("drawnow");
+  m_octave_interpreter.feval("drawnow");
 
   cb(result);
 }
@@ -423,51 +432,53 @@ void xoctave_interpreter::configure_impl()
   octave::install_signal_handlers();
 
   // Set interpreter to read user/global configuration files
-  interpreter.read_user_files(true);
+  m_octave_interpreter.read_user_files(true);
 
   // Initialize interpreter
-  interpreter.execute();
+  m_octave_interpreter.execute();
 
   // Fix disp function and clear display function
-  interpreter.get_symbol_table().install_built_in_function("display", octave_value());
+  m_octave_interpreter.get_symbol_table().install_built_in_function("display", octave_value());
 
   // Prepend our override path to have precedence over default m-files
-  interpreter.get_load_path().prepend(XEUS_OCTAVE_OVERRIDE_PATH);
-  interpreter.get_load_path().set_add_hook(
-    [prevhook = interpreter.get_load_path().get_add_hook(), this](std::string const& s)
+  m_octave_interpreter.get_load_path().prepend(XEUS_OCTAVE_OVERRIDE_PATH);
+  m_octave_interpreter.get_load_path().set_add_hook(
+    [prevhook = m_octave_interpreter.get_load_path().get_add_hook(), this](std::string const& s)
     {
-      interpreter.get_load_path().prepend(XEUS_OCTAVE_OVERRIDE_PATH);
+      m_octave_interpreter.get_load_path().prepend(XEUS_OCTAVE_OVERRIDE_PATH);
       prevhook(s);
     }
   );
 
-  interpreter.get_output_system().page_screen_output(true);
+  m_octave_interpreter.get_output_system().page_screen_output(true);
 
+#ifndef __EMSCRIPTEN__
   // Register the graphics toolkits
-  xeus_octave::tk::notebook::register_all(interpreter);
-  xeus_octave::tk::plotly::register_all(interpreter);
+  xeus_octave::tk::notebook::register_all(m_octave_interpreter);
+  xeus_octave::tk::plotly::register_all(m_octave_interpreter);
 
-  // For unknown resons, setting a graphical toolkit does not work, unless
+  // For unknown reasons, setting a graphical toolkit does not work, unless
   // another "magic" toolkit such as gnuplot or fltk is loaded first. Since we
   // do not know which are magic and which are available at compile-time, we go
   // though them all.
-  auto const& available_toolkits = interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
+  auto const& available_toolkits = m_octave_interpreter.get_gtk_manager().available_toolkits_list().cellstr_value();
   for (auto i = octave_idx_type{0}; i < available_toolkits.numel(); ++i)
   {
     octave::feval("graphics_toolkit", ovl(available_toolkits.elem(i)));
   }
 
   octave::feval("graphics_toolkit", ovl("notebook"));
-
-  // Register embedded functions
-  xeus_octave::display::register_all(interpreter);
-  xeus_octave::interpreter::register_all(interpreter);
+#endif  // __EMSCRIPTEN__
 
   // Register the input system
   xeus_octave::io::register_input(m_stdin);
 
+  // Register embedded functions
+  xeus_octave::display::register_all(m_octave_interpreter);
+  xeus_octave::interpreter::register_all(m_octave_interpreter);
+
   // Install version variable
-  interpreter.get_symbol_table().install_built_in_function(
+  m_octave_interpreter.get_symbol_table().install_built_in_function(
     "XOCTAVE", new octave_builtin([](octave_value_list const&, int) { return ovl(XEUS_OCTAVE_VERSION); }, "XOCTAVE")
   );
 }
@@ -516,7 +527,7 @@ nl::json xoctave_interpreter::complete_request_impl(std::string const& code, int
 #endif
 
   // Retrieve the completions from the interpreter
-  auto const completions = interpreter.feval(
+  auto const completions = m_octave_interpreter.feval(
     "completion_matches",
     octave_value(symbol),
     1  // For getting the return value
@@ -559,7 +570,7 @@ nl::json xoctave_interpreter::inspect_request_impl(std::string const& code, int 
 #endif
 
   // Retrieve help for the symbol
-  auto data = get_help_for_symbol(interpreter, symbol);
+  auto data = get_help_for_symbol(m_octave_interpreter, symbol);
 
   if (data)
     return xeus::create_inspect_reply(true, *data);
