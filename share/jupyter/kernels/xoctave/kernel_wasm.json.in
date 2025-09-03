@@ -1,0 +1,16 @@
+{
+  "display_name": "Octave (xoctave)",
+  "argv": [
+      "@XEUS_OCTAVE_KERNELSPEC_PATH@xoctave",
+      "-f",
+      "{connection_file}"
+  ],
+  "language": "Octave",
+  "metadata": {
+	"debugger": false,
+	"shared": {
+	  "libxeus.so": "lib/libxeus.so",
+	  "libz.so": "lib/libz.so"
+	}
+  }
+}

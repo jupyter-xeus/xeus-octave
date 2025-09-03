@@ -13,6 +13,10 @@
    :target: https://mybinder.org/v2/gh/jupyter-xeus/xeus-octave/stable?urlpath=/lab/tree/notebooks/xeus-octave.ipynb
    :alt: Run on Binder
 
+.. image:: https://jupyterlite.rtfd.io/en/latest/_static/badge.svg
+   :target: https://jupyter-xeus.github.io/xeus-octave/lab/?path=xeus-octave-wasm.ipynb
+   :alt: Run on JupyterLite
+
 .. image:: https://badges.gitter.im/Join%20Chat.svg
    :target: https://gitter.im/QuantStack/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
    :alt: Join the Gitter Chat

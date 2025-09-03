@@ -42,10 +42,17 @@ if(NOT DEFINED XEUS_OCTAVE_KERNELSPEC_PATH)
     set(XEUS_OCTAVE_KERNELSPEC_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/")
 endif()
 
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
-)
+if(EMSCRIPTEN)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel_wasm.json.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
+    )
+else()
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
+    )
+endif()
 
 # Build options
 # =============
