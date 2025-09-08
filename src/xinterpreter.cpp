@@ -345,16 +345,14 @@ void xoctave_interpreter::execute_request_impl(
     // Execute code
     auto str_parser = parser(execution_count, code, m_octave_interpreter);
 
-// #ifndef __EMSCRIPTEN__
     // Clear current figure
     // This is useful for creating a figure in every cell, otherwise running code
     // in subsequent cells updates a previously displayed figure.
     // The current figure is stored in the properties of the root gh object (id 0)
-    auto& root_figure = static_cast<octave::root_figure::properties&>(
+    auto& root_figure = dynamic_cast<octave::root_figure::properties&>(
       m_octave_interpreter.get_gh_manager().get_object(0).get_properties()
     );
     root_figure.set_currentfigure(octave_value(NAN));
-// #endif
 
     try
     {
