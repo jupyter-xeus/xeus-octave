@@ -42,6 +42,10 @@
 #include "xeus-octave/tex2html.hpp"
 #include "xeus-octave/tk_plotly.hpp"
 
+#ifdef __EMSCRIPTEN__
+#include "xeus-octave/xinterpreter_wasm.hpp"
+#endif
+
 namespace nl = nlohmann;
 
 namespace xeus_octave::tk::plotly
@@ -515,8 +519,13 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
     // Show the newly created plot
     nl::json data = nl::json::object();
     data["application/vnd.plotly.v1+json"] = std::move(plot);
+#ifdef __EMSCRIPTEN__
+    // RTTI support not enabled
+    xeus_octave::xoctave_wasm_interpreter::get_instance().update_display_data(std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}});
+#else
     dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
       .update_display_data(std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}});
+#endif
   }
 }
 
@@ -529,8 +538,14 @@ void plotly_graphics_toolkit::show_figure(octave::graphics_object const& go) con
   // Display an empty figure (this is equivalent to the action of creating)
   // a window, and prepares a display with the correct display_id for
   // future updates
+#ifdef __EMSCRIPTEN__
+    // RTTI support not enabled
+    xeus_octave::xoctave_wasm_interpreter::get_instance()
+      .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
+#else
   dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
     .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
+#endif
 }
 
 std::string plotly_graphics_toolkit::getObjectNumber(
