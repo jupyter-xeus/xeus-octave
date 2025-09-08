@@ -345,7 +345,6 @@ void xoctave_interpreter::execute_request_impl(
     // Execute code
     auto str_parser = parser(execution_count, code, m_octave_interpreter);
 
-#ifndef __EMSCRIPTEN__
     // Clear current figure
     // This is useful for creating a figure in every cell, otherwise running code
     // in subsequent cells updates a previously displayed figure.
@@ -354,7 +353,6 @@ void xoctave_interpreter::execute_request_impl(
       m_octave_interpreter.get_gh_manager().get_object(0).get_properties()
     );
     root_figure.set_currentfigure(octave_value(NAN));
-#endif
 
     try
     {
@@ -452,9 +450,10 @@ void xoctave_interpreter::configure_impl()
 
   m_octave_interpreter.get_output_system().page_screen_output(true);
 
-#ifndef __EMSCRIPTEN__
   // Register the graphics toolkits
+#ifndef __EMSCRIPTEN__
   xeus_octave::tk::notebook::register_all(m_octave_interpreter);
+#endif
   xeus_octave::tk::plotly::register_all(m_octave_interpreter);
 
   // For unknown reasons, setting a graphical toolkit does not work, unless
@@ -467,8 +466,12 @@ void xoctave_interpreter::configure_impl()
     octave::feval("graphics_toolkit", ovl(available_toolkits.elem(i)));
   }
 
+  // Default graphics toolkit
+#ifdef __EMSCRIPTEN__
+  octave::feval("graphics_toolkit", ovl("plotly"));
+#else
   octave::feval("graphics_toolkit", ovl("notebook"));
-#endif  // __EMSCRIPTEN__
+#endif
 
   // Register the input system
   xeus_octave::io::register_input(m_stdin);
