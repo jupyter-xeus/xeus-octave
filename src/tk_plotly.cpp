@@ -521,7 +521,9 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
     data["application/vnd.plotly.v1+json"] = std::move(plot);
 #ifdef __EMSCRIPTEN__
     // RTTI support not enabled
-    xeus_octave::xoctave_wasm_interpreter::get_instance().update_display_data(std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}});
+    xeus_octave::xoctave_wasm_interpreter::get_instance().update_display_data(
+      std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}}
+    );
 #else
     dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
       .update_display_data(std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}});
@@ -539,9 +541,10 @@ void plotly_graphics_toolkit::show_figure(octave::graphics_object const& go) con
   // a window, and prepares a display with the correct display_id for
   // future updates
 #ifdef __EMSCRIPTEN__
-    // RTTI support not enabled
-    xeus_octave::xoctave_wasm_interpreter::get_instance()
-      .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
+  // RTTI support not enabled
+  xeus_octave::xoctave_wasm_interpreter::get_instance().display_data(
+    nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}}
+  );
 #else
   dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
     .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
