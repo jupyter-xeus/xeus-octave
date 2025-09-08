@@ -264,7 +264,9 @@ macro(xeus_octave_create_target target_name linkage output_name)
     target_link_libraries(${target_name} PRIVATE PNG::PNG)
 
     if(EMSCRIPTEN)
+        include(WasmBuildOptions)
         target_compile_options(${target_name} PRIVATE ${octinterp_CFLAGS})
+        xeus_wasm_compile_options(${target_name})
         target_link_libraries(
             ${target_name}
             # Cannot mix shared and static libs with emscripten
