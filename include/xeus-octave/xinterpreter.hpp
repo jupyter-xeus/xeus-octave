@@ -82,7 +82,6 @@ protected:
   io::xoctave_input m_stdin;
 
   bool m_silent{false};
-  bool m_allow_stdin{false};
 };
 
 }  // namespace xeus_octave

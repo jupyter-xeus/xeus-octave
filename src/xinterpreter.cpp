@@ -312,7 +312,6 @@ void xoctave_interpreter::execute_request_impl(
   nl::json result;
 
   m_silent = config.silent;
-  m_allow_stdin = config.allow_stdin;
 
   result = xeus::create_successful_reply();
 
