@@ -36,20 +36,6 @@ namespace xeus_octave
 
 class XEUS_OCTAVE_API xoctave_interpreter : public xeus::xinterpreter
 {
-public:
-
-  void publish_stream(std::string const& name, std::string const& text);
-
-  void display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
-
-  void
-  update_display_data(nl::json data, nl::json metadata = nl::json::object(), nl::json transient = nl::json::object());
-
-  void publish_execution_result(int execution_count, nl::json data, nl::json metadata);
-
-  void publish_execution_error(
-    std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
-  );
 
 protected:
 
@@ -73,7 +59,7 @@ protected:
 
   void shutdown_request_impl() override;
 
-protected:
+private:
 
   octave::interpreter m_octave_interpreter;
 
@@ -81,7 +67,10 @@ protected:
   io::xoctave_output m_stderr{"stderr"};
   io::xoctave_input m_stdin;
 
-  bool m_silent{false};
+  nl::json handle_exception(bool silent,
+                            const std::string& ename,
+                            const std::string& evalue,
+                            std::vector<std::string> traceback = {});
 };
 
 }  // namespace xeus_octave
