@@ -297,9 +297,8 @@ void notebook_graphics_toolkit::show_figure(octave::graphics_object const& go) c
   // a window, and prepares a display with the correct display_id for
   // future updates
   xeus::get_interpreter().display_data(
-    nl::json(nl::json::value_t::object),
-    nl::json(nl::json::value_t::object),
-    {{"display_id", id}});
+    nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}}
+  );
 }
 
 void notebook_graphics_toolkit::send_figure(

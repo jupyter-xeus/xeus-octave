@@ -67,10 +67,9 @@ private:
   io::xoctave_output m_stderr{"stderr"};
   io::xoctave_input m_stdin;
 
-  nl::json handle_exception(bool silent,
-                            const std::string& ename,
-                            const std::string& evalue,
-                            std::vector<std::string> traceback = {});
+  nl::json handle_exception(
+    bool silent, std::string const& ename, std::string const& evalue, std::vector<std::string> traceback = {}
+  );
 };
 
 }  // namespace xeus_octave

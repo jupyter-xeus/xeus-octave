@@ -278,9 +278,7 @@ void xoctave_interpreter::execute_request_impl(
   {
   public:
 
-    splinter_cell(octave::interpreter& interp, bool silent)
-      : m_interp(interp)
-      , m_silent(silent)
+    splinter_cell(octave::interpreter& interp, bool silent) : m_interp(interp), m_silent(silent)
     {
       if (m_silent)
       {
@@ -350,7 +348,7 @@ void xoctave_interpreter::execute_request_impl(
   else
   {
     splinter_cell guard(m_octave_interpreter, config.silent);
-    
+
     // Execute code
     auto str_parser = parser(execution_count, code, m_octave_interpreter);
 
@@ -612,10 +610,9 @@ void xoctave_interpreter::shutdown_request_impl()
 #endif
 }
 
-nl::json xoctave_interpreter::handle_exception(bool silent,
-                                               const std::string& ename,
-                                               const std::string& evalue,
-                                               std::vector<std::string> traceback)
+nl::json xoctave_interpreter::handle_exception(
+  bool silent, std::string const& ename, std::string const& evalue, std::vector<std::string> traceback
+)
 {
   m_octave_interpreter.recover_from_exception();
   if (!silent)

@@ -521,9 +521,8 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
     data["application/vnd.plotly.v1+json"] = std::move(plot);
 
     xeus::get_interpreter().update_display_data(
-      std::move(data),
-      nl::json(nl::json::value_t::object),
-      {{"display_id", id}});
+      std::move(data), nl::json(nl::json::value_t::object), {{"display_id", id}}
+    );
   }
 }
 
@@ -537,9 +536,8 @@ void plotly_graphics_toolkit::show_figure(octave::graphics_object const& go) con
   // a window, and prepares a display with the correct display_id for
   // future updates
   xeus::get_interpreter().display_data(
-    nl::json(nl::json::value_t::object),
-    nl::json(nl::json::value_t::object),
-    {{"display_id", id}});
+    nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}}
+  );
 }
 
 std::string plotly_graphics_toolkit::getObjectNumber(
