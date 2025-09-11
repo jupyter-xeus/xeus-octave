@@ -296,8 +296,10 @@ void notebook_graphics_toolkit::show_figure(octave::graphics_object const& go) c
   // Display an empty figure (this is equivalent to the action of creating)
   // a window, and prepares a display with the correct display_id for
   // future updates
-  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter())
-    .display_data(nl::json(nl::json::value_t::object), nl::json(nl::json::value_t::object), {{"display_id", id}});
+  xeus::get_interpreter().display_data(
+    nl::json(nl::json::value_t::object),
+    nl::json(nl::json::value_t::object),
+    {{"display_id", id}});
 }
 
 void notebook_graphics_toolkit::send_figure(
@@ -319,7 +321,7 @@ void notebook_graphics_toolkit::send_figure(
   tran["display_id"] = id;
 
   // Update
-  dynamic_cast<xoctave_interpreter&>(xeus::get_interpreter()).update_display_data(data, meta, tran);
+  xeus::get_interpreter().update_display_data(data, meta, tran);
 }
 
 void register_all(octave::interpreter& interpreter)

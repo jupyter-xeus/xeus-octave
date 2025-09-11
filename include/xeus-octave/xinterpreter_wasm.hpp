@@ -21,12 +21,6 @@ public:
 
   xoctave_wasm_interpreter();
   virtual ~xoctave_wasm_interpreter() = default;
-
-  static xoctave_wasm_interpreter& get_instance();
-
-private:
-
-  static xoctave_wasm_interpreter* s_wasm_instance;
 };
 
 }  // namespace xeus_octave
