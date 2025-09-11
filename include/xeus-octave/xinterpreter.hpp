@@ -59,9 +59,9 @@ protected:
 
   void shutdown_request_impl() override;
 
-private:
-
   octave::interpreter m_octave_interpreter;
+
+private:
 
   io::xoctave_output m_stdout{"stdout"};
   io::xoctave_output m_stderr{"stderr"};
