@@ -249,6 +249,11 @@ void fix_parse_error(std::string& evalue, std::string const& code, int line, int
 
 }  // namespace
 
+xoctave_interpreter::xoctave_interpreter()
+{
+  xeus::register_interpreter(this);
+}
+
 void xoctave_interpreter::execute_request_impl(
   send_reply_callback cb,
   int execution_count,

@@ -36,6 +36,9 @@ namespace xeus_octave
 
 class XEUS_OCTAVE_API xoctave_interpreter : public xeus::xinterpreter
 {
+public:
+
+  xoctave_interpreter();
 
 protected:
 
