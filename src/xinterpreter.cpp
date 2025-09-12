@@ -96,38 +96,6 @@ void register_all(octave::interpreter& interpreter)
 
 }  // namespace interpreter
 
-void xoctave_interpreter::publish_stream(std::string const& name, std::string const& text)
-{
-  if (!m_silent)
-    xinterpreter::publish_stream(name, text);
-}
-
-void xoctave_interpreter::display_data(nl::json data, nl::json metadata, nl::json transient)
-{
-  if (!m_silent)
-    xinterpreter::display_data(data, metadata, transient);
-}
-
-void xoctave_interpreter::update_display_data(nl::json data, nl::json metadata, nl::json transient)
-{
-  if (!m_silent)
-    xinterpreter::update_display_data(data, metadata, transient);
-}
-
-void xoctave_interpreter::publish_execution_result(int execution_count, nl::json data, nl::json metadata)
-{
-  if (!m_silent)
-    xinterpreter::publish_execution_result(execution_count, data, metadata);
-}
-
-void xoctave_interpreter::publish_execution_error(
-  std::string const& ename, std::string const& evalue, std::vector<std::string> const& trace_back
-)
-{
-  if (!m_silent)
-    xinterpreter::publish_execution_error(ename, evalue, trace_back);
-}
-
 namespace
 {
 
@@ -281,6 +249,11 @@ void fix_parse_error(std::string& evalue, std::string const& code, int line, int
 
 }  // namespace
 
+xoctave_interpreter::xoctave_interpreter()
+{
+  xeus::register_interpreter(this);
+}
+
 void xoctave_interpreter::execute_request_impl(
   send_reply_callback cb,
   int execution_count,
@@ -306,13 +279,47 @@ void xoctave_interpreter::execute_request_impl(
     bool parse_error() const { return !m_parse_error_msg.empty(); }
   };
 
+  class splinter_cell
+  {
+  public:
+
+    splinter_cell(octave::interpreter& interp, bool silent) : m_interp(interp), m_silent(silent)
+    {
+      if (m_silent)
+      {
+        m_interp.get_evaluator().silent_functions(true);
+        m_interp.get_output_system().page_screen_output(false);
+        p_out_orig = std::cout.rdbuf();
+        p_err_orig = std::cerr.rdbuf();
+        std::cout.rdbuf(m_null_stream.rdbuf());
+        std::cerr.rdbuf(m_null_stream.rdbuf());
+      }
+    }
+
+    ~splinter_cell()
+    {
+      if (m_silent)
+      {
+        std::cerr.rdbuf(p_err_orig);
+        std::cout.rdbuf(p_out_orig);
+        m_interp.get_output_system().page_screen_output(true);
+        m_interp.get_evaluator().silent_functions(false);
+      }
+    }
+
+  private:
+
+    octave::interpreter& m_interp;
+    bool m_silent;
+    std::ostringstream m_null_stream;
+    std::streambuf* p_out_orig;
+    std::streambuf* p_err_orig;
+  };
+
 #ifndef NDEBUG
   std::clog << "Executing: " << code << std::endl;
 #endif
   nl::json result;
-
-  m_silent = config.silent;
-  m_allow_stdin = config.allow_stdin;
 
   result = xeus::create_successful_reply();
 
@@ -331,7 +338,10 @@ void xoctave_interpreter::execute_request_impl(
       auto ename = "Execution exception";
       auto evalue = concat(std::string_view("help: '"), trim, std::string_view("' not found\n"));
       result = xeus::create_error_reply(ename, evalue);
-      publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
+      if (!config.silent)
+      {
+        publish_execution_error(ename, evalue, fix_traceback(ename, evalue));
+      }
     }
     else
     {
@@ -342,6 +352,8 @@ void xoctave_interpreter::execute_request_impl(
   }
   else
   {
+    splinter_cell guard(m_octave_interpreter, config.silent);
+
     // Execute code
     auto str_parser = parser(execution_count, code, m_octave_interpreter);
 
@@ -366,19 +378,14 @@ void xoctave_interpreter::execute_request_impl(
     {
       auto const ename = "Interrupt exception";
       auto const evalue = "Kernel was interrupted";
-      auto traceback = fix_traceback(ename, evalue);
-      m_octave_interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, traceback);
-      result = xeus::create_error_reply(ename, evalue, traceback);
+      result = handle_exception(config.silent, ename, evalue, fix_traceback(ename, evalue));
     }
     catch (octave::index_exception const& e)
     {
       auto const ename = "Index exception";
       auto evalue = e.message();
       auto traceback = fix_traceback(ename, evalue, e.stack_trace());
-      m_octave_interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, traceback);
-      result = xeus::create_error_reply(ename, evalue, traceback);
+      result = handle_exception(config.silent, ename, evalue, std::move(traceback));
     }
     catch (octave::execution_exception const& e)
     {
@@ -399,18 +406,13 @@ void xoctave_interpreter::execute_request_impl(
       }
       auto traceback = fix_traceback(ename, evalue, e.stack_trace());
       m_octave_interpreter.get_error_system().save_exception(e);
-      m_octave_interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, traceback);
-      result = xeus::create_error_reply(ename, evalue, traceback);
+      result = handle_exception(config.silent, ename, evalue, std::move(traceback));
     }
     catch (std::bad_alloc const&)
     {
       auto const ename = "Memory exception";
       auto const evalue = "Could not allocate the memory required for the computation";
-      auto traceback = fix_traceback(ename, evalue);
-      m_octave_interpreter.recover_from_exception();
-      publish_execution_error(ename, evalue, traceback);
-      result = xeus::create_error_reply(ename, evalue, traceback);
+      result = handle_exception(config.silent, ename, evalue, fix_traceback(ename, evalue));
     }
   }
 
@@ -611,6 +613,18 @@ void xoctave_interpreter::shutdown_request_impl()
 #ifndef NDEBUG
   std::clog << "Bye!!" << std::endl;
 #endif
+}
+
+nl::json xoctave_interpreter::handle_exception(
+  bool silent, std::string const& ename, std::string const& evalue, std::vector<std::string> traceback
+)
+{
+  m_octave_interpreter.recover_from_exception();
+  if (!silent)
+  {
+    publish_execution_error(ename, evalue, traceback);
+  }
+  return xeus::create_error_reply(ename, evalue, traceback);
 }
 
 }  // namespace xeus_octave

@@ -92,7 +92,6 @@ int main(int argc, char* argv[])
 
   std::unique_ptr<xeus::xcontext> context = xeus::make_zmq_context();
   auto interpreter = xeus::xkernel::interpreter_ptr(new xeus_octave::xoctave_interpreter());
-  xeus::register_interpreter(interpreter.get());
   auto hist = xeus::make_in_memory_history_manager();
   auto logger = xeus::make_console_logger(xeus::xlogger::full, make_file_logger(xeus::xlogger::full));
 

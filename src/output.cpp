@@ -19,7 +19,6 @@
 
 #include "xeus-octave/output.hpp"
 #include "xeus-octave/xinterpreter.hpp"
-#include "xeus-octave/xinterpreter_wasm.hpp"
 
 #include <iostream>
 
@@ -53,12 +52,7 @@ xoctave_output::int_type xoctave_output::sync()
   // Called in case of flush.
   if (!m_output.empty())
   {
-#ifdef __EMSCRIPTEN__
-    // RTTI support not enabled
-    xeus_octave::xoctave_wasm_interpreter::get_instance().publish_stream(m_channel, m_output);
-#else
-    dynamic_cast<xeus_octave::xoctave_interpreter&>(xeus::get_interpreter()).publish_stream(m_channel, m_output);
-#endif
+    xeus::get_interpreter().publish_stream(m_channel, m_output);
     m_output.clear();
   }
   return 0;
