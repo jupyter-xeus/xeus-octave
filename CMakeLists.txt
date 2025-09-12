@@ -137,9 +137,7 @@ set(
     include/xeus-octave/xinterpreter.hpp
 )
 
-if(EMSCRIPTEN)
-    list(APPEND XEUS_OCTAVE_HEADERS include/xeus-octave/xinterpreter_wasm.hpp)
-else()
+if(NOT EMSCRIPTEN)
     list(
         APPEND
         XEUS_OCTAVE_HEADERS
@@ -153,9 +151,7 @@ set(
     src/display.cpp src/input.cpp src/output.cpp src/tk_plotly.cpp src/xinterpreter.cpp
 )
 
-if(EMSCRIPTEN)
-    list(APPEND XEUS_OCTAVE_SRC src/xinterpreter_wasm.cpp)
-else()
+if(NOT EMSCRIPTEN)
     list(APPEND XEUS_OCTAVE_SRC src/tk_notebook.cpp)
 endif()
 

@@ -19,7 +19,6 @@
 
 #include "xeus-octave/output.hpp"
 #include "xeus-octave/xinterpreter.hpp"
-#include "xeus-octave/xinterpreter_wasm.hpp"
 
 #include <iostream>
 

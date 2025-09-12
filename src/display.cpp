@@ -28,7 +28,6 @@
 
 #include "xeus-octave/utils.hpp"
 #include "xeus-octave/xinterpreter.hpp"
-#include "xeus-octave/xinterpreter_wasm.hpp"
 #include "xeus/xinterpreter.hpp"
 
 namespace nl = nlohmann;

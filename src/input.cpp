@@ -22,7 +22,6 @@
 #include <octave/cmd-edit.h>
 
 #include "xeus-octave/xinterpreter.hpp"
-#include "xeus-octave/xinterpreter_wasm.hpp"
 
 namespace
 {

@@ -42,10 +42,6 @@
 #include "xeus-octave/tex2html.hpp"
 #include "xeus-octave/tk_plotly.hpp"
 
-#ifdef __EMSCRIPTEN__
-#include "xeus-octave/xinterpreter_wasm.hpp"
-#endif
-
 namespace nl = nlohmann;
 
 namespace xeus_octave::tk::plotly
