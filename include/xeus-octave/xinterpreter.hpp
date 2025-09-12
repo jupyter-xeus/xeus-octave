@@ -40,7 +40,7 @@ public:
 
   xoctave_interpreter();
 
-protected:
+private:
 
   void configure_impl() override;
 
@@ -63,8 +63,6 @@ protected:
   void shutdown_request_impl() override;
 
   octave::interpreter m_octave_interpreter;
-
-private:
 
   io::xoctave_output m_stdout{"stdout"};
   io::xoctave_output m_stderr{"stderr"};
