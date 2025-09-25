@@ -76,10 +76,10 @@ option(
 )
 
 if(EMSCRIPTEN)
+    set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
     set(XEUS_OCTAVE_BUILD_STATIC ON)
     set(XEUS_OCTAVE_BUILD_SHARED OFF)
     set(XEUS_OCTAVE_BUILD_EXECUTABLE ON)
-    set(XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ OFF)
     set(XEUS_OCTAVE_USE_SHARED_XEUS_OCTAVE OFF)
     set(XEUS_OCTAVE_DISABLE_ARCH_NATIVE ON)
     set(XEUS_OCTAVE_DISABLE_TUNE_GENERIC ON)
@@ -263,11 +263,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
         include(WasmBuildOptions)
         target_compile_options(${target_name} PRIVATE ${octinterp_CFLAGS})
         xeus_wasm_compile_options(${target_name})
-        target_link_libraries(
-            ${target_name}
-            # Cannot mix shared and static libs with emscripten
-            PUBLIC ${octinterp_STATIC_LIBRARIES}
-        )
+        target_link_libraries(${target_name} PUBLIC xeus ${octinterp_STATIC_LIBRARIES})
     else()
         target_link_libraries(
             ${target_name}
