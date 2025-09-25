@@ -263,10 +263,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
         include(WasmBuildOptions)
         target_compile_options(${target_name} PRIVATE ${octinterp_CFLAGS})
         xeus_wasm_compile_options(${target_name})
-        target_link_libraries(
-            ${target_name}
-            PUBLIC xeus ${octinterp_STATIC_LIBRARIES}
-        )
+        target_link_libraries(${target_name} PUBLIC xeus ${octinterp_STATIC_LIBRARIES})
     else()
         target_link_libraries(
             ${target_name}
