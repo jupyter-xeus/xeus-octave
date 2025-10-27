@@ -17,9 +17,9 @@
    :target: https://jupyter-xeus.github.io/xeus-octave/lab/?path=xeus-octave-wasm.ipynb
    :alt: Run on JupyterLite
 
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-   :target: https://gitter.im/QuantStack/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-   :alt: Join the Gitter Chat
+.. image:: https://img.shields.io/badge/social_chat-zulip-blue.svg
+   :target: https://jupyter.zulipchat.com/#narrow/channel/539737-Jupyter-Kernels
+   :alt: Join the Zulip Chat
 
 .. Used for including in Sphinx doc
 .. [[INTRODUCTION CONTENT START]]
