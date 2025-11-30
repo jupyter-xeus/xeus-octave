@@ -93,7 +93,6 @@ find_package(PNG REQUIRED)
 if(NOT EMSCRIPTEN)
     set(xeus_zmq_REQUIRED_VERSION 3.0.0)
     find_package(xeus-zmq ${xeus_zmq_REQUIRED_VERSION} REQUIRED)
-    find_package(glad REQUIRED)
     find_package(glfw3)
 else()
     find_package(xeus-lite REQUIRED)
@@ -124,6 +123,7 @@ endif()
 # Source files
 # ============
 
+
 set(
     XEUS_OCTAVE_HEADERS
     include/xeus-octave/config.hpp
@@ -144,6 +144,9 @@ if(NOT EMSCRIPTEN)
         include/xeus-octave/opengl.hpp
         include/xeus-octave/tk_notebook.hpp
     )
+    
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/glad/include)
+    add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/gl.c)
 endif()
 
 set(
@@ -268,7 +271,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
         target_link_libraries(
             ${target_name}
             PUBLIC PkgConfig::octinterp
-            PRIVATE glad::glad glfw
+            PRIVATE glad glfw
         )
 
         if(XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ)
