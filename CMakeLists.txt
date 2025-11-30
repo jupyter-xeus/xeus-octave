@@ -146,7 +146,7 @@ if(NOT EMSCRIPTEN)
     )
     
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/glad/include)
-    file(GLOB BUTTERFLIES_SOURCES_C ${CMAKE_CURRENT_SOURCE_DIR} *.c glad/src/gl.c)
+    add_library(glad STATIC ${CMAKE_CURRENT_SOURCE_DIR}/glad/src/gl.c)
 endif()
 
 set(
@@ -271,7 +271,7 @@ macro(xeus_octave_create_target target_name linkage output_name)
         target_link_libraries(
             ${target_name}
             PUBLIC PkgConfig::octinterp
-            PRIVATE glfw
+            PRIVATE glad glfw
         )
 
         if(XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ)
