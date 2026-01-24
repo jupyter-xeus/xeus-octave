@@ -64,6 +64,8 @@ option(XEUS_OCTAVE_BUILD_STATIC "Build xeus-octave static library" OFF)
 option(XEUS_OCTAVE_BUILD_SHARED "Split xoctave build into executable and library" ON)
 option(XEUS_OCTAVE_BUILD_EXECUTABLE "Build the xoctave executable" ON)
 
+option(XEUS_OCTAVE_PKG_REBUILD "Run pkg rebuild upon starting the kernel" OFF)
+
 option(
     XEUS_OCTAVE_USE_SHARED_XEUS_ZMQ
     "Link xeus-octave with the xeus-zmq shared library (instead of the static library)"
@@ -251,6 +253,10 @@ macro(xeus_octave_create_target target_name linkage output_name)
         PUBLIC "XEUS_OCTAVE_EXPORTS"
         PRIVATE XEUS_OCTAVE_OVERRIDE_PATH="${CMAKE_INSTALL_PREFIX}/share/xeus-octave"
     )
+
+    if(XEUS_OCTAVE_PKG_REBUILD)
+        target_compile_definitions(${target_name} PRIVATE "XEUS_OCTAVE_PKG_REBUILD")
+    endif()
 
     target_include_directories(
         ${target_name}

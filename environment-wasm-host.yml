@@ -8,6 +8,7 @@ dependencies:
   - nlohmann_json
   - nlohmann_json-abi
   - octave
+  - octave-fuzzy-logic-toolkit
   - libpng
   - zlib
   - libflang
