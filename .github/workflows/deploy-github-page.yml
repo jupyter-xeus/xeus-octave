@@ -54,6 +54,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_FIND_ROOT_PATH="$PREFIX" \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DXEUS_OCTAVE_PKG_REBUILD=ON \
             -DCMAKE_VERBOSE_MAKEFILE=ON
 
           emmake make -j${{ env.ncpus }} install
@@ -65,6 +66,8 @@ jobs:
               --XeusAddon.prefix=${{ env.PREFIX }} \
               --XeusAddon.mounts=$PREFIX/share/octave:/share/octave \
               --XeusAddon.mounts=$PREFIX/share/xeus-octave:/share/xeus-octave \
+              --XeusAddon.default_channels=https://repo.prefix.dev/emscripten-forge-dev \
+              --XeusAddon.default_channels=https://repo.prefix.dev/conda-forge \
               --contents notebooks/xeus-octave-wasm.ipynb \
               --output-dir dist
 
