@@ -54,6 +54,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_FIND_ROOT_PATH="$PREFIX" \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DXEUS_OCTAVE_PKG_REBUILD=ON \
             -DCMAKE_VERBOSE_MAKEFILE=ON
 
           emmake make -j${{ env.ncpus }} install

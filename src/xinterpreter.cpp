@@ -487,8 +487,10 @@ void xoctave_interpreter::configure_impl()
     "XOCTAVE", new octave_builtin([](octave_value_list const&, int) { return ovl(XEUS_OCTAVE_VERSION); }, "XOCTAVE")
   );
 
+#ifdef XEUS_OCTAVE_PKG_REBUILD
   // Rebuild package database
   octave::feval("pkg", ovl("rebuild"));
+#endif
 }
 
 namespace
