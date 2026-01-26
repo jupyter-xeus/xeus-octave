@@ -23,7 +23,7 @@ jobs:
           - name: Github-page
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -54,7 +54,6 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
             -DCMAKE_FIND_ROOT_PATH="$PREFIX" \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-            -DXEUS_OCTAVE_PKG_REBUILD=ON \
             -DCMAKE_VERBOSE_MAKEFILE=ON
 
           emmake make -j${{ env.ncpus }} install
