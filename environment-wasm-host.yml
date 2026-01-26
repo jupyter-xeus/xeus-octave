@@ -8,8 +8,6 @@ dependencies:
   - nlohmann_json
   - nlohmann_json-abi
   - octave
-  - octave-fuzzy-logic-toolkit
-  - octave-splines
   - libpng
   - zlib
   - libflang
@@ -18,3 +16,6 @@ dependencies:
   - liblapack
   - freetype
   - plotly
+# Optional
+  - octave-fuzzy-logic-toolkit
+  - octave-splines
