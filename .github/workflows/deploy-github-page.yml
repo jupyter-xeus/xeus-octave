@@ -66,7 +66,7 @@ jobs:
               --XeusAddon.prefix=${{ env.PREFIX }} \
               --XeusAddon.mounts=$PREFIX/share/octave:/share/octave \
               --XeusAddon.mounts=$PREFIX/share/xeus-octave:/share/xeus-octave \
-              --XeusAddon.default_channels=https://repo.prefix.dev/emscripten-forge-dev \
+              --XeusAddon.default_channels=https://repo.prefix.dev/emscripten-forge-4x \
               --XeusAddon.default_channels=https://repo.prefix.dev/conda-forge \
               --contents notebooks/xeus-octave-wasm.ipynb \
               --output-dir dist
