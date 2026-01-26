@@ -33,27 +33,6 @@ set(
 )
 message(STATUS "Building xeus-octave v${${PROJECT_NAME}_VERSION}")
 
-# Configuration
-# =============
-
-include(GNUInstallDirs)
-
-if(NOT DEFINED XEUS_OCTAVE_KERNELSPEC_PATH)
-    set(XEUS_OCTAVE_KERNELSPEC_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/")
-endif()
-
-if(EMSCRIPTEN)
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel_wasm.json.in"
-        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
-    )
-else()
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json.in"
-        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
-    )
-endif()
-
 # Build options
 # =============
 
@@ -103,6 +82,32 @@ endif()
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(octinterp REQUIRED IMPORTED_TARGET GLOBAL octinterp>=10.0)
+
+# Configuration
+# =============
+
+include(GNUInstallDirs)
+
+if(NOT DEFINED XEUS_OCTAVE_KERNELSPEC_PATH)
+    set(XEUS_OCTAVE_KERNELSPEC_PATH "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}/")
+endif()
+
+if(EMSCRIPTEN)
+    # Requires version variable, octinterp_VERSION, set by Octave dependency
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel_wasm.json.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
+    )
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js"
+    )
+else()
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/share/jupyter/kernels/xoctave/kernel.json"
+    )
+endif()
 
 # Compiler flags
 # ==============
@@ -267,9 +272,12 @@ macro(xeus_octave_create_target target_name linkage output_name)
 
     if(EMSCRIPTEN)
         include(WasmBuildOptions)
-        target_compile_options(${target_name} PRIVATE ${octinterp_CFLAGS})
         xeus_wasm_compile_options(${target_name})
-        target_link_libraries(${target_name} PUBLIC xeus ${octinterp_STATIC_LIBRARIES})
+        target_link_libraries(
+            ${target_name}
+            PUBLIC xeus PkgConfig::octinterp
+            PRIVATE FortranRuntime
+        )
     else()
         target_link_libraries(
             ${target_name}

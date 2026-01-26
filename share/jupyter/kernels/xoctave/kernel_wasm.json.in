@@ -7,10 +7,12 @@
   ],
   "language": "Octave",
   "metadata": {
-	"debugger": false,
-	"shared": {
-	  "libxeus.so": "lib/libxeus.so",
-	  "libz.so": "lib/libz.so"
-	}
+    "debugger": false,
+    "shared": {
+      "libxeus.so": "lib/libxeus.so",
+      "liboctinterp.so": "lib/octave/@octinterp_VERSION@/liboctinterp.so",
+      "liboctave.so": "lib/octave/@octinterp_VERSION@/liboctave.so",
+      "libz.so": "lib/libz.so"
+    }
   }
 }
