@@ -437,13 +437,6 @@ void xoctave_interpreter::configure_impl()
   // Initialize interpreter
   m_octave_interpreter.execute();
 
-#ifdef XEUS_OCTAVE_PKG_REBUILD
-  // Run pkg rebuild upon starting the kernel
-  std::string pkg_rebuild("pkg rebuild");
-  int status = 0;
-  m_octave_interpreter.eval_string(pkg_rebuild, true, status);
-#endif
-
   // Fix disp function and clear display function
   m_octave_interpreter.get_symbol_table().install_built_in_function("display", octave_value());
 
@@ -493,6 +486,9 @@ void xoctave_interpreter::configure_impl()
   m_octave_interpreter.get_symbol_table().install_built_in_function(
     "XOCTAVE", new octave_builtin([](octave_value_list const&, int) { return ovl(XEUS_OCTAVE_VERSION); }, "XOCTAVE")
   );
+
+  // Rebuild package database
+  octave::feval("pkg", ovl("rebuild"));
 }
 
 namespace
