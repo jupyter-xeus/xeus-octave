@@ -26,7 +26,7 @@
 #ifndef XEUS_OCTAVE_OPENGL_H
 #define XEUS_OCTAVE_OPENGL_H
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 
 namespace octave
 {

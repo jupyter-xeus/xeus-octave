@@ -13,7 +13,6 @@ dependencies:
   - xeus-zmq>=3.1.1,<4.0
   - nlohmann_json=3.12.0
   - octave =10.*
-  - glad
   - glfw
   - libpng
   # Test dependencies
@@ -31,6 +30,7 @@ dependencies:
   - sphinx_rtd_theme
   # Dev dependencies
   - jupyterlab
+  - glad
   - nodejs
   - ccache
   - cmake-format
