@@ -597,7 +597,6 @@ nl::json xoctave_interpreter::is_complete_request_impl(std::string const& /*code
 nl::json xoctave_interpreter::kernel_info_request_impl()
 {
   return xeus::create_info_reply(
-    /* protocol_version= */ xeus::get_protocol_version(),
     /* implementation= */ "xoctave",
     /* implementation_version= */ XEUS_OCTAVE_VERSION,
     /* language_name= */ "Octave",
@@ -605,19 +604,24 @@ nl::json xoctave_interpreter::kernel_info_request_impl()
     /* language_mimetype= */ "text/x-octave",
     /* language_file_extension= */ ".m",
     /* pygments_lexer= */ "octave",
-    /* language_codemirror_mode= */ "octave",
+    /* language_codemirror_mode= */ std::string("octave"),
     /* language_nbconvert_exporter= */ "",
     /* banner= */ octave_startup_message(),
-    /* debugger= */ false,
     /* help_links= */ nl::json::array()
   );
 }
 
-void xoctave_interpreter::shutdown_request_impl()
+nl::json xoctave_interpreter::shutdown_request_impl(bool /*restart*/)
 {
 #ifndef NDEBUG
   std::clog << "Bye!!" << std::endl;
 #endif
+  return xeus::create_shutdown_reply(false);
+}
+
+nl::json xoctave_interpreter::interrupt_request_impl()
+{
+  return xeus::create_interrupt_reply();
 }
 
 nl::json xoctave_interpreter::handle_exception(

@@ -3,8 +3,8 @@ channels:
   - https://repo.prefix.dev/emscripten-forge-4x
   - conda-forge
 dependencies:
-  - xeus
-  - xeus-lite
+  - xeus >=6,<7
+  - xeus-lite >=5,<6
   - nlohmann_json
   - nlohmann_json-abi
   - octave
