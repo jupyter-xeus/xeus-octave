@@ -6,6 +6,7 @@
       "{connection_file}"
   ],
   "language": "Octave",
+  "kernel_protocol_version": "5.6.0",
   "metadata": {
     "debugger": false,
     "shared": {
