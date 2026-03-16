@@ -14,7 +14,6 @@ dependencies:
   - nlohmann_json
   - nlohmann_json-abi
   - octave =10.*
-  - glad
   - glfw
   - libpng
   # Test dependencies
@@ -32,6 +31,7 @@ dependencies:
   - sphinx_rtd_theme
   # Dev dependencies
   - jupyterlab
+  - glad
   - nodejs
   - ccache
   - cmake-format
