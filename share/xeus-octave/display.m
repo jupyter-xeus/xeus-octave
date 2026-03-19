@@ -63,7 +63,7 @@ function display(varargin)
 				case "html"
 					displaymatrixhtml(name, value, tinfo);
 				otherwise
-					displaytext(name, value);
+					displaymatrixtext(name, value);
 			end
 		case { "scalar" "complex scalar" }
 			switch fmt
@@ -88,15 +88,30 @@ function display(varargin)
 	end
 end
 
+function txt = matrixtext (name, value)
+	[~, spacing] = format;
+	compact = strcmp(spacing, 'compact');
+	if compact
+		txt = [name, ' =', newline, disp(value), newline];
+	else
+		txt = [name, ' =', newline, newline, disp(value), newline];
+	end
+end
+
 function displaymatrixhtml (name, value, fmt)
 	out.("text/html") = __matrix_to_html__(name, value, fmt);
-	out.("text/plain") = [name, " = ", disp(value)];
+	out.("text/plain") = matrixtext(name, value);
 	display_data(out);
 end
 
 function displaymatrixlatex (name, value, fmt)
 	out.("text/latex") = __matrix_to_latex__(name, value, fmt);
-	out.("text/plain") = [name, " = ", disp(value)];
+	out.("text/plain") = matrixtext(name, value);
+	display_data(out);
+end
+
+function displaymatrixtext (name, value)
+	out.("text/plain") = matrixtext(name, value);
 	display_data(out);
 end
 
