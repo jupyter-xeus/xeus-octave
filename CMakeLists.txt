@@ -336,6 +336,23 @@ if(XEUS_OCTAVE_BUILD_EXECUTABLE)
         target_link_libraries(xoctave PRIVATE xeus-lite)
         xeus_octave_set_kernel_options(xoctave)
 
+            # we need to hard link 
+            # export LIBS="-lz -lMagick++-6.Q16 -lMagickWand-6.Q16 -lMagickCore-6.Q16 -lbz2 -ltiff -lpng -ljpeg -lxml2"
+            target_link_options(
+                xoctave
+                PRIVATE
+                "SHELL:-L${CMAKE_INSTALL_PREFIX}/lib"
+                "SHELL:-lz"
+                "SHELL:-lMagick++-6.Q16"
+                "SHELL:-lMagickWand-6.Q16"
+                "SHELL:-lMagickCore-6.Q16"
+                "SHELL:-lbz2"
+                "SHELL:-ltiff"
+                "SHELL:-lpng"
+                "SHELL:-ljpeg"
+                "SHELL:-lxml2"
+            )
+
         xeus_wasm_compile_options(xoctave)
         xeus_wasm_link_options(xoctave "web,worker")
         target_compile_options(xoctave PRIVATE ${octinterp_CFLAGS})

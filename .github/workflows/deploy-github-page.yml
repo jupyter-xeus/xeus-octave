@@ -33,6 +33,8 @@ jobs:
           environment-file: environment-wasm-build.yml
           init-shell: bash
           environment-name: xeus-octave-wasm-build
+          cache-environment: false
+          cache-downloads: false
 
       - name: Set ncpus
         run: echo "ncpus=$(nproc --all)" >> $GITHUB_ENV

@@ -16,6 +16,14 @@ dependencies:
   - liblapack
   - freetype
   - plotly
+  # dragged in static libraries from image magick
+  - imagemagick <7
+  - libtiff
+  - libpng
+  - libjpeg-turbo
+  - bzip2
+  - libxml2
+  - openjpeg
 # Optional
   - octave-fuzzy-logic-toolkit
   - octave-splines
