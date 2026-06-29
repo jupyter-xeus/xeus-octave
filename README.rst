@@ -51,6 +51,12 @@ Interactive Plotly plots
 .. image:: docs/source/interactive-plotly-plots.png
    :alt: Interactive Plotly plots
 
+Interactive legend in Plotly plots
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/source/interactive-plotly-legend.png
+   :alt: Interactive legend in Plotly
+
 Rich display of tables
 ~~~~~~~~~~~~~~~~~~~~~~
 

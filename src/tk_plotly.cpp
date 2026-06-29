@@ -66,6 +66,22 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
   // Retrieve the figure id
   std::string id = getPlotStream<std::string>(go);
 
+  bool isInteractive = false;  // for backward compatibility
+  try
+  {
+    octave_value_list res = octave::feval("displayformat", octave_value_list("plotly_interactive_legend"), 1);
+    if (!res.empty())
+    {
+      res(0).string_value() == "true" ? isInteractive = true : isInteractive = false;
+      std::clog << "interactive: " << isInteractive << std::endl;
+    }
+  }
+  catch (octave::execution_exception const& e)
+  {
+    isInteractive = false;
+    std::clog << "ERROR:Missing displayformat function?" << std::endl;
+  }
+
   if (go.isa("figure"))
   {
     std::map<std::string, std::vector<unsigned long>> ids;
@@ -87,8 +103,17 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
     // Tooltip on the closest point
     plot["layout"]["hovermode"] = "closest";
 
-    // We draw manually the legend
-    plot["layout"]["showlegend"] = false;
+    if (isInteractive)
+    {
+      plot["layout"]["showlegend"] = true;
+      plot["layout"]["legend"]["x"] = 1;
+      plot["layout"]["legend"]["y"] = 0.5;  // interfere with plotly menu when in top right corner
+    }
+    else
+    {
+      // We draw manually the legend
+      plot["layout"]["showlegend"] = false;
+    }
 
     // Background color
     plot["layout"]["plot_bgcolor"] = "rgba(0,0,0,0)";
@@ -115,6 +140,10 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
         std::string axNumber = getObjectNumber(ax, ids);
 
         bool isLegend = !ax.get("tag").isempty() && ax.get("tag").string_value() == "legend";
+        if (isLegend & isInteractive)
+          // ignore legend info from octave,
+          // plotly will automatically show legend if traces have names
+          continue;
 
         if (!ax.get("tag").isempty() && ax.get("tag").string_value() == "polaraxes")
         {

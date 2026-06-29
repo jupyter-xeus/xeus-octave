@@ -10,41 +10,44 @@ function r = displayformat(typ, fmt)
 		settings.("complex scalar") = "text";
 		settings.("struct") = "json";
 		settings.("scalar struct") = "json";
+		settings.("plotly_interactive_legend") = "false";
     end
 
     if (nargin == 0)
         r = settings;
     elseif (nargin == 1)
         if (ischar(typ))
-			if (strcmp(typ, "latex"))
-				settings.("matrix") = "latex";
-				settings.("bool matrix") = "latex";
-				settings.("complex matrix") = "latex";
-				settings.("range") = "latex";
-				settings.("scalar") = "latex";
-				settings.("complex scalar") = "latex";
-                settings.("struct") = "json";
-                settings.("scalar struct") = "json";
-			elseif (strcmp(typ, "html"))
-				settings.("matrix") = "html";
-				settings.("bool matrix") = "html";
-				settings.("complex matrix") = "html";
-				settings.("range") = "html";
-				settings.("scalar") = "text";
-				settings.("complex scalar") = "text";
-                settings.("struct") = "json";
-                settings.("scalar struct") = "json";
-            elseif (isfield(settings, typ))
-                r = settings.(typ);
-                return;
-            else
-                r = "";
-            end
+		if (strcmp(typ, "latex"))
+			settings.("matrix") = "latex";
+			settings.("bool matrix") = "latex";
+			settings.("complex matrix") = "latex";
+			settings.("range") = "latex";
+			settings.("scalar") = "latex";
+			settings.("complex scalar") = "latex";
+               		settings.("struct") = "json";
+               		settings.("scalar struct") = "json";
+		elseif (strcmp(typ, "html"))
+			settings.("matrix") = "html";
+			settings.("bool matrix") = "html";
+			settings.("complex matrix") = "html";
+			settings.("range") = "html";
+			settings.("scalar") = "text";
+			settings.("complex scalar") = "text";
+               		settings.("struct") = "json";
+               		settings.("scalar struct") = "json";
+	        elseif (isfield(settings, typ))
+               		r = settings.(typ);
+	                return;
+		else
+                	r = "";
+            	end
         else
             error("TYPE must be a string");
         end
     elseif (nargin == 2)
-        if (ischar(typ) && ischar(fmt))
+    	if (!isfield(settings, typ))
+	    error("Unknown argument")
+        elseif (ischar(typ) && ischar(fmt))
             settings.(typ) = fmt;
         else
             error("Parameters must be strings")
