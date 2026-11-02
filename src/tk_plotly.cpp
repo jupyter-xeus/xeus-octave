@@ -116,6 +116,47 @@ void plotly_graphics_toolkit::redraw_figure(octave::graphics_object const& go) c
 
         bool isLegend = !ax.get("tag").isempty() && ax.get("tag").string_value() == "legend";
 
+#if OCTAVE_MAJOR_VERSION >= 6
+        auto title = m_interpreter.get_gh_manager().get_object(axisProperties.get_title());
+#else
+        auto title = gh_manager::get_object(axisProperties.get_title());
+#endif
+
+        // The title is drawn as an annotation centered above the axis
+        if (!isLegend && title && title.isa("text"))
+        {
+          auto& titleProperties = dynamic_cast<octave::text::properties&>(title.get_properties());
+          std::string titleString = titleProperties.get_string().string_value();
+
+          if (!titleString.empty())
+          {
+            unsigned long aNumber = plot["layout"]["annotations"].size();
+
+            plot["layout"]["annotations"][aNumber]["showarrow"] = false;
+
+            plot["layout"]["annotations"][aNumber]["xref"] = "paper";
+            plot["layout"]["annotations"][aNumber]["yref"] = "paper";
+
+            plot["layout"]["annotations"][aNumber]["x"] = axisPosition(0) + axisPosition(2) / 2;
+            plot["layout"]["annotations"][aNumber]["y"] = axisPosition(1) + axisPosition(3);
+
+            plot["layout"]["annotations"][aNumber]["xanchor"] = "center";
+            plot["layout"]["annotations"][aNumber]["yanchor"] = "bottom";
+
+            text(
+              plot["layout"]["annotations"][aNumber],
+              titleString,
+              titleProperties.get_interpreter(),
+              titleProperties.get_color_rgb(),
+              titleProperties.get_fontsize()
+            );
+
+            if (titleProperties.get_fontweight() == "bold")
+              plot["layout"]["annotations"][aNumber]["text"] =
+                "<b>" + plot["layout"]["annotations"][aNumber]["text"].get<std::string>() + "</b>";
+          }
+        }
+
         if (!ax.get("tag").isempty() && ax.get("tag").string_value() == "polaraxes")
         {
           std::string p = "polar" + axNumber;
