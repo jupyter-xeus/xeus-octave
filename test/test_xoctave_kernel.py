@@ -117,6 +117,14 @@ class KernelTests(jupyter_kernel_test.KernelTests):
 
         self.assertEqual(content0["transient"]["display_id"], content1["transient"]["display_id"])
 
+    def test_plot_plotly_title(self):
+        self.flush_channels()
+        reply, output_msgs = self.execute_helper(code="graphics_toolkit plotly; plot(1:3); title('My title')")
+
+        app = output_msgs[-1]["content"]["data"]["application/vnd.plotly.v1+json"]
+        texts = [a["text"] for a in app["layout"].get("annotations", [])]
+        self.assertIn("<b>My title</b>", texts)
+
     def test_issue_68(self):
         """
         This tests that parsing of code with multiple errors is actually stopped
