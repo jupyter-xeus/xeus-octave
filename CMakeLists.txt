@@ -102,8 +102,8 @@ if(EMSCRIPTEN)
         "${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js.in"
         "${CMAKE_CURRENT_SOURCE_DIR}/wasm/env_vars.js"
     )
-    # The Fortran runtime: recent flang releases ship one library, flang_rt.runtime;
-    # earlier versions ship FortranRuntime and FortranDecimal
+    # The Fortran runtime: recent flang releases ship one library, flang_rt.runtime; earlier
+    # versions ship FortranRuntime and FortranDecimal
     find_library(XEUS_OCTAVE_FORTRAN_RUNTIME NAMES flang_rt.runtime FortranRuntime REQUIRED)
     find_library(XEUS_OCTAVE_FORTRAN_DECIMAL NAMES FortranDecimal)
     if(NOT XEUS_OCTAVE_FORTRAN_DECIMAL)
